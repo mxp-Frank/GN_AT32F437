@@ -1,0 +1,19 @@
+del *._2i /s
+del *.d /s
+del *.o /s
+del *.dep /s
+del *.fed /s
+del *.l2p /s
+del *.lex /s
+del *.lnp /s
+del *.crf /s
+del *.iex /s
+del *.htm /s
+del JLinkLog.txt /s
+del *.hex /s
+del *.bin /s
+del *.axf /s
+del *.bak /s
+del OBJ\objs\*.*  /s/q
+del OBJ\lists\*.* /s/q
+exit
