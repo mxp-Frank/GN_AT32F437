@@ -24,15 +24,19 @@
 
 static uint8_t 					cmdActionID[ID_SET_ALLNUM];		//控制激活参数
 //结构体变量
+static PartsParam_t 			Fs_PartsParam;
 static CommonParam_t			Fs_CommonParam;			
 static InternalParam_t 			Fs_InternalParam;
 static UserParam_t 				Fs_UserParam;
  
-static PartsParam_t 			IdentificationParam;
+static PartsParam_t 			PartsParam;
 static CommonParam_t			CommonParam;
 static InternalParam_t 			InternalParam;
 static UserParam_t 				UserParam;
 
+
+
+	
 static DefaultParam_t DeviceParam =
 {
 	.FactoryMode  = 0,         //工厂模式	
@@ -43,11 +47,13 @@ static DefaultParam_t DeviceParam =
   	.SetChannelNo = 0,	      //设置
     .SetPointValue = 0,       //设置射频电源功率  0~1000
   	.SetACDCVolt = 0,	      //设置射频电源AC-DC电压值  0~50000
-    .SetACDCCurrent = 0,     //设置射频电源AC-DC电流值，0-200
-    .SetWorkFreq = 0,        //设置射频电源输出频率值，0-2000
-    .SetWorkPhase = 0,       //设置射频电源输出相位值，0-2000
+    .SetACDCCurrent = 0,      //设置射频电源AC-DC电流值，0-200
+    .SetWorkFreq = 0,         //设置射频电源输出频率值，0-2000
+    .SetWorkPhase = 0,        //设置射频电源输出相位值，0-2000
 	.TargetPos[LOAD]=5000,
 	.TargetPos[TUNE]=5000,
+	.CurrentPos[LOAD]= 5000,
+	.CurrentPos[TUNE]= 5000,
 };
 /* GLOBAL VARIABLES */
 FaultWord_t 			g_FaultWord;
@@ -64,8 +70,11 @@ const uint8_t BootloaderVersion[BOOTLOADER_VERSION_LEN] __attribute__((at(0x0800
 const uint8_t BootloaderVersion[BOOTLOADER_VERSION_LEN]  = BOOTLOADER_VERSION;
 const uint8_t SoftwareVersion[SOFTWARE_VERSION_LEN]  = SOFTWARE_VERSION;
 #endif
-
-static void Check_IdentificationParam(void);
+static void Check_Fs_PartsParam(void);
+static void Check_Fs_CommonParam(void);
+static void Check_Fs_InternalParam(void);
+static void Check_Fs_UserParam(void);
+static void Check_PartsParam(void);
 static void Check_CommonParam(void);
 static void Check_InternalParam(void);
 static void Check_UserParam(void);
@@ -83,45 +92,60 @@ void Params_Init(void)
 	memset(&g_FaultWord,0,sizeof(FaultWord_t));
 	memset(&g_StatusWord,0,sizeof(StatusWord_t));
 	
-	Read_FS_IdentificationParam((uint8_t*)&IdentificationParam);
+	Read_FS_PartsParam((uint8_t*)&Fs_PartsParam);
 	Read_FS_CommonParam((uint8_t*)&Fs_CommonParam);
 	Read_FS_InternalParam((uint8_t*)&Fs_InternalParam);
-	Read_UserParam((uint8_t*)&Fs_UserParam);
+	Read_FS_UserParam((uint8_t*)&Fs_UserParam);
+	Check_Fs_PartsParam();
+	Check_Fs_CommonParam();
+	Check_Fs_InternalParam();
+	Check_Fs_UserParam(); 
 	
+	Read_PartsParam((uint8_t*)&PartsParam);
 	Read_CommonParam((uint8_t*)&CommonParam);
 	Read_InternalParam((uint8_t*)&InternalParam);
-	/*读取预设状态*/
-	DeviceParam.PowerWorkMode = 1; //默认工作模式
 	Read_UserParam((uint8_t*)&UserParam);
-		
-	Check_IdentificationParam();
+	Check_PartsParam();
 	Check_CommonParam();
 	Check_InternalParam();
 	Check_UserParam(); 
+	
 }
 
 /* FUNCTION ***********************************************************************
- * Function Name : Check_IdentificationParam
+ * Function Name : Check_PartsParam
  * Description   : 检查配置信息参数
  * Parameter     : 
  * return        :               
  * END ***************************************************************************/
-static void Check_IdentificationParam(void)
+static void Check_Fs_PartsParam(void)
 {
-	uint8_t i;
-	uint16_t len = PARTS_PARAM_LEN;
-	uint8_t *pFactoryParam = (uint8_t*)&IdentificationParam;
-	for (i = 0; i < len; i++)
+	uint16_t i;
+	//内容全部为0xFF则将参数值全部初始化
+	uint8_t *pCheckParam = (uint8_t*)&Fs_PartsParam;
+	for (i = 0; i < PARTS_PARAM_LEN; i++)
 	{
-		if (pFactoryParam[i] != 0xFF)
-		{
-			break;
-		}
+		if (pCheckParam[i] != 0xFF)break;
+		
 	}
-	//内容全部为0xFF则将参数值全部初始化为0
-	if (i >= len)
+	if (i >= PARTS_PARAM_LEN/3)
 	{
-		memset(&IdentificationParam, 0, PARTS_PARAM_LEN);
+		memset(&Fs_PartsParam, 0, PARTS_PARAM_LEN);
+	}
+}
+static void Check_PartsParam(void)
+{
+	uint16_t i;
+	//内容全部为0xFF则将参数值全部初始化
+	uint8_t *pCheckParam = (uint8_t*)&PartsParam;
+	for (i = 0; i < PARTS_PARAM_LEN; i++)
+	{
+		if (pCheckParam[i] != 0xFF)break;		
+	}
+	
+	if (i >= PARTS_PARAM_LEN/3)
+	{
+		memset(&PartsParam, 0, PARTS_PARAM_LEN);
 	}
 	
 }
@@ -131,8 +155,47 @@ static void Check_IdentificationParam(void)
  * Parameter     : 
  * return        :               
  * END ***************************************************************************/
+static void Check_Fs_CommonParam(void)
+{
+	uint16_t i;
+	//内容全部为0xFF则将参数值全部初始化
+	uint8_t *pCheckParam = (uint8_t*)&Fs_CommonParam;
+	for (i = 0; i < COMMUN_PARAM_LEN; i++)
+	{
+		if (pCheckParam[i] != 0xFF)break;
+	}
+	if (i >= COMMUN_PARAM_LEN/3)
+	{
+		memset(&Fs_CommonParam, 0, PARTS_PARAM_LEN);
+		Fs_CommonParam.DataRate = 2;
+		Fs_CommonParam.CommunicateType = 2;
+	}
+	//检查所有参数范围(参数有范围值)
+	if(Fs_CommonParam.DataRate > 4)
+	{
+		Fs_CommonParam.DataRate = 2;
+	}
+	if(Fs_CommonParam.CommunicateType > 2)
+	{
+		Fs_CommonParam.CommunicateType = 2;
+	}
+}
 static void Check_CommonParam(void)
 {
+	uint16_t i;
+	//内容全部为0xFF则将参数值全部初始化
+	uint8_t *pCheckParam = (uint8_t*)&CommonParam;
+	for (i = 0; i < COMMUN_PARAM_LEN; i++)
+	{
+		if (pCheckParam[i] != 0xFF)break;
+	}
+	if (i >= COMMUN_PARAM_LEN/3)
+	{
+		memset(&PartsParam, 0, PARTS_PARAM_LEN);
+		CommonParam.DataRate = 2;
+		CommonParam.CommunicateType = 2;
+	}
+	//检查所有参数范围(参数有范围值)
 	if(CommonParam.DataRate > 4)
 	{
 		CommonParam.DataRate = 2;
@@ -141,14 +204,6 @@ static void Check_CommonParam(void)
 	{
 		CommonParam.CommunicateType = 2;
 	}
-	if(CommonParam.DeviceAddress == 0xFF)
-	{
-		CommonParam.DeviceAddress = 0;
-	}
-	if(CommonParam.EtherCatAddress ==0xFFFF)
-	{
-		CommonParam.EtherCatAddress = 0;
-	}
 }
 /* FUNCTION ***********************************************************************
  * Function Name : Check_InternalParam
@@ -156,8 +211,58 @@ static void Check_CommonParam(void)
  * Parameter     : 
  * return        :               
  * END ***************************************************************************/
+static void Check_Fs_InternalParam(void)
+{
+	uint16_t i;
+	//内容全部为0xFF则将参数值全部初始化
+	uint8_t *pCheckParam = (uint8_t*)&Fs_InternalParam;
+	for (i = 0; i < INTERNAL_PARAM_LEN; i++)
+	{
+		if (pCheckParam[i] != 0xFF)break;
+	}
+	if(i>INTERNAL_PARAM_LEN/3)
+	{
+		memset(&Fs_InternalParam, 0, INTERNAL_PARAM_LEN);
+		Fs_InternalParam.VSWRLimit= 1500;
+		Fs_InternalParam.AnalogVoltRange= 10000;
+		Fs_InternalParam.AnalogRFPowerFactor= 10000;
+	}	
+	//检查所有参数范围(参数有范围值)
+   if(Fs_InternalParam.VSWRLimit < 1000)
+   {
+		Fs_InternalParam.VSWRLimit= 1500;
+   }
+   if(Fs_InternalParam.AnalogVoltRange > 15000)
+   {
+		Fs_InternalParam.AnalogVoltRange= 10000;
+   }
+   if(Fs_InternalParam.AnalogRFPowerFactor > 15000)
+   {
+		Fs_InternalParam.AnalogRFPowerFactor= 10000;
+   }
+    if(Fs_InternalParam.StartPoint >= MAX_POWER)
+   {
+		Fs_InternalParam.StartPoint = 0;
+   }
+}
+
 static void Check_InternalParam(void)
 {
+	uint16_t i;
+	//内容全部为0xFF则将参数值全部初始化
+	uint8_t *pCheckParam = (uint8_t*)&InternalParam;
+	for (i = 0; i < INTERNAL_PARAM_LEN; i++)
+	{
+		if (pCheckParam[i] != 0xFF)break;
+	}
+	if(i>INTERNAL_PARAM_LEN/3)
+	{
+		memset(&InternalParam, 0, INTERNAL_PARAM_LEN);
+		InternalParam.VSWRLimit= 1500;
+		InternalParam.AnalogVoltRange= 10000;
+		InternalParam.AnalogRFPowerFactor= 10000;
+	}	
+	//检查所有参数范围(参数有范围值)
    if(InternalParam.VSWRLimit < 1000)
    {
 		InternalParam.VSWRLimit= 1500;
@@ -170,73 +275,11 @@ static void Check_InternalParam(void)
    {
 		InternalParam.AnalogRFPowerFactor= 10000;
    }
-   if(InternalParam.FpgaPulsePowerThr ==0xFFFFFFFF)
-   {
-		InternalParam.AnalogRFPowerFactor= 1000;
-   }
-   if(InternalParam.FpgaPulseSyncDelay ==0xFFFF)
-   {
-		InternalParam.FpgaPulseSyncDelay= 0;
-   }
     if(InternalParam.StartPoint >= MAX_POWER)
    {
 		InternalParam.StartPoint = 0;
    }
-  
-   if(InternalParam.VrmsFactor ==0xFFFFFFFF)
-   {
-		InternalParam.VrmsFactor= 0;
-   }
-   if(InternalParam.IrmsFactor ==0xFFFF)
-   {
-		InternalParam.IrmsFactor= 0;
-   }
-   if(InternalParam.PhaseFactor ==0xFFFFFFFF)
-   {
-		InternalParam.PhaseFactor= 0;
-   }
-   if(InternalParam.PIDProportion ==0xFFFF)
-   {
-		InternalParam.PIDProportion= 0;
-   }
-	if(InternalParam.PIDIntegral ==0xFFFFFFFF)
-   {
-		InternalParam.PIDIntegral= 0;
-   }
-   if(InternalParam.PIDDerivatice ==0xFFFF)
-   {
-		InternalParam.PIDDerivatice= 0;
-   }
-   if(InternalParam.PIDErrorThr ==0xFFFFFFFF)
-   {
-		InternalParam.PIDErrorThr= 0;
-   } 
-   if(InternalParam.ACDCVoltGain ==0xFFFFFFFF)
-   {
-		InternalParam.ACDCVoltGain= 0;
-   }
-   if(InternalParam.ACDCVoltOffset ==0xFFFF)
-   {
-		InternalParam.ACDCVoltOffset= 0;
-   }
-    if(InternalParam.ACDCCurrentGain ==0xFFFFFFFF)
-   {
-		InternalParam.ACDCCurrentGain= 0;
-   }
-   if(InternalParam.ACDCCurrentOffset ==0xFFFFFFFF)
-   {
-		InternalParam.ACDCCurrentOffset= 0;
-   }
-   if(InternalParam.DrainVoltGain ==0xFFFFFFFF)
-   {
-		InternalParam.DrainVoltGain= 0;
-   }
-   if(InternalParam.DrainVoltOffset ==0xFFFFFFFF)
-   {
-		InternalParam.DrainVoltOffset= 0;
-   }
 }
-
 
 /* FUNCTION ***********************************************************************
  * Function Name : Check_UserParam
@@ -244,8 +287,117 @@ static void Check_InternalParam(void)
  * Parameter     : 
  * return        :               
  * END ***************************************************************************/
+static void Check_Fs_UserParam(void)
+{	
+	uint16_t i;
+	//内容全部为0xFF则将参数值全部初始化
+	uint8_t *pCheckParam = (uint8_t*)&Fs_UserParam;
+	for (i = 0; i < USER_PARAM_LEN; i++)
+	{
+		if (pCheckParam[i] != 0xFF)break;
+	}
+	if(i>USER_PARAM_LEN/3)
+	{
+		memset(&Fs_UserParam, 0, USER_PARAM_LEN);
+		Fs_UserParam.PrefDelayOff = 15;	
+		Fs_UserParam.PulseDuty = 50;
+		Fs_UserParam.VDCFactor = MAX_VDCATTEN;
+		Fs_UserParam.PowerOffsetFactor = 1000;
+		Fs_UserParam.PrefThr = MAX_POWER;
+		Fs_UserParam.PfwdLimit = MAX_POWER;
+		Fs_UserParam.PrefLimit = MAX_POWER;
+		Fs_UserParam.PvdcLimit = MAX_POWER;
+		
+	}	
+	//检查所有参数范围(参数有范围值)
+	if(Fs_UserParam.RegulationMode > MAX_REGUALATION) 
+	{
+		Fs_UserParam.RegulationMode = 0;
+	}
+	if(Fs_UserParam.SlowMode > 1) 
+	{
+		Fs_UserParam.SlowMode = 0;
+	}
+	if(Fs_UserParam.MatchMode > 1)
+	{
+		Fs_UserParam.MatchMode = 0;
+	}
+	if(Fs_UserParam.PulseMode > 1) 
+	{
+		Fs_UserParam.PulseMode= 0;
+	}
+	if(Fs_UserParam.PrefMode > 1) 
+	{
+		Fs_UserParam.PrefMode = 0;
+	}		
+	if(Fs_UserParam.PrefDelayOff > MAX_REFLECTDELAY) 
+	{
+		Fs_UserParam.PrefDelayOff = 15;
+	}
+	if(Fs_UserParam.PulseFreq > 1000000) 
+	{
+		Fs_UserParam.PulseFreq = 0;
+	}
+	if(Fs_UserParam.PulseDuty > 100) 
+	{
+		Fs_UserParam.PulseDuty = 50;
+	}
+	if(Fs_UserParam.SlowRFOnDelay > MAX_SLOWDELAY) 
+	{
+		Fs_UserParam.SlowRFOnDelay = 0;
+	}
+	if(Fs_UserParam.SlowRFOffDelay > MAX_SLOWDELAY) 
+	{
+		Fs_UserParam.SlowRFOffDelay = 0;
+	}
+	if(Fs_UserParam.VDCFactor > MAX_VDCATTEN)
+	{
+		Fs_UserParam.VDCFactor = MAX_VDCATTEN;
+	}
+	if(Fs_UserParam.PowerOffsetFactor > MAX_POWEROFFSET) 
+	{
+		Fs_UserParam.PowerOffsetFactor = 1000;
+	}
+	if(Fs_UserParam.PrefThr > MAX_POWER)
+	{
+		Fs_UserParam.PrefThr = 500;
+	}
+	if(Fs_UserParam.PfwdLimit > MAX_POWER) 
+	{
+		Fs_UserParam.PfwdLimit = MAX_POWER;
+	}
+	if(Fs_UserParam.PrefLimit > MAX_POWER)
+	{
+		Fs_UserParam.PrefLimit = MAX_POWER;
+	}
+	if(Fs_UserParam.PvdcLimit > MAX_POWER)
+	{
+		Fs_UserParam.PvdcLimit = MAX_POWER;
+	}	
+}
 static void Check_UserParam(void)
 {	
+	uint16_t i;
+	//内容全部为0xFF则将参数值全部初始化
+	uint8_t *pCheckParam = (uint8_t*)&UserParam;
+	for (i = 0; i < USER_PARAM_LEN; i++)
+	{
+		if (pCheckParam[i] != 0xFF)break;
+	}
+	if(i>USER_PARAM_LEN/3)
+	{
+		memset(&UserParam, 0, USER_PARAM_LEN);
+		UserParam.PrefDelayOff = 15;	
+		UserParam.PulseDuty = 50;
+		UserParam.VDCFactor = MAX_VDCATTEN;
+		UserParam.PowerOffsetFactor = 1000;
+		UserParam.PrefThr = MAX_POWER;
+		UserParam.PfwdLimit = MAX_POWER;
+		UserParam.PrefLimit = MAX_POWER;
+		UserParam.PvdcLimit = MAX_POWER;
+		
+	}	
+	//检查所有参数范围(参数有范围值)
 	if(UserParam.RegulationMode > MAX_REGUALATION) 
 	{
 		UserParam.RegulationMode = 0;
@@ -312,64 +464,95 @@ static void Check_UserParam(void)
 	}	
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // 以下是对params_interface.h中定义的接口的实现
-
 //------------------------------------------------------------------------------------------------
 // Identification parameter Operation
 void IF_IdentParam_SetDeviceType(uint8_t value)
 {
 	if(ON==IF_CmdParam_GetFactoryMode())
 	{
-		IdentificationParam.DeviceType = value;
-		cmdActionID[ID_SAVE_FACTORY_PARAM]= ON;	
-	}	
+		Fs_PartsParam.DeviceType = value;
+		cmdActionID[ID_SAVE_FS_PARTS_PARAM]= ON;	
+	}
+	PartsParam.DeviceType = value;
+	cmdActionID[ID_SAVE_PARTS_PARAM]= ON;		
 }
 
 uint8_t IF_IdentParam_GetDeviceType(void)
 {
-	return IdentificationParam.DeviceType;
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{
+		return Fs_PartsParam.DeviceType;
+	}else
+	{
+		return PartsParam.DeviceType;
+	}
 }
 //-----------------------------------------------------------------------------
 void IF_IdentParam_SetVendorCode(uint8_t value)
 {
 	if(ON==IF_CmdParam_GetFactoryMode())
 	{
-		IdentificationParam.VendorCode = value;
-		cmdActionID[ID_SAVE_FACTORY_PARAM]= ON;	
+		PartsParam.VendorCode = value;
+		cmdActionID[ID_SAVE_FS_PARTS_PARAM]= ON;	
 	}	
+	PartsParam.VendorCode = value;
+	cmdActionID[ID_SAVE_PARTS_PARAM]= ON;	
 }
 
 uint8_t IF_IdentParam_GetVendorCode(void)
 {
-	return IdentificationParam.VendorCode;
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{
+		return Fs_PartsParam.VendorCode;
+	}else
+	{
+		return PartsParam.VendorCode;
+	}
 }
 //-----------------------------------------------------------------------------
 void IF_IdentParam_SetHardwareVersion(uint8_t* pBuf, uint8_t len)
 {
+	if(len >= HARDWARE_VERSION_LEN)len = HARDWARE_VERSION_LEN;
 	if(ON==IF_CmdParam_GetFactoryMode())
 	{
-		memset(IdentificationParam.HardwareVersion, 0, HARDWARE_VERSION_LEN);
-		memcpy(IdentificationParam.HardwareVersion, pBuf,
-			(len < HARDWARE_VERSION_LEN) ? len : HARDWARE_VERSION_LEN);
-		cmdActionID[ID_SAVE_FACTORY_PARAM]= ON;	
+		memset(Fs_PartsParam.HardwareVersion, 0, HARDWARE_VERSION_LEN);
+		memcpy(Fs_PartsParam.HardwareVersion, pBuf,len);
+		cmdActionID[ID_SAVE_FS_PARTS_PARAM]= ON;	
 	}	
+	memset(PartsParam.HardwareVersion, 0, HARDWARE_VERSION_LEN);
+	memcpy(PartsParam.HardwareVersion, pBuf,len);
+	cmdActionID[ID_SAVE_PARTS_PARAM]= ON;	
 }
 
 uint8_t IF_IdentParam_GetHardwareVersion(uint8_t* pBuf)
 {
 	uint8_t i;
-	for (i = 0; i < HARDWARE_VERSION_LEN; i++)
+	if(ON==IF_CmdParam_GetFactoryMode())
 	{
-		if (IdentificationParam.HardwareVersion[i] == 0)
+		for (i = 0; i < HARDWARE_VERSION_LEN; i++)
 		{
-			break;
-		}
+			if (Fs_PartsParam.HardwareVersion[i] == 0)
+			{
+				break;
+			}
 
-		pBuf[i] = IdentificationParam.HardwareVersion[i];
+			pBuf[i] = Fs_PartsParam.HardwareVersion[i];
+		}
+	}else
+	{
+		for (i = 0; i < HARDWARE_VERSION_LEN; i++)
+		{
+			if (PartsParam.HardwareVersion[i] == 0)
+			{
+				break;
+			}
+
+			pBuf[i] = PartsParam.HardwareVersion[i];
+		}
 	}
-	return i;
+	return i;	
 }
 
 //-----------------------------------------------------------------------------
@@ -419,27 +602,43 @@ void IF_IdentParam_SetProductModel(uint8_t* pBuf, uint8_t len)
 {
 	if(ON==IF_CmdParam_GetFactoryMode())
 	{
-		memset(IdentificationParam.ProductModel, 0, PRODUCT_MODEL_LEN);
-		memcpy(IdentificationParam.ProductModel, pBuf,
+		memset(Fs_PartsParam.ProductModel, 0, PRODUCT_MODEL_LEN);
+		memcpy(Fs_PartsParam.ProductModel, pBuf,
 			(len < PRODUCT_MODEL_LEN) ? len : PRODUCT_MODEL_LEN);
-		cmdActionID[ID_SAVE_FACTORY_PARAM]=ON;	
-	}	
+		cmdActionID[ID_SAVE_FS_PARTS_PARAM]=ON;	
+	}
+	memset(PartsParam.ProductModel, 0, PRODUCT_MODEL_LEN);
+	memcpy(PartsParam.ProductModel, pBuf,
+			(len < PRODUCT_MODEL_LEN) ? len : PRODUCT_MODEL_LEN);
+	cmdActionID[ID_SAVE_PARTS_PARAM]=ON;		
 }
 
 uint8_t IF_IdentParam_GetProductModel(uint8_t* pBuf)
 {
 	uint8_t i;
-
-	for (i = 0; i < PRODUCT_MODEL_LEN; i++)
+	if(ON==IF_CmdParam_GetFactoryMode())
 	{
-		if (IdentificationParam.ProductModel[i] == 0)
+		for (i = 0; i < PRODUCT_MODEL_LEN; i++)
 		{
-			break;
+			if (Fs_PartsParam.ProductModel[i] == 0)
+			{
+				break;
+			}
+
+			pBuf[i] = Fs_PartsParam.ProductModel[i];
 		}
+	}else
+	{
+		for (i = 0; i < PRODUCT_MODEL_LEN; i++)
+		{
+			if (PartsParam.ProductModel[i] == 0)
+			{
+				break;
+			}
 
-		pBuf[i] = IdentificationParam.ProductModel[i];
+			pBuf[i] = PartsParam.ProductModel[i];
+		}
 	}
-
 	return i;
 }
 //-----------------------------------------------------------------------------
@@ -447,24 +646,41 @@ void IF_IdentParam_SetSerialNumber(uint8_t* pBuf, uint8_t len)
 {
 	if(ON==IF_CmdParam_GetFactoryMode())
 	{
-		memset(IdentificationParam.SerialNumber, 0, SERIAL_NUMBER_LEN);
-		memcpy(IdentificationParam.SerialNumber, pBuf,
+		memset(Fs_PartsParam.SerialNumber, 0, SERIAL_NUMBER_LEN);
+		memcpy(Fs_PartsParam.SerialNumber, pBuf,
 			(len < SERIAL_NUMBER_LEN) ? len : SERIAL_NUMBER_LEN);
-		cmdActionID[ID_SAVE_FACTORY_PARAM]= ON;	
-	}	
+		cmdActionID[ID_SAVE_FS_PARTS_PARAM]= ON;	
+	}
+	memset(PartsParam.SerialNumber, 0, SERIAL_NUMBER_LEN);
+	memcpy(PartsParam.SerialNumber, pBuf,
+			(len < SERIAL_NUMBER_LEN) ? len : SERIAL_NUMBER_LEN);
+	cmdActionID[ID_SAVE_PARTS_PARAM]= ON;		
 }
 
 uint8_t IF_IdentParam_GetSerialNumber(uint8_t* pBuf)
 {
 	uint8_t i;
-
-	for (i = 0; i < SERIAL_NUMBER_LEN; i++)
+	if(ON==IF_CmdParam_GetFactoryMode())
 	{
-		if (IdentificationParam.SerialNumber[i] == 0)
+	
+		for (i = 0; i < SERIAL_NUMBER_LEN; i++)
 		{
-			break;
+			if (Fs_PartsParam.SerialNumber[i] == 0)
+			{
+				break;
+			}
+			pBuf[i] = Fs_PartsParam.SerialNumber[i];
 		}
-		pBuf[i] = IdentificationParam.SerialNumber[i];
+	}else
+	{
+		for (i = 0; i < SERIAL_NUMBER_LEN; i++)
+		{
+			if (PartsParam.SerialNumber[i] == 0)
+			{
+				break;
+			}
+			pBuf[i] = PartsParam.SerialNumber[i];
+		}
 	}
 
 	return i;
@@ -474,27 +690,43 @@ void IF_IdentParam_SetTrackingNumber(uint8_t* pBuf, uint8_t len)
 {
 	if(ON==IF_CmdParam_GetFactoryMode())
 	{
-		memset(IdentificationParam.TrackingNumber, 0, TRACKING_NUMBER_LEN);
-		memcpy(IdentificationParam.TrackingNumber, pBuf,
+		memset(Fs_PartsParam.TrackingNumber, 0, TRACKING_NUMBER_LEN);
+		memcpy(Fs_PartsParam.TrackingNumber, pBuf,
 			(len < TRACKING_NUMBER_LEN) ? len : TRACKING_NUMBER_LEN);
-		cmdActionID[ID_SAVE_FACTORY_PARAM]= ON;	
+		cmdActionID[ID_SAVE_FS_PARTS_PARAM]= ON;	
 	}
+	memset(PartsParam.TrackingNumber, 0, TRACKING_NUMBER_LEN);
+	memcpy(PartsParam.TrackingNumber, pBuf,
+			(len < TRACKING_NUMBER_LEN) ? len : TRACKING_NUMBER_LEN);
+	cmdActionID[ID_SAVE_PARTS_PARAM]= ON;	
 }
 
 uint8_t IF_IdentParam_GetTrackingNumber(uint8_t* pBuf)
 {
 	uint8_t i;
-
-	for (i = 0; i < TRACKING_NUMBER_LEN; i++)
+	if(ON==IF_CmdParam_GetFactoryMode())
 	{
-		if (IdentificationParam.TrackingNumber[i] == 0)
+		for (i = 0; i < TRACKING_NUMBER_LEN; i++)
 		{
-			break;
+			if (Fs_PartsParam.TrackingNumber[i] == 0)
+			{
+				break;
+			}
+
+			pBuf[i] = Fs_PartsParam.TrackingNumber[i];
 		}
+	}else
+	{
+		for (i = 0; i < TRACKING_NUMBER_LEN; i++)
+		{
+			if (PartsParam.TrackingNumber[i] == 0)
+			{
+				break;
+			}
 
-		pBuf[i] = IdentificationParam.TrackingNumber[i];
+			pBuf[i] = PartsParam.TrackingNumber[i];
+		}
 	}
-
 	return i;
 }
 //-----------------------------------------------------------------------------
@@ -1574,6 +1806,10 @@ void IF_CmdParam_SetResetDevice(void)
 //---------------------------------------------------------------
 void IF_CmdParam_ResumeFactorySettings(void)
 {
+	memcpy(&PartsParam,   &Fs_PartsParam,   PARTS_PARAM_LEN);	
+	memcpy(&CommonParam,  &Fs_CommonParam,  COMMUN_PARAM_LEN);	
+	memcpy(&InternalParam,&Fs_InternalParam,INTERNAL_PARAM_LEN);	
+	memcpy(&UserParam,    &Fs_UserParam,    USER_PARAM_LEN);
 	cmdActionID[ID_RESUME_ALLPARAMS]= ON;	
 }
 //---------------------------------------------------------------
@@ -1774,18 +2010,32 @@ uint16_t IF_GetAMPD(uint16_t frameNo, uint8_t* pBuf)
 ///////////////////////////////////////////////////////////////////////////////////////////
 void IF_NvmParam_SetPartsParams(uint8_t  *pBuf, uint16_t len)
 {
-	memcpy((uint8_t*)&Fs_InternalParam,pBuf,len); 
-	cmdActionID[ID_SAVE_INTERNAL_PARAM]	=ON;		
+	if(len>PARTS_PARAM_LEN)len = PARTS_PARAM_LEN;
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{	
+		memcpy((uint8_t*)&Fs_PartsParam,pBuf,len); 
+		cmdActionID[ID_SAVE_FS_PARTS_PARAM] = ON;		
+	}
+	memcpy((uint8_t*)&PartsParam,pBuf,len); 
+	cmdActionID[ID_SAVE_PARTS_PARAM]	=ON;		
 }
 //-------------------------------------------------------------------------------------------------
 void IF_NvmParam_GetPartsParams(uint8_t  *pBuf, uint16_t len)
 {	
-	memcpy(pBuf,(uint8_t *)&Fs_InternalParam,len);	
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{
+		memcpy(pBuf,(uint8_t *)&Fs_PartsParam,len);	
+	}
+	else
+	{
+		memcpy(pBuf,(uint8_t *)&PartsParam,len);	
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
 void IF_NvmParam_SetInternalParams(uint8_t  *pBuf, uint16_t len)
 {
+	if(len>INTERNAL_PARAM_LEN)len = INTERNAL_PARAM_LEN;
 	if(ON==IF_CmdParam_GetFactoryMode())
 	{	
 		memcpy((uint8_t*)&Fs_InternalParam,pBuf,len); 
@@ -1810,6 +2060,7 @@ void IF_NvmParam_GetInternalParams(uint8_t  *pBuf, uint16_t len)
 //-------------------------------------------------------------------------------------------------
 void IF_NvmParam_SetUserParams(uint8_t  *pBuf, uint16_t len)
 {
+	if(len>USER_PARAM_LEN)len = USER_PARAM_LEN;
 	if(ON==IF_CmdParam_GetFactoryMode())
 	{
 		memcpy((uint8_t*)&Fs_UserParam,pBuf,len); 
@@ -1831,7 +2082,6 @@ void IF_NvmParam_GetUserParams(uint8_t  *pBuf, uint16_t len)
 	}
 }
 
-
 /* FUNCTION *******************************************************************
  *
  * Function Name : IF_Param_ExecuteActionsAfterRsp
@@ -1841,30 +2091,35 @@ void IF_NvmParam_GetUserParams(uint8_t  *pBuf, uint16_t len)
 void IF_Param_ExecuteActionsAfterRsp(void)
 {
    DeviceCmdMsg_t DeviceCmd;
-   for(uint8_t i= 0;i < ID_SET_ALLNUM;i++)
+   for(uint8_t cmdID= 0;cmdID < ID_SET_ALLNUM;cmdID++)
    {
-	   if(cmdActionID[i] == ON)
+	   if(cmdActionID[cmdID] == ON)
 	   {
-		   switch(i)
+		   switch(cmdID)
 		   {
-			case ID_SAVE_FACTORY_PARAM:		
-				DeviceCmd.cmdId = CMD_SAVE_FACTORYPARAM;
+			case ID_SAVE_FS_PARTS_PARAM:	
+				Check_Fs_PartsParam();
+				DeviceCmd.cmdId = CMD_SAVE_FSPARTSPARAM;
 				DeviceCmd.cmdData.Val = 0;			
 			break;
-			case ID_SAVE_FS_COMMON_PARAM:   
+			case ID_SAVE_FS_COMMON_PARAM: 
+				Check_Fs_CommonParam();				
 				DeviceCmd.cmdId = CMD_SAVE_FSCOMMONPARAM;
 				DeviceCmd.cmdData.Val = 0;			
 			break;
 			case ID_SAVE_FS_INTERNAL_PARAM: 
+				Check_Fs_InternalParam();
 				DeviceCmd.cmdId = CMD_SAVE_FSINTERNALPARAM;
 				DeviceCmd.cmdData.Val = 0;			
 			break;
 			case ID_SAVE_FS_USER_PARAM: 
+				Check_Fs_UserParam();
 				DeviceCmd.cmdId = CMD_SAVE_FSUSERPARAM;
 				DeviceCmd.cmdData.Val = 0;			
 			break;
-			case ID_READ_FACTORY_PARAM:  	
-				DeviceCmd.cmdId = CMD_READ_FACTORYPARAM;
+			/*****************************************************/
+			case ID_READ_FS_PARTS_PARAM:  	
+				DeviceCmd.cmdId = CMD_READ_FSPARTSPARAM;
 				DeviceCmd.cmdData.Val = 0;			
 			break;
 			case ID_READ_FS_COMMON_PARAM:	
@@ -1878,19 +2133,34 @@ void IF_Param_ExecuteActionsAfterRsp(void)
 			case ID_READ_FS_USER_PARAM:		
 				DeviceCmd.cmdId = CMD_READ_FSUSERPARAM;	
 				DeviceCmd.cmdData.Val = 0;			
-			break;	   
-			case ID_SAVE_COMMON_PARAM:		
-				DeviceCmd.cmdId = CMD_SAVE_COMMONPARAM;
+			break;
+			/*****************************************************/
+			case ID_SAVE_PARTS_PARAM:	
+				Check_PartsParam();				
+				DeviceCmd.cmdId = CMD_SAVE_PARTSPARAM;
 				DeviceCmd.cmdData.Val = 0;			
 			break;
-			case ID_SAVE_INTERNAL_PARAM:	
+			case ID_SAVE_COMMON_PARAM:	
+				Check_CommonParam();				
+				DeviceCmd.cmdId = CMD_SAVE_COMMONPARAM;
+				DeviceCmd.cmdData.Val = 0;			
+			break;			
+			
+			case ID_SAVE_INTERNAL_PARAM:
+				Check_InternalParam();					
 				DeviceCmd.cmdId = CMD_SAVE_INTERNALPARAM;
 				DeviceCmd.cmdData.Val = 0;			
 			break;
-			case ID_SAVE_USER_PARAM:  		
+			case ID_SAVE_USER_PARAM: 
+				Check_UserParam();
 				DeviceCmd.cmdId =  CMD_SAVE_USERPARAM;	
 				DeviceCmd.cmdData.Val = 0;			
-			break;	   		   
+			break;			
+           	/*****************************************************/
+			case ID_READ_PARTS_PARAM:  	
+				DeviceCmd.cmdId = CMD_READ_PARTSPARAM;
+				DeviceCmd.cmdData.Val = 0;			
+			break;		
 			case ID_READ_COMMON_PARAM:		
 				DeviceCmd.cmdId = CMD_READ_COMMONPARAM;
 				DeviceCmd.cmdData.Val = 0;
@@ -1902,11 +2172,13 @@ void IF_Param_ExecuteActionsAfterRsp(void)
 			case ID_READ_USER_PARAM:		
 				DeviceCmd.cmdId = CMD_READ_USERPARAM;
 				DeviceCmd.cmdData.Val = 0;			
-			break;	   
+			break;	
+			/*****************************************************/
 			case ID_RESUME_ALLPARAMS:		
 				DeviceCmd.cmdId = CMD_RESUME_ALLPARAM;
 				DeviceCmd.cmdData.Val = 0;			
 			break;
+			/*****************************************************/
 			case ID_SET_BAUDRATE:			
 				DeviceCmd.cmdId = CMD_SETBAUDRATE;
 				DeviceCmd.cmdData.Val = IF_CommParam_GetDataRate();			
@@ -1915,9 +2187,10 @@ void IF_Param_ExecuteActionsAfterRsp(void)
 				DeviceCmd.cmdId = CMD_DEVICERESET;
 				DeviceCmd.cmdData.Val = 0;				
 			break;
+			default:break;
 			}
 			xQueueSend(CmdQueue, &DeviceCmd, (TickType_t)0);
-			cmdActionID[i] = OFF;  //关闭状态
+			cmdActionID[cmdID] = OFF;  //关闭状态
 	   }
    }		
 }
@@ -1928,75 +2201,33 @@ void IF_Param_ExecuteActionsAfterRsp(void)
  * Description   : 函数实现对非易失存储器读写的功能实现
  * parameter     : NVMParam_Mask --保存NVM的标志掩码
  * END ***********************************************************************/
-void IF_NvmParamsRW(NVMMask_Enum NVM_Mask)
+void IF_NvmParamsRW(NVMRWMask_Enum NVM_Mask)
 {
 	/***************工厂模式下************************/
 	switch((uint32_t )NVM_Mask)
 	{	
-		case Read_FS_IdentificationMask:
-			Read_FS_IdentificationParam((uint8_t *)&IdentificationParam);
-			break;
-		case Read_FS_CommonMask:		//读取通信参数
-			Read_FS_CommonParam((uint8_t *)&Fs_CommonParam);
-			break;
-		case Read_FS_InternalMask:  //读取内部参数
-			Read_FS_InternalParam((uint8_t *)&Fs_InternalParam);
-			break;
-		case Read_FS_UserMask:    //读取用户参数
-			Read_UserParam((uint8_t *)&Fs_UserParam);
-			break;
-		case Write_FS_IdentificationMask: //设置ID参数
-			Write_FS_IdentificationParam((uint8_t *)&IdentificationParam);
-			break;
-		
-		case Write_FS_CommonMask: //设置通信参数
-			Write_FS_CommonParam((uint8_t *)&Fs_CommonParam);
-			break;
-
-		case Write_FS_InternalMask: //设置内部参数
-			Write_FS_InternalParam((uint8_t *)&Fs_InternalParam);	
-			break;
-
-		case Write_FS_UserMask:  //设置用户参数
-			Write_UserParam((uint8_t *)&Fs_UserParam);
-			break;
-	
-		/***************正常模式下************************/
-		case Read_CommonMask://读取通信参数
-			 Read_CommonParam((uint8_t *)&CommonParam);
-			break;
-
-		case Read_InternalMask:  //读取内部参数
-			 Read_InternalParam((uint8_t *)&InternalParam);
-			break;
-
-		case Read_UserMask: //读取用户参数
-			 Read_UserParam((uint8_t *)&UserParam);
-			 break;
-
-		case Write_CommonMask://设置通信参数
-			 Check_CommonParam();
-			 Write_CommonParam((uint8_t *)&CommonParam);			
-			 break;
-
-		case Write_InternalMask: //设置内部参数
-			 Check_InternalParam();
-			 Write_InternalParam((uint8_t *)&InternalParam);			
-			 break;
-
-		case Write_UserMask:  //设置用户参数
-			 Check_UserParam();
-			 Write_UserParam((uint8_t *)&UserParam);	
-			
-			break;
-
+		/***************工厂模式下读参数*****************************/
+		case Read_Fs_PartsMask:		Read_FS_PartsParam((uint8_t *)&Fs_PartsParam);			break;
+		case Read_FS_CommonMask:	Read_FS_CommonParam((uint8_t *)&Fs_CommonParam);		break;
+		case Read_FS_InternalMask:	Read_FS_InternalParam((uint8_t *)&Fs_InternalParam);	break;
+		case Read_FS_UserMask: 		Read_UserParam((uint8_t *)&Fs_UserParam);				break;
+		/***************工厂模式下写参数*****************************/
+		case Write_Fs_PartsMask: 	Write_FS_PartsParam((uint8_t *)&Fs_PartsParam);			break;	
+		case Write_FS_CommonMask: 	Write_FS_CommonParam((uint8_t *)&Fs_CommonParam);		break;
+		case Write_FS_InternalMask:	Write_FS_InternalParam((uint8_t *)&Fs_InternalParam);	break;
+		case Write_FS_UserMask: 	Write_UserParam((uint8_t *)&Fs_UserParam);				break;	
+		/***************正常模式下读参数************************/
+		case Read_PartsMask:   		Read_PartsParam((uint8_t *)&PartsParam);      			break;
+		case Read_CommonMask:  		Read_CommonParam((uint8_t *)&CommonParam);    			break;
+		case Read_InternalMask:		Read_InternalParam((uint8_t *)&InternalParam);			break;
+		case Read_UserMask:    		Read_UserParam((uint8_t *)&UserParam);        			break;
+		/***************正常模式下写参数************************/
+		case Write_PartsMask:   	Write_PartsParam((uint8_t *)&PartsParam);      			break;
+		case Write_CommonMask:  	Write_CommonParam((uint8_t *)&CommonParam);	 			break;
+		case Write_InternalMask:	Write_InternalParam((uint8_t *)&InternalParam);			break;
+		case Write_UserMask:    	Write_UserParam((uint8_t *)&UserParam);					break;
 		case Write_AllResumeMask:
-			memcpy(&CommonParam,  &Fs_CommonParam,  COMMUNICATION_PARAM_LEN);	
-			memcpy(&InternalParam,&Fs_InternalParam,INTERNAL_PARAM_LEN);	
-			memcpy(&UserParam,    &Fs_UserParam,    USER_PARAM_LEN);	
-			Check_CommonParam();
-			Check_InternalParam();
-			Check_UserParam();
+			Write_PartsParam((uint8_t *)&PartsParam);		
 			Write_CommonParam((uint8_t *)&CommonParam);
 			Write_InternalParam((uint8_t *)&InternalParam);
 			Write_UserParam((uint8_t *)&UserParam);		

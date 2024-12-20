@@ -16,14 +16,19 @@
 
 /* LOCAL VARIABLES */
 /* GLOBAL VARIABLES */ 
-uint8_t FpgaUpdate_NoAck = 0;
-SemaphoreHandle_t ModbusSemaphore = NULL;
-SemaphoreHandle_t FpgaSemaphore =NULL;
+
+SemaphoreHandle_t ModbusReSemaphore = NULL;   //重复发送
+SemaphoreHandle_t ModbusNfSemaphore = NULL;  //发送成功通知
+SemaphoreHandle_t FpgaReSemaphore =NULL;    //重复发送
+SemaphoreHandle_t FpgaNfSemaphore =NULL;    //发送成功通知
 QueueHandle_t UserQueue = NULL;
 QueueHandle_t FGIPv2Queue = NULL;
 QueueHandle_t BsipTxQueue = NULL;
-QueueHandle_t FpgaQueue =NULL;
-QueueHandle_t ModbusQueue =NULL;
+QueueHandle_t FpgaFWQueue =NULL;
+
+QueueHandle_t ModbusRxQueue =NULL;
+QueueHandle_t ModbusFWQueue =NULL;
+
 QueueHandle_t CmdQueue = NULL;
 
 /* FUNCTION PROTOTYPES */
@@ -192,15 +197,18 @@ void IF_UartTask3(void)
  * Description   : 函数实现串口任务的功能实现
  *
  * END ***********************************************************************/
-void IF_UartTask4(void)
+void IF_UartReciveTask4(void)
 {
-	 CommMsg_t rxMsg;	
-	if(pdTRUE == xQueueReceive(ModbusQueue, &rxMsg,(TickType_t)0)) //接受到Modbus队列
+	CommMsg_t rxMsg;	
+	if(pdTRUE == xQueueReceive(ModbusRxQueue, &rxMsg,portMAX_DELAY)) //接受到Modbus队列
 	{	
-		 Dealwith_Modbus_Service(&rxMsg);	
-	}	
+		 Dealwith_Modbus_Service(&rxMsg);
+	}
+}
+void IF_UartSendTask4(void)
+{
 	Modbus_TxBufManagment(RS485_UART);
-	vTaskDelay(100);
+				
 }
 
 /************************************************************************/
@@ -220,13 +228,12 @@ uint8_t SendToRxQueueFromISR(uint8_t port, pCommMsg_t pRxMsg)
 			if(pdTRUE == xQueueSendFromISR(FGIPv2Queue, pRxMsg, &xHigherPriorityTaskWoken))result = 1;	
 		break;
 		case RS485_UART:
-			if(pdTRUE == xQueueSendFromISR(ModbusQueue, pRxMsg, &xHigherPriorityTaskWoken))result = 1;	
+			if(pdTRUE == xQueueSendFromISR(ModbusRxQueue, pRxMsg, &xHigherPriorityTaskWoken))result = 1;	
 		break;
 		case FPGA_UART:	
 			if(pRxMsg->data[1]==0xFF && pRxMsg->data[2]==0xFF &&pRxMsg->data[3]==0x00 &&pRxMsg->data[4]==0xFF &&pRxMsg->data[5]==0xFF)
-			{
-				FpgaUpdate_NoAck = 0;
-				xSemaphoreGiveFromISR(FpgaSemaphore,&xHigherPriorityTaskWoken);		
+			{	
+				xSemaphoreGiveFromISR(FpgaReSemaphore,&xHigherPriorityTaskWoken);		
 			}		
 			break;		
 	}

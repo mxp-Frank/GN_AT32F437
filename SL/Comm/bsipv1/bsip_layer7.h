@@ -93,7 +93,8 @@ typedef enum
 typedef enum
 {//uinit: ms
     DEVICE_COREBOARD                             = 0,
-    DEVICE_FPGA                                  = 1
+    DEVICE_FPGA                                  = 1,
+	DEVICE_MODBUS                                 = 2
 
 } FirmwareDeviceTypeEnum;
 
@@ -104,6 +105,7 @@ typedef struct _FirmwareDataMsg_t
     uint32_t DownFileLen;
     uint8_t FileSign[APP_FILE_SIGN_LEN];
     uint8_t FpgaSign[APP_FILE_SIGN_LEN];
+	uint8_t ModbusSign[APP_FILE_SIGN_LEN];
     uint8_t DownFileSign[APP_FILE_SIGN_LEN];
     uint16_t FlashBufIndex;
     uint32_t DownloadFileIndex;
@@ -126,6 +128,7 @@ extern void Dealwith_BSIP_Layer7(void);
 extern void BSIP_TxTimeManagment(uint8_t port);
 extern void BSIP_TxBufManagment(uint8_t port);
 extern void BSIP_FpgaFirmwareUpdate(uint8_t port);
+extern void BSIP_ModbusFirmwareUpdate(uint8_t port);
 
 
 #endif /* _BSIP_LAYER7_H_ */

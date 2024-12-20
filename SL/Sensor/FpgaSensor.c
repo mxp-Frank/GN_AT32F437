@@ -26,13 +26,13 @@ static uint8_t GetSensorRegisterValue(void);
 static void GetInputSensorValue(void);
 static void SetOutputSensorValue(void);
 static float GetVSWRReflectance(float vswr_r,float vswr_x);
-static void Fpga_SetDDSSignSwitch(uint32_t value);
-static void Fpga_SetChannelSetting(uint32_t value);
-static void Fpga_SetFreqSetting(uint32_t value);
-static void Fpga_SetPhaseSetting(uint32_t value);
-static void Fpga_SetACDCVoltSetting(uint32_t value);
-static void Fpga_SetACDCurrentSetting(uint32_t value);
-static void Fpga_SetACDCSwitchSetting(uint32_t value);
+static void Fpga_SetDDSSignSwitch(UINT32_Value WriteReg);
+static void Fpga_SetChannelSetting(UINT32_Value WriteReg);
+static void Fpga_SetFreqSetting(UINT32_Value WriteReg);
+static void Fpga_SetPhaseSetting(UINT32_Value WriteReg);
+static void Fpga_SetACDCVoltSetting(UINT32_Value WriteReg);
+static void Fpga_SetACDCurrentSetting(UINT32_Value WriteReg);
+static void Fpga_SetACDCSwitchSetting(UINT32_Value WriteReg);
 /* FUNCTION *********************************************************************************
  * Function Name : IF_Sensor_2G_ParamInit
  * Description   : 得到二代VI传感器的数据初始化
@@ -54,10 +54,8 @@ void IF_FpgaSensor_ParamInit(void)
 void Sensor_Fpga_Task(void)
 {
    if( 1== GetSensorRegisterValue())
-   {
-	    taskENTER_CRITICAL();
+   { 
 	    GetInputSensorValue();
-	    taskEXIT_CRITICAL();
 	    SetOutputSensorValue(); 
    }		
 }
@@ -195,32 +193,32 @@ float IF_Fpga_GetSensor(uint8_t ChnN)
 }
 static void SetOutputSensorValue(void)
 {
-	uint32_t WriteReg;
-	WriteReg = IF_CmdParam_GetSensorChannelNo();
+	UINT32_Value WriteReg;
+	WriteReg.Val = IF_CmdParam_GetSensorChannelNo();
 	Fpga_SetChannelSetting(WriteReg);	
 	
-	WriteReg = IF_CmdParam_GetDDSDriverState();
+	WriteReg.Val = IF_CmdParam_GetDDSDriverState();
 	Fpga_SetDDSSignSwitch(WriteReg);
 	
-	WriteReg = IF_CmdParam_GetACDCDriverState();
+	WriteReg.Val = IF_CmdParam_GetACDCDriverState();
 	Fpga_SetACDCSwitchSetting(WriteReg);
 	
-	WriteReg = IF_CmdParam_GetACDCVoltage();
+	WriteReg.Val = IF_CmdParam_GetACDCVoltage();
 	Fpga_SetACDCVoltSetting(WriteReg);
 	
-	WriteReg = IF_CmdParam_GetACDCCurrent();	
+	WriteReg.Val = IF_CmdParam_GetACDCCurrent();	
 	Fpga_SetACDCurrentSetting(WriteReg);
 	
-	WriteReg = IF_CmdParam_GetWorkFrequency();	
+	WriteReg.Val = IF_CmdParam_GetWorkFrequency();	
 	Fpga_SetFreqSetting(WriteReg);	
 	
-	WriteReg = IF_CmdParam_GetWorkPhase();	
+	WriteReg.Val = IF_CmdParam_GetWorkPhase()/10;	
 	Fpga_SetPhaseSetting(WriteReg);		   
 }	
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
-uint8_t IF_Get_Sensor_Version(uint8_t *pBuf)
+uint8_t IF_Sensor_GetVersion(uint8_t *pBuf)
 {
 	uint8_t j = 0;
 	for(uint8_t i = 0;i < 8;i++)
@@ -236,10 +234,8 @@ uint8_t IF_Get_Sensor_Version(uint8_t *pBuf)
  * Parameter     : value -----开关值
  *                                 
  * END ***************************************************************************************/
-static void  Fpga_SetDDSSignSwitch(uint32_t value)
+static void  Fpga_SetDDSSignSwitch(UINT32_Value WriteReg)
 {
-	UINT32_Value WriteReg;
-	WriteReg.Val = value;
 	if(FpgaReg.DDSSignSwitch != WriteReg.Val)
 	{
 		for(uint8_t i = 0;i < 4;i++)
@@ -254,10 +250,8 @@ static void  Fpga_SetDDSSignSwitch(uint32_t value)
  * Parameter     : value -----开关值
  *                                 
  * END ***************************************************************************************/
-static void  Fpga_SetChannelSetting(uint32_t value)
+static void  Fpga_SetChannelSetting(UINT32_Value WriteReg)
 {
-	UINT32_Value WriteReg;
-	WriteReg.Val = value;
 	if(FpgaReg.ChannelSetting != WriteReg.Val)
 	{
 		for(uint8_t i = 0;i < 4;i++)
@@ -272,10 +266,8 @@ static void  Fpga_SetChannelSetting(uint32_t value)
  * Parameter     : value -----频率值
  *                                 
  * END ***************************************************************************************/
-static void  Fpga_SetFreqSetting(uint32_t value)
+static void  Fpga_SetFreqSetting(UINT32_Value WriteReg)
 {	
-	UINT32_Value WriteReg;
-	WriteReg.Val = value;
 	if(FpgaReg.FreqSetting != WriteReg.Val)
 	{
 		for(uint8_t i = 0;i < 4;i++)
@@ -290,10 +282,8 @@ static void  Fpga_SetFreqSetting(uint32_t value)
  * Parameter     : value -----相位值
  *                                 
  * END ***************************************************************************************/
-static void  Fpga_SetPhaseSetting(uint32_t value)
+static void  Fpga_SetPhaseSetting(UINT32_Value WriteReg)
 {	
-	UINT32_Value WriteReg;
-	WriteReg.Val = value;
 	if(FpgaReg.PhaseSetting != WriteReg.Val)
 	{
 		for(uint8_t i = 0;i < 4;i++)
@@ -308,26 +298,32 @@ static void  Fpga_SetPhaseSetting(uint32_t value)
  * Parameter     : value -----相位值
  *                                 
  * END ***************************************************************************************/
-static void  Fpga_SetACDCVoltSetting(uint32_t value)
+static void  Fpga_SetACDCVoltSetting(UINT32_Value WriteReg)
 {	
-	UINT32_Value WriteReg;
-	WriteReg.Val = 0;
-	double fvalue1 = 0,fvalue2 = 0,fvalue3 = 0,fvalue4 = 0,fvalue5 = 0,fvalue6 = 0,fvalue7 = 0;
+	double fvalue =0,fvalue1 = 0,fvalue2 = 0,fvalue3 = 0,fvalue4 = 0,fvalue5 = 0,fvalue6 = 0,fvalue7 = 0,fvalue8 = 1.0F;
+
 	double Gain = IF_InternalParam_GetACDCVoltGain()/1000.0F;
-	double Offset=IF_InternalParam_GetACDCVoltOffset()/1000.0F;
-	if(value >= IF_InternalParam_GetACDCVoltOffset())
+	double SlowStartDelay = IF_UserParam_GetSlowStartDelay();
+	
+	if(WriteReg.Val >= IF_InternalParam_GetACDCVoltOffset())
 	{
-		fvalue1 = (value/1000.0F)/Gain-Offset;
+		fvalue = (WriteReg.Val-IF_InternalParam_GetACDCVoltOffset());
 	}else 
 	{
-		fvalue1 = 0.0F;
+		fvalue = 0.0F;
 	}
+	if(IF_UserParam_GetSlowMode() == 1)
+	{	
+		IF_Timer_SetRFSlowStartDelayFlag(ON);
+		fvalue8 =  IF_Timer_GetRFSlowStartDelayTime()/SlowStartDelay;
+	}
+	fvalue1 = (fvalue8*fvalue/1000.0F)/Gain;
 	fvalue2 = (fvalue1/0.9294F)+0.0005F;
-	fvalue3 =(fvalue2*560.0F)/1000.0F;
-	fvalue4 =fvalue3/1.2F;
-	fvalue5 =fvalue4/(50.0F/2700.0F);
-	fvalue6 =(fvalue5/32.0F)*16384.0F;
-	fvalue7 =fvalue6 + 16383.0F;
+	fvalue3 = (fvalue2*560.0F)/1000.0F;
+	fvalue4 = fvalue3/1.2F;
+	fvalue5 = fvalue4/(50.0F/2700.0F);
+	fvalue6 = (fvalue5/32.0F)*16384.0F;
+	fvalue7 = fvalue6 + 16383.0F;
 	WriteReg.Val =(uint32_t)(fvalue7/2.0F);
 	if(FpgaReg.ACDCVoltSetting != WriteReg.Val)
 	{
@@ -344,14 +340,14 @@ static void  Fpga_SetACDCVoltSetting(uint32_t value)
  * Parameter     : value -----相位值
  *                                 
  * END ***************************************************************************************/
-static void  Fpga_SetACDCurrentSetting(uint32_t value)
+static void  Fpga_SetACDCurrentSetting(UINT32_Value WriteReg)
 {
-	UINT32_Value WriteReg;
-	double fvalue1 = 0,fvalue2 = 0,fvalue3 = 0,fvalue4 = 0,fvalue5 = 0,fvalue6 = 0;
+	double fvalue = 0,fvalue1 = 0,fvalue2 = 0,fvalue3 = 0,fvalue4 = 0,fvalue5 = 0,fvalue6 = 0;
 	double Gain   = IF_InternalParam_GetACDCCurrentGain()/1000.0F;
 	double Offset = IF_InternalParam_GetACDCCurrentOffset()/1000.0F;
 	
-	fvalue1 = (value/1000.0F)/Gain;
+	fvalue = WriteReg.Val/1000.0F;
+	fvalue1 = fvalue/Gain;
 	fvalue2 = fvalue1/1.0238F;
 	fvalue3 =fvalue2/(50.0F/2700.0F);
 	fvalue4 =fvalue3/1.2F;
@@ -372,10 +368,8 @@ static void  Fpga_SetACDCurrentSetting(uint32_t value)
  * Parameter     : value -----相位值
  *                                 
  * END ***************************************************************************************/
-static void  Fpga_SetACDCSwitchSetting(uint32_t value)
+static void  Fpga_SetACDCSwitchSetting(UINT32_Value WriteReg)
 {	
-	UINT32_Value WriteReg;
-	WriteReg.Val = value;
 	if(FpgaReg.ACDCSwitchSetting != WriteReg.Val)
 	{
 		for(uint8_t i = 0;i < 4;i++)

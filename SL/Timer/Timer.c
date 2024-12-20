@@ -38,7 +38,7 @@ static void Check_RFOnTimer(void);
 static void Check_FanSpeedTimer(void);
 
 static void Timer_ISR_Callback(void);
-static uint32_t GetSysTickCnt(void);
+
 /************************************************************************/
 /*1ms ISR Callback Functions Definitions                                   */
 /************************************************************************/
@@ -337,7 +337,7 @@ static void Timer_ISR_Callback(void)
 	Check_RFSlowStartDelay();
 	Check_RFSlowStopDelay();
 	Check_FanSpeedTimer();
-	Check_Modbus_CallBack(RS485_UART);
+	
 }
 
 
@@ -372,7 +372,7 @@ void SysTick_Handler(void)
  * Parameter     :
  * Return        :
  * END ***************************************************************************************/
-static uint32_t GetSysTickCnt(void)
+uint32_t GetSysTickCnt(void)
 {
 	if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)	/*系统已经运行*/
 	{
@@ -382,11 +382,6 @@ static uint32_t GetSysTickCnt(void)
 	{
 		return sysTickCnt;
 	}
-}
-
-uint32_t Now(void)
-{
-	return GetSysTickCnt();
 }
 
 ///* FUNCTION *********************************************************************************

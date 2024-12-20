@@ -16,7 +16,6 @@
 
 /* CONST & MACROS */
 #define QUEUE_LENGTH         	5        //队列长度
-
 /* DATA STRUCTURES */
 
 /* LOCAL VARIABLES */
@@ -31,7 +30,8 @@ static TaskHandle_t HwTestTask_Handler;
 static TaskHandle_t UserHMITask_Handler;
 static TaskHandle_t DebugHMITask_Handler;
 static TaskHandle_t FpgaUpdateTask_Handler;
-static TaskHandle_t ModbusTask_Handler;
+static TaskHandle_t ModbusRecvTask_Handler;
+static TaskHandle_t ModbusSendTask_Handler;
 /* GLOBAL VARIABLES */
 
 /* FUNCTION PROTOTYPES */
@@ -42,7 +42,8 @@ static void PT_Port_task_function(void *pvParameters);
 static void UserHMI_task_function(void *pvParameters);
 static void DebugHMI_task_function(void *pvParameters);
 static void Fpga_task_function(void *pvParameters);
-static void Modbus_task_function(void *pvParameters);
+static void Modbus_Recvtask_function(void *pvParameters);
+static void Modbus_Sendtask_function(void *pvParameters);
 static void HwTest_task_function(void *pvParameters);
 /************************************************************************/
 /* Global Functions Definitions                                          */
@@ -63,14 +64,19 @@ int main(void)
 	
 	/* Semaphore initiation */
 	mainSemaphore =xSemaphoreCreateBinary();
-	FpgaSemaphore = xSemaphoreCreateBinary();
-	ModbusSemaphore = xSemaphoreCreateBinary();
-	 /* queue initiation */
-	FpgaQueue = xQueueCreate(QUEUE_LENGTH, sizeof(UpgradeFrame_t));   		//Fpga Protocol	
+	FpgaReSemaphore = xSemaphoreCreateBinary();
+	FpgaNfSemaphore = xSemaphoreCreateBinary();
+	ModbusReSemaphore = xSemaphoreCreateBinary();
+	ModbusNfSemaphore =xSemaphoreCreateBinary();
+	/* queue initiation */
+	
 	UserQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));   			//User Protocol
 	FGIPv2Queue = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));   			//FGIPv2 Protocol	
 	BsipTxQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));           //BSIP Protocol	
-	ModbusQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));           //Modbus Protocol	
+	ModbusRxQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));         //Modbus Protocol	
+	
+	ModbusFWQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(BSIPInfo_t));        //Modbus Firmware Protocol	
+	FpgaFWQueue = xQueueCreate(QUEUE_LENGTH, sizeof(BSIPInfo_t));   		//Fpga Firmware Protocol	
 	
 	CmdQueue = xQueueCreate(QUEUE_LENGTH, sizeof(DeviceCmdMsg_t));		    //Cmd Control
 	
@@ -101,7 +107,7 @@ int main(void)
 	{ 
         DEBUG_Print("UserHMI_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(DebugHMI_task_function,"DebugHMI_task",512,NULL,4,&DebugHMITask_Handler);
+	xReturn = xTaskCreate(DebugHMI_task_function,"DebugHMI_task",512,NULL,2,&DebugHMITask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("DebugHMI_task could not be created as there was insufficient heap memory remaining.\r\n");
@@ -112,7 +118,12 @@ int main(void)
         DEBUG_Print("Fpga_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
 	
-	xReturn = xTaskCreate(Modbus_task_function,"modbus_task",512,NULL,2,&ModbusTask_Handler);
+	xReturn = xTaskCreate(Modbus_Recvtask_function,"modbus_task",512,NULL,3,&ModbusRecvTask_Handler);
+	if(xReturn != pdPASS)
+	{ 
+        DEBUG_Print("Modbus_task could not be created as there was insufficient heap memory remaining.\r\n");
+	}
+	xReturn = xTaskCreate(Modbus_Sendtask_function,"modbus_task",512,NULL,3,&ModbusSendTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Modbus_task could not be created as there was insufficient heap memory remaining.\r\n");
@@ -257,7 +268,7 @@ static void DebugHMI_task_function(void *pvParameters)
  * END *********************************************************/
 static void Fpga_task_function(void *pvParameters)
 {
-	
+	xSemaphoreGive(FpgaNfSemaphore);
     while(1)
     {
 		IF_SL_UartTask3();//blocked task
@@ -269,12 +280,20 @@ static void Fpga_task_function(void *pvParameters)
  * Parameter     : 无
  * Return        : 无
  * END *********************************************************/
-static void Modbus_task_function(void *pvParameters)
+static void Modbus_Recvtask_function(void *pvParameters)
 {
 	
     while(1)
     {
-		IF_SL_UartTask4();//blocked task
+		IF_SL_UartReciveTask4();//blocked task
+    }
+}
+static void Modbus_Sendtask_function(void *pvParameters)
+{
+	xSemaphoreGive(ModbusNfSemaphore);
+    while(1)
+    {
+		IF_SL_UartSendTask4();//blocked task
     }
 }
 

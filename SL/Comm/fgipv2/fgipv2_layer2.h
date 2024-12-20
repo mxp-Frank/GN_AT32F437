@@ -40,14 +40,6 @@ typedef enum
 }UpgradeFrameType;
 
 
-typedef struct _UpgradeFrame_struct
-{ 
-    UpgradeFrameType frame_type;
-    uint16_t		 frame_number;
-	uint8_t 		 Data[MAX_INFO_LEN];
-    uint16_t 		 len;
-
-}UpgradeFrame_t;
 
 extern GlobeStatus_t g_GS[PORT_NUM];
 

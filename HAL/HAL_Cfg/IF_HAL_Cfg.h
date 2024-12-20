@@ -41,7 +41,7 @@ typedef enum
 #define EXT_ADC_VRES            0xFFFF   //2^16
 
 
-#define ADC_VREF            3425
+#define ADC_VREF            3300
 #define ADC_VRES            4096
 
 //*****************************************************************************

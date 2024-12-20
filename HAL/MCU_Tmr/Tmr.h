@@ -23,7 +23,7 @@ extern "C" {
 #define TMRPRD_1MS          28800       //1ms period with TMRCLK_28M clk
 #define TMRPRD_25US         720         //25us period with TMRCLK_28M clk
 #define TMRCLK_28M          28800000    //28.8MHz clock(288/28.8=10, now use!)
-
+#define TMRPRD_100US        288000       //1ms period with TMRCLK_28M clk
 #define TMRPRD_5US         144
 
 #define FAN_PWM_PORT			GPIOA			
@@ -32,24 +32,24 @@ extern "C" {
 #define FAM_PWM_MUX				GPIO_MUX_1	
 
 
-#define Fan1_FG_PORT			GPIOA			
+#define Fan1_FG_PORT			GPIOC			
 #define Fan1_FG_PIN				Fan1_FG_RS_Pin99_PC9   //TMR8_CH4
 #define Fan1_FG_PIN_SOURCES		GPIO_PINS_SOURCE8
 #define Fan1_FG_MUX				GPIO_MUX_2	
 
 
-#define Fan2_FG_PORT			GPIOA			
+#define Fan2_FG_PORT			GPIOC			
 #define Fan2_FG_PIN				Fan2_FG_RS_Pin98_PC8    //TMR3_CH3
 #define Fan2_FG_PIN_SOURCES		GPIO_PINS_SOURCE8
 #define Fan2_FG_MUX				GPIO_MUX_2	
 
 
-#define Fan3_FG_PORT			GPIOA			
+#define Fan3_FG_PORT			GPIOC			
 #define Fan3_FG_PIN				Fan3_FG_RS_Pin97_PC7   //TMR3_CH2
 #define Fan3_FG_PIN_SOURCES		GPIO_PINS_SOURCE8
 #define Fan3_FG_MUX				GPIO_MUX_2	
 
-#define Fan4_FG_PORT			GPIOA			
+#define Fan4_FG_PORT			GPIOC			
 #define Fan4_FG_PIN				Fan4_FG_RS_Pin96_PC6   //TMR3_CH1
 #define Fan4_FG_PIN_SOURCES		GPIO_PINS_SOURCE8
 #define Fan4_FG_MUX				GPIO_MUX_2	

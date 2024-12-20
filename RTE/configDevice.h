@@ -10,13 +10,13 @@
 #ifndef _CONFIGDEVICE_H_
 #define _CONFIGDEVICE_H_
 
-#define BOOTLOADER_VERSION                       "CB_0.0.5"
+#define BOOTLOADER_VERSION                       "CB_0.0.6"
 #define BOOTLOADER_VERSION_LEN                   16
 
-#define SOFTWARE_VERSION                         "CA_0.0.5"
+#define SOFTWARE_VERSION                         "CA_0.0.6"
 #define SOFTWARE_VERSION_LEN                     16
 
-#define MODBUS_FILE_SIGN                        "CY_GN017"
+#define MODBUS_FILE_SIGN                        "acdc_017"
 #define FPGA_FILE_SIGN							"fpga_boa"
 #define APP_FILE_SIGN                           "CY_GN017"
 

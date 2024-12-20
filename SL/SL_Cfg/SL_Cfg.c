@@ -95,11 +95,14 @@ void IF_SL_UartTask3(void)
  * Parameter     : 
  * Parameter     :                               
  * END ***************************************************************************************/
-void IF_SL_UartTask4(void)
+void IF_SL_UartReciveTask4(void)
 {
-   IF_UartTask4();
+   IF_UartReciveTask4();
 }
-
+void IF_SL_UartSendTask4(void)
+{
+   IF_UartSendTask4();
+}
 /**************Nvm SL interface*******************/
 
 //Sensor SL interface
@@ -135,7 +138,7 @@ float IF_SL_Fpga_GetSensor(uint8_t ChnNo)
 int16_t IF_SL_Get_Sensor_DCBias(void)
 {
 	int16_t value =0;
-	value = IF_Get_Sensor_DCBias();
+	value = IF_Sensor_GetDCBias();
 	return value;
 }	
 /**********************Interface  Output Layer****************************************/
@@ -411,10 +414,11 @@ void IF_SL_Nvm_WriteSystemResetTimes(void)
 		IF_Timer_SetPowerUpDurationFlag(OFF);
 	}	
 }	
-void IF_SL_Nvm_ParamsRW(NVMMask_Enum NVM_Mask)
+void IF_SL_Nvm_ParamsRW(NVMRWMask_Enum NVMRW_Mask)
 {
-   IF_NvmParamsRW(NVM_Mask);
+   IF_NvmParamsRW(NVMRW_Mask);
 }
+
 /**********************Timer Layer*******************************************/
 uint16_t IF_SL_Timer_GetRFSlowStartDelayTime(void)
 {
@@ -463,7 +467,6 @@ void IF_SL_ResetDevice(void)
 //**************************************
 uint16_t  IF_SL_CmdParam_GetSetPoint(void)
 {
-	
 	uint16_t value = 0;	
 	float OffsetFactor = 0.001F*IF_UserParam_GetPowerOffsetFactor();
 	value = IF_CmdParam_GetSetPoint();   
@@ -501,6 +504,13 @@ uint32_t IF_SL_CmdParam_GetACDCVoltage(void)
 	return value;
 }	
 
+void IF_SL_ACDC_SetParamsRW(ModBusTypeEnum ModbusType)
+{
+	IF_ACDC_SetParamsRW(ModbusType);
+}
+
+
+/*****************************************/
 void IF_SL_RFPower_UpdateProcessData(void)
 {
 	IF_UpdateAMPD();
@@ -509,7 +519,7 @@ void IF_SL_RFPower_ClearProcessData(void)
 {
 	IF_ClearAMPD();
 }
-
+/*****************************************/
 void IF_SL_ExecuteAction(void)
 {
 	IF_Param_ExecuteActionsAfterRsp();

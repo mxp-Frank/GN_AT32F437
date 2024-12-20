@@ -19,8 +19,8 @@
 #define _DEVSENSOR_H_
 #include "stdint.h"
 
-#define POWER_24V_MIN        	1964      // 24 - 2.4 = 21.6 V, 21.6 / 11 * 1000 = 1964 mV
-#define POWER_24V_MAX        	2400      // 24 + 2.4 = 26.4 V, 26.4 / 11 * 1000 = 2400 mV
+#define POWER_24V_MIN        	21600      // 24 - 2.4 = 21.6 V, 21.6 / 11 * 1000 = 1964 mV
+#define POWER_24V_MAX        	26400      // 24 + 2.4 = 26.4 V, 26.4 / 11 * 1000 = 2400 mV
 
 #define TEMP_MAX             	850
 #define ADC_VOLT(x)   			(x*EXT_ADC_VREF/EXT_ADC_VRES)

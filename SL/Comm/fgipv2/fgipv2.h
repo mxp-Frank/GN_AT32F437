@@ -8,26 +8,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define MAKE_UINT16(a,b)         ((uint16_t)(((a) << 8) | (b)))
-#define MAKE_UINT32(a,b,c,d)     ((uint32_t)(((a) << 24) | ((b) << 16) | ((c) << 8) | (d)))
-
-#define Byte0_UINT16(x)          ((uint8_t)((x) & 0xFF))
-#define Byte1_UINT16(x)          ((uint8_t)(((x) >> 8) & 0xFF))
-
-#define Byte0_UINT32(x)          (uint8_t)((x) & 0xFF)
-#define Byte1_UINT32(x)          (uint8_t)(((x) >> 8) & 0xFF)
-#define Byte2_UINT32(x)          (uint8_t)(((x) >> 16) & 0xFF)
-#define Byte3_UINT32(x)          (uint8_t)(((x) >> 24) & 0xFF)
-
-#define Word0_UINT32(x)          ((uint16_t)((x) & 0xFFFF))
-#define Word1_UINT32(x)          ((uint16_t)(((x) >> 16) & 0xFFFF))
-
-#define SET_BIT(x,bit)			  (x|(0x01<<bit))	
-#define GET_BIT(x,bit)			  (x&(0x01<<bit))
-#define GET_UINT16(x)             (uint16_t)(x)
-
-#define FloatToUINT16(x)		     ((x-(uint16_t)x>0)? (x+1):(x))
-
 #define BUFFER_SIZE            	520   // ????: (255 + 4) * 2 + 2
 
 typedef union _Control_t

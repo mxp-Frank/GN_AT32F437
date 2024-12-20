@@ -18,7 +18,7 @@
 
 /* LOCAL VARIABLES */
 
-uint8_t FlashBuffer[FLASH_SECTOR_SIZE];
+NvmBuffer_t NvmFlash;
 /* GLOBAL VARIABLES */
 
 /* FUNCTION PROTOTYPES */
@@ -102,16 +102,16 @@ uint8_t IF_NvmParam_WriteDownloadFlag(void)
 {
     error_status status;
 
-    memset(FlashBuffer, 0xFF, FLASH_SECTOR_SIZE);
+    memset(&NvmFlash, 0,sizeof(NvmBuffer_t));
 
-    FlashBuffer[0] = 0x44;
-    FlashBuffer[1] = 0x33;
-    FlashBuffer[2] = 0x22;
-    FlashBuffer[3] = 0x11;
+    NvmFlash.Buf[0] = 0x44;
+    NvmFlash.Buf[1] = 0x33;
+    NvmFlash.Buf[2] = 0x22;
+    NvmFlash.Buf[3] = 0x11;
 
     __disable_irq();
 
-    status = IF_Flash_write(DOWNLOAD_APP_FLAG_ADDR, (uint16_t *)FlashBuffer, FLASH_SECTOR_SIZE/2);
+    status = IF_Flash_write(DOWNLOAD_APP_FLAG_ADDR, (uint16_t *)NvmFlash.Buf, FLASH_SECTOR_SIZE/2);
 
     __enable_irq();
 
@@ -144,11 +144,11 @@ void IF_NvmParam_CopyRawFileToRunningArea(void)
 
     for (i = 0; i < sectorNum; i++)
     {
-        memset(FlashBuffer, 0, FLASH_SECTOR_SIZE);
+        memset(&NvmFlash, 0,sizeof(NvmBuffer_t));
 
-        IF_HAL_Flash_read(DOWNLOAD_RAW_APP_START_ADDR + i * FLASH_SECTOR_SIZE, FlashBuffer, FLASH_SECTOR_SIZE);
+        IF_HAL_Flash_read(DOWNLOAD_RAW_APP_START_ADDR + i * FLASH_SECTOR_SIZE, NvmFlash.Buf, FLASH_SECTOR_SIZE);
 
-        IF_HAL_Flash_write(RUNNING_APP_START_ADDR + i * FLASH_SECTOR_SIZE, (uint16_t *)FlashBuffer, FLASH_SECTOR_SIZE/2);
+        IF_HAL_Flash_write(RUNNING_APP_START_ADDR + i * FLASH_SECTOR_SIZE, (uint16_t *)&NvmFlash.Buf, FLASH_SECTOR_SIZE/2);
 
         IF_HAL_WDOG_FEED();
     }
@@ -199,20 +199,20 @@ void IF_NvmParam_EncryptDownloadFile(uint32_t encryptionFlag)
 
     for (i = 0; i < sectorNum; i++)
     {
-        memset(FlashBuffer, 0, FLASH_SECTOR_SIZE);
+        memset(&NvmFlash, 0,sizeof(NvmBuffer_t));
 
         IF_HAL_Flash_read(DOWNLOAD_ENCRYPTED_APP_START_ADDR + i * FLASH_SECTOR_SIZE,
-                FlashBuffer, FLASH_SECTOR_SIZE);
+                NvmFlash.Buf, FLASH_SECTOR_SIZE);
 
         j = (i == 0) ? 0x200 : 0;
 
         for (; j < FLASH_SECTOR_SIZE; j++)
         {
-            FlashBuffer[j] ^= encryptionCode[j % 4];
+            NvmFlash.Buf[j] ^= encryptionCode[j % 4];
         }
 
         IF_HAL_Flash_write(DOWNLOAD_RAW_APP_START_ADDR + i * FLASH_SECTOR_SIZE,
-                (uint16_t *)FlashBuffer, FLASH_SECTOR_SIZE/2);
+                (uint16_t *)&NvmFlash.Buf, FLASH_SECTOR_SIZE/2);
 
         IF_HAL_WDOG_FEED();
     }
@@ -399,14 +399,14 @@ uint8_t Write_ConfigParam(uint8_t* pBuf)
 	return  IF_HAL_EEPROM_WriteBytes(PRESETPARAM_NUM_ADDR, pBuf, sizeof(char));
 }
 
-void Read_FS_IdentificationParam(uint8_t* pBuf)
+void Read_FS_PartsParam(uint8_t* pBuf)
 {
-	IF_HAL_EEPROM_ReadBytes(FACTORY_PARAM_ADDR, pBuf, PARTS_PARAM_LEN);	
+	IF_HAL_EEPROM_ReadBytes(FACTORY_PARAM_FS_ADDR, pBuf, PARTS_PARAM_LEN);	
 }
 
-uint8_t Write_FS_IdentificationParam(uint8_t* pBuf)
+uint8_t Write_FS_PartsParam(uint8_t* pBuf)
 {
-	return IF_HAL_EEPROM_WriteBytes(FACTORY_PARAM_ADDR, pBuf, PARTS_PARAM_LEN);
+	return IF_HAL_EEPROM_WriteBytes(FACTORY_PARAM_FS_ADDR, pBuf, PARTS_PARAM_LEN);
 }
 void Read_FS_CommonParam(uint8_t* pBuf)
 {
@@ -434,6 +434,17 @@ uint8_t Write_FS_InternalParam(uint8_t* pBuf)
 }
 
 //-----------------------------------------------------------------------------
+void Read_PartsParam(uint8_t* pBuf)
+{
+	IF_HAL_EEPROM_ReadBytes(FACTORY_PARAM_ADDR, pBuf, PARTS_PARAM_LEN);	
+}
+
+uint8_t Write_PartsParam(uint8_t* pBuf)
+{
+	return IF_HAL_EEPROM_WriteBytes(FACTORY_PARAM_ADDR, pBuf, PARTS_PARAM_LEN);
+}
+//--------------------------------------------------------------------------------
+
 void Read_CommonParam(uint8_t* pBuf)
 {	
 	IF_HAL_EEPROM_ReadBytes(COMMON_PARAM_ADDR, pBuf, INTERNAL_PARAM_LEN);	

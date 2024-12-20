@@ -36,9 +36,6 @@ static uint8_t ModbusFileSign[APP_FILE_SIGN_LEN] = MODBUS_FILE_SIGN;
 static uint8_t DownFileSign[APP_FILE_SIGN_LEN];
 static uint32_t DownloadFileIndex;
 
-static uint8_t NvmBuffer[FLASH_SECTOR_SIZE];
-static uint16_t NvmBufIndex;
-
 uint8_t GetDataLen(uint8_t dataType)
 {
 	uint8_t len;
@@ -152,8 +149,11 @@ static void Dealwith_DOB_VendorCode(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 
 static void Dealwith_DOB_HardwareVersion(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
-	
-	if ((pTxDOB->SubIndex) != 0x01)
+	uint8_t VersionID = 0;
+	if ((pTxDOB->SubIndex) < 4)
+	{
+		VersionID = pTxDOB->SubIndex;	
+	}else
 	{
 		pTxDOB->Status = UnknownSubIndex;
 		return;
@@ -164,7 +164,14 @@ static void Dealwith_DOB_HardwareVersion(DataObject_t* pRxDOB, DataObject_t* pTx
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_VECT;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		pTxDOB->DataLen  = IF_IdentParam_GetHardwareVersion(&pTxDOB->pData[1]);
+		if( VersionID == 1)
+		{
+			pTxDOB->DataLen  = IF_IdentParam_GetHardwareVersion(&pTxDOB->pData[1]);
+		}
+		else if( VersionID == 2)
+		{
+			pTxDOB->DataLen  = IF_Sensor_GetACDCHardWareVersion(&pTxDOB->pData[1]);
+		}
 		pTxDOB->pData[0] = pTxDOB->DataLen;
 		pTxDOB->DataLen += 1;
 
@@ -180,7 +187,15 @@ static void Dealwith_DOB_HardwareVersion(DataObject_t* pRxDOB, DataObject_t* pTx
 				uint8_t* pBuf;
 				uint8_t len = pRxDOB->DataLen;
 				pBuf = pRxDOB->pData;
-				IF_IdentParam_SetHardwareVersion(pBuf,len);
+				if(VersionID == 1)
+				{
+					IF_IdentParam_SetHardwareVersion(pBuf,len);	
+				}
+				else if(VersionID == 2)
+				{
+					IF_Sensor_SetACDCHardWareVersion(pBuf,len);
+				}
+				
 				pTxDOB->Status = NoErrorNoData;
 			}
 			else
@@ -207,7 +222,7 @@ static void Dealwith_DOB_FpgawareVersion(DataObject_t* pRxDOB, DataObject_t* pTx
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_VECT;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		pTxDOB->DataLen  = IF_Get_Sensor_Version(&pTxDOB->pData[1]);
+		pTxDOB->DataLen  = IF_Sensor_GetVersion(&pTxDOB->pData[1]);
 		pTxDOB->pData[0] = pTxDOB->DataLen;
 		pTxDOB->DataLen += 1;
 
@@ -220,18 +235,28 @@ static void Dealwith_DOB_FpgawareVersion(DataObject_t* pRxDOB, DataObject_t* pTx
 }
 static void Dealwith_DOB_SoftwareVersion(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
-	if ((pTxDOB->SubIndex) != 0x01)
+	uint8_t VersionID = 0;
+	if ((pTxDOB->SubIndex) < 4)
+	{
+		VersionID = pTxDOB->SubIndex;	
+	}else
 	{
 		pTxDOB->Status = UnknownSubIndex;
 		return;
 	}
-
 	if (rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_VECT;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		pTxDOB->DataLen  = IF_IdentParam_GetSoftwareVersion(&pTxDOB->pData[1]);
+		if(VersionID == 1)
+		{
+			pTxDOB->DataLen  = IF_IdentParam_GetSoftwareVersion(&pTxDOB->pData[1]);
+		}
+		else if(VersionID == 2)
+		{
+			pTxDOB->DataLen  = IF_Sensor_GetACDCAppVersion(&pTxDOB->pData[1]);
+		}
 
 		pTxDOB->pData[0] = pTxDOB->DataLen;
 		pTxDOB->DataLen += 1;
@@ -246,7 +271,11 @@ static void Dealwith_DOB_SoftwareVersion(DataObject_t* pRxDOB, DataObject_t* pTx
 
 static void Dealwith_DOB_BootloaderVersion(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
-	if ((pTxDOB->SubIndex) != 0x01)
+	uint8_t VersionID = 0;
+	if ((pTxDOB->SubIndex) < 4)
+	{
+		VersionID = pTxDOB->SubIndex;	
+	}else
 	{
 		pTxDOB->Status = UnknownSubIndex;
 		return;
@@ -257,7 +286,16 @@ static void Dealwith_DOB_BootloaderVersion(DataObject_t* pRxDOB, DataObject_t* p
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_VECT;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		pTxDOB->DataLen  = IF_IdentParam_GetBootloaderVersion(&pTxDOB->pData[1]);
+		
+		if(VersionID == 1)
+		{
+			pTxDOB->DataLen  = IF_IdentParam_GetBootloaderVersion(&pTxDOB->pData[1]);	
+		}
+		else if(VersionID == 2)
+		{
+			pTxDOB->DataLen  = IF_Sensor_GetACDCBootVersion(&pTxDOB->pData[1]);
+		}
+
 
 		pTxDOB->pData[0] = pTxDOB->DataLen;
 		pTxDOB->DataLen += 1;
@@ -407,12 +445,16 @@ static void Dealwith_DOB_TrackingNumber(DataObject_t* pRxDOB, DataObject_t* pTxD
 
 static void Dealwith_DOB_CheckSum(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
-	//
-	if ((pTxDOB->SubIndex) != 0x01)
+	uint8_t VersionID = 0;
+	if ((pTxDOB->SubIndex) <= 0x03)
+	{
+		VersionID = pTxDOB->SubIndex;	
+	}else
 	{
 		pTxDOB->Status = UnknownSubIndex;
 		return;
 	}
+
 
 	if (rxInfo.Cmd == ParameterRead)
 	{
@@ -422,7 +464,15 @@ static void Dealwith_DOB_CheckSum(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->DataType = DataType_UINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		value = IF_IdentParam_GetCheckSum();
+		if(VersionID == 1)
+		{
+			value = IF_IdentParam_GetCheckSum();	
+		}
+		else if(VersionID == 2)
+		{
+			value = IF_Sensor_GetACDCAppChecksum();
+		}
+		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -2170,6 +2220,439 @@ static void Dealwith_DOB_DrainVoltOffset(DataObject_t* pRxDOB, DataObject_t* pTx
 		}
 	}
 }
+static void Dealwith_DOB_FactorAC380_AVoltage(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_ModbusParam_GetFactor_Ac380_AV();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_UINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_ModbusParam_SetFactor_Ac380_AV(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_FactorAC380_ACurrent(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_ModbusParam_GetFactor_Ac380_AI();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_UINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_ModbusParam_SetFactor_Ac380_AI(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_FactorAC380_BVoltage(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_ModbusParam_GetFactor_Ac380_BV();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_UINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_ModbusParam_SetFactor_Ac380_BV(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_FactorAC380_BCurrent(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_ModbusParam_GetFactor_Ac380_BI();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_UINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_ModbusParam_SetFactor_Ac380_BI(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_FactorAC380_CVoltage(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_ModbusParam_GetFactor_Ac380_CV();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_UINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_ModbusParam_SetFactor_Ac380_CV(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_FactorAC380_CCurrent(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_ModbusParam_GetFactor_Ac380_CI();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_UINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_ModbusParam_SetFactor_Ac380_CI(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_FactorDCDC1_Voltage(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_ModbusParam_GetFactor_DcDc1_V();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_UINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_ModbusParam_SetFactor_DcDc1_V(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_FactorDCDC1_Current(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_ModbusParam_GetFactor_DcDc1_I();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_UINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_ModbusParam_SetFactor_DcDc1_I(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+
+static void Dealwith_DOB_FactorDCDC2_Voltage(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_ModbusParam_GetFactor_DcDc2_V();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_UINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_ModbusParam_SetFactor_DcDc2_V(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_FactorDCDC2_Current(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_ModbusParam_GetFactor_DcDc2_I();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_UINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_ModbusParam_SetFactor_DcDc2_I(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_FactorWay3_Current(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_ModbusParam_GetFactor_Way3_I();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_UINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_ModbusParam_SetFactor_Way3_I(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_FactorWay4_Current(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_ModbusParam_GetFactor_Way4_I();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_UINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_ModbusParam_SetFactor_Way4_I(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
 static void Dealwith_DOB_DCBias(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	if ((pTxDOB->SubIndex) != 0x01)
@@ -2184,7 +2667,7 @@ static void Dealwith_DOB_DCBias(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->DataLen  = 2;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 
-		int16_t value = IF_Get_Sensor_DCBias();
+		int16_t value = IF_Sensor_GetDCBias();
 	
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT16(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT16(value);
@@ -2329,11 +2812,13 @@ static void Dealwith_DOB_StatusWord(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 	if (rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
-		pTxDOB->DataType = DataType_UINT16;
-		pTxDOB->DataLen  = 2;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT16(g_StatusWord.word);
-		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT16(g_StatusWord.word);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(g_StatusWord.Dword);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(g_StatusWord.Dword);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(g_StatusWord.Dword);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(g_StatusWord.Dword);
 	}
 	else if (rxInfo.Cmd == ParameterWrite)
 	{
@@ -2351,12 +2836,13 @@ static void Dealwith_DOB_FaultWord(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 	if (rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
-		pTxDOB->DataType = DataType_UINT16;
-		pTxDOB->DataLen  = 2;
+		pTxDOB->DataType = DataType_UINT32;
+		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-			
-		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT16(g_FaultWord.word);
-		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT16(g_FaultWord.word);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(g_FaultWord.Dword);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(g_FaultWord.Dword);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(g_FaultWord.Dword);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(g_FaultWord.Dword);	
 	}
 	else if (rxInfo.Cmd == ParameterWrite)
 	{
@@ -2751,7 +3237,7 @@ static void Dealwith_DOB_ACInputVolt1(DataObject_t* pRxDOB, DataObject_t* pTxDOB
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int32_t value = IF_Get_Sensor_ACInputVoltage(ADC_CHNL1);
+		int32_t value = IF_Sensor_GetACInputVoltage(ADC_CHNL1);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -2777,7 +3263,7 @@ static void Dealwith_DOB_ACInputVolt2(DataObject_t* pRxDOB, DataObject_t* pTxDOB
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int32_t value = IF_Get_Sensor_ACInputVoltage(ADC_CHNL2);
+		int32_t value = IF_Sensor_GetACInputVoltage(ADC_CHNL2);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -2802,7 +3288,7 @@ static void Dealwith_DOB_ACInputVolt3(DataObject_t* pRxDOB, DataObject_t* pTxDOB
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int32_t value = IF_Get_Sensor_ACInputVoltage(ADC_CHNL3);
+		int32_t value = IF_Sensor_GetACInputVoltage(ADC_CHNL3);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -2827,7 +3313,7 @@ static void Dealwith_DOB_ACInputCurrent1(DataObject_t* pRxDOB, DataObject_t* pTx
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int32_t value = IF_Get_Sensor_ACInputCurrent(ADC_CHNL1);
+		int32_t value = IF_Sensor_GetACInputCurrent(ADC_CHNL1);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -2853,7 +3339,7 @@ static void Dealwith_DOB_ACInputCurrent2(DataObject_t* pRxDOB, DataObject_t* pTx
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int32_t value = IF_Get_Sensor_ACInputCurrent(ADC_CHNL2);
+		int32_t value = IF_Sensor_GetACInputCurrent(ADC_CHNL2);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -2878,7 +3364,7 @@ static void Dealwith_DOB_ACInputCurrent3(DataObject_t* pRxDOB, DataObject_t* pTx
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int32_t value = IF_Get_Sensor_ACInputCurrent(ADC_CHNL3);
+		int32_t value = IF_Sensor_GetACInputCurrent(ADC_CHNL3);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -2903,7 +3389,7 @@ static void Dealwith_DOB_PAVoltage1(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int32_t value = IF_Get_Sensor_PAVoltage(ADC_CHNL1);
+		int32_t value = IF_Sensor_GetPAVoltage(ADC_CHNL1);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -2929,7 +3415,7 @@ static void Dealwith_DOB_PAVoltage2(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int32_t value = IF_Get_Sensor_PAVoltage(ADC_CHNL2);
+		int32_t value = IF_Sensor_GetPAVoltage(ADC_CHNL2);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -2954,7 +3440,7 @@ static void Dealwith_DOB_PACurrent1(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int32_t value = IF_Get_Sensor_PACurrent(ADC_CHNL1);
+		int32_t value = IF_Sensor_GetPACurrent(ADC_CHNL1);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -2980,7 +3466,7 @@ static void Dealwith_DOB_PACurrent2(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int32_t value = IF_Get_Sensor_PACurrent(ADC_CHNL2);
+		int32_t value = IF_Sensor_GetPACurrent(ADC_CHNL2);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -3005,7 +3491,7 @@ static void Dealwith_DOB_PACurrent3(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int32_t value = IF_Get_Sensor_PACurrent(ADC_CHNL3);
+		int32_t value = IF_Sensor_GetPACurrent(ADC_CHNL3);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -3030,7 +3516,7 @@ static void Dealwith_DOB_PACurrent4(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int32_t value = IF_Get_Sensor_PACurrent(ADC_CHNL4);
+		int32_t value = IF_Sensor_GetPACurrent(ADC_CHNL4);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -3151,7 +3637,7 @@ static void Dealwith_DOB_ACDCTemperature1(DataObject_t* pRxDOB, DataObject_t* pT
 		pTxDOB->DataLen  = 2;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int16_t value = IF_Get_Sensor_ACDCTemperature(ADC_CHNL1);
+		int16_t value = IF_Sensor_GetACDCTemperature(ADC_CHNL1);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT16(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT16(value);
@@ -3176,7 +3662,7 @@ static void Dealwith_DOB_ACDCTemperature2(DataObject_t* pRxDOB, DataObject_t* pT
 		pTxDOB->DataLen  = 2;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int16_t value = IF_Get_Sensor_ACDCTemperature(ADC_CHNL2);
+		int16_t value = IF_Sensor_GetACDCTemperature(ADC_CHNL2);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT16(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT16(value);
@@ -3699,24 +4185,23 @@ static void Dealwith_Datablock_AutoMatchProcessData(DataObject_t* pRxDOB, DataOb
 			return;
 		}
 
-		memset(NvmBuffer, 0, FLASH_BUF_SIZE);
-		NvmBufIndex = 0;
+		memset(&NvmFlash, 0, sizeof(NvmBuffer_t));
 
-		NvmBufIndex = IF_GetAMPD(frameNo, NvmBuffer);
+		NvmFlash.Index = IF_GetAMPD(frameNo, NvmFlash.Buf);
 
-		txDataBlockRemainLen -= NvmBufIndex;
+		txDataBlockRemainLen -= NvmFlash.Index;
 
 		if (txDataBlockRemainLen > 0)
 		{
 			DataBlockRead_ResponseOK(pTxDOB, MoreBlock, ID_ProcessData,
-					frameNo, NvmBuffer, NvmBufIndex);
+					frameNo, NvmFlash.Buf, NvmFlash.Index);
 
 			ExpectedFrameNo++;
 		}
 		else
 		{
 			DataBlockRead_ResponseOK(pTxDOB, LastBlock, ID_ProcessData,
-					frameNo, NvmBuffer, NvmBufIndex);
+					frameNo, NvmFlash.Buf, NvmFlash.Index);
 
 			ExpectedFrameNo = 0;
 		}
@@ -3756,7 +4241,7 @@ static void Dealwith_Datablock_Firmware(DataObject_t* pRxDOB, DataObject_t* pTxD
 		ExpectedDataBlockID = ID_Firmware;
 		ExpectedDataBlockCmd = DataBlockWrite;
 		
-		NvmBufIndex = 0;
+		memset((void*)&NvmFlash, 0, sizeof(NvmBuffer_t));
 		DownloadFileIndex = 0;
 		DownFileLen = 0;
 	}
@@ -3812,55 +4297,57 @@ static void Dealwith_Datablock_Firmware(DataObject_t* pRxDOB, DataObject_t* pTxD
 					if (0 == memcmp(DownFileSign, McuFileSign,APP_FILE_SIGN_LEN))
 					{
 						//记录下载文件长度
-						DownFileLen = MAKE_UINT32(NvmBuffer[11],NvmBuffer[10],NvmBuffer[9],NvmBuffer[8]);
+						DownFileLen = MAKE_UINT32(NvmFlash.Buf[11],NvmFlash.Buf[10],NvmFlash.Buf[9],NvmFlash.Buf[8]);
 						if ((DownFileLen == 0) || (DownFileLen > MAX_APP_FILE_SIZE))
 						{
 							pTxDOB->Status = DataBlockLengthError;
 							return;
 						}else
 						{
-							FirmwareFlag = 1; //升级状态MCU
+							FirmwareFlag = MCU_FIRMUPDATE; //升级状态MCU
 						}
 					}else if (0 == memcmp(DownFileSign, FpgaFileSign,APP_FILE_SIGN_LEN)) 
 					{
-						FirmwareFlag = 2;//升级状态FPGA
+						FirmwareFlag = FPGA_FIRMUPDATE;//升级状态FPGA
+						
 					}else if (0 == memcmp(DownFileSign, ModbusFileSign,APP_FILE_SIGN_LEN)) 
 					{
-						FirmwareFlag = 3;//升级状态FPGA
-					}else
+						FirmwareFlag = MODBUS_FIRMUPDATE;//升级状态MODBUS
+					}
+					else
 					{
-						FirmwareFlag = 0;
+						FirmwareFlag = NO_FIRMUPDATE;
 						pTxDOB->Status = HardwareError;
 						return;
 					}
 				}
 				//把数据放入缓冲区
-				NvmBuffer[NvmBufIndex++] = pRxDOB->pData[i];
-				if(NvmBufIndex == FLASH_BUF_SIZE && FirmwareFlag == 1)
+				NvmFlash.Buf[NvmFlash.Index++] = pRxDOB->pData[i];
+				if(NvmFlash.Index == FLASH_BUF_SIZE && FirmwareFlag == MCU_FIRMUPDATE)
 				{
 					//缓冲区满了，把数据写入Flash
 					if (!IF_NvmParam_WriteDownloadFile(
 							DownloadFileIndex - FLASH_BUF_SIZE + 1,
-							(uint16_t *)NvmBuffer,
+							(uint16_t *)NvmFlash.Buf,
 							FLASH_BUF_SIZE/2))
 					{
 						pTxDOB->Status = HardwareError;
 						return;
 					}
-					NvmBufIndex = 0;
+					memset((void*)&NvmFlash, 0, sizeof(NvmBuffer_t));
 				} 
 				DownloadFileIndex++;
 			}
-			if(FirmwareFlag == 1)  //Upgrade MCU software
-			{
-				//如果是最后一帧
-				if (DataBlockFlag == LastBlock)
+			
+			if(FirmwareFlag == MCU_FIRMUPDATE)//Upgrade MCU software
+			{				
+				if (DataBlockFlag == LastBlock)//如果是最后一帧
 				{	
-					if(NvmBufIndex != 0)
+					if(NvmFlash.Index != 0)
 					{
 						if (!IF_NvmParam_WriteDownloadFile(
-								DownloadFileIndex - NvmBufIndex,
-								(uint16_t *)NvmBuffer,
+								DownloadFileIndex - NvmFlash.Index,
+								(uint16_t *)NvmFlash.Buf,
 								FLASH_BUF_SIZE/2))
 						{
 							pTxDOB->Status = HardwareError;
@@ -3879,8 +4366,8 @@ static void Dealwith_Datablock_Firmware(DataObject_t* pRxDOB, DataObject_t* pTxD
 						pTxDOB->Status = DataBlockCRCError;
 						return;
 					}
-					// 设置升级标识
-					if (!IF_NvmParam_WriteDownloadFlag())
+					
+					if (!IF_NvmParam_WriteDownloadFlag())// 设置升级标识
 					{
 						pTxDOB->Status = HardwareError;
 						return;
@@ -3888,76 +4375,87 @@ static void Dealwith_Datablock_Firmware(DataObject_t* pRxDOB, DataObject_t* pTxD
 
 					IF_CmdParam_SetResetDevice();	
 				}
-			}else if(FirmwareFlag == 2)   // Upgrade FPGA  software
-			{
+			}			
+			else if(FirmwareFlag == FPGA_FIRMUPDATE) // Upgrade FPGA  software
+			{					
+				memset(&NvmFlash,0,sizeof(NvmBuffer_t));
 				BSIPInfo_t txBsipFrame;	
 				txBsipFrame.bsip.msgclass=(MsgClassEnum)0x20;  		   //msg_class_command 
 				txBsipFrame.bsip.msgid = 0xF1;	   		   			   //msg_id     
-				txBsipFrame.bsip.subindex.byte=0x00;	   			   //msg_subindex 	
-				txBsipFrame.bsip.info = NvmBuffer;								
+				txBsipFrame.bsip.subindex.byte=0x00;	   			   //msg_subindex 				
 				if(frameNo == 0)
-				{					
-					txBsipFrame.bsip.info[txBsipFrame.infoLen++] = FIRMWARE_SOF;
+				{						
+					NvmFlash.Buf[NvmFlash.Index++] = FIRMWARE_SOF;
+					
 				}else if(DataBlockFlag == LastBlock)
 				{
-					txBsipFrame.bsip.info[txBsipFrame.infoLen++] = FIRMWARE_EOF;
-				}else
+					NvmFlash.Buf[NvmFlash.Index++] = FIRMWARE_EOF;
+					
+				} else 
 				{
-					txBsipFrame.bsip.info[txBsipFrame.infoLen++] = FIRMWARE_COF;
-				}  
-				txBsipFrame.bsip.info[txBsipFrame.infoLen++] = pRxDOB->DataLen - 2;	   //FrameLength
-				txBsipFrame.bsip.info[txBsipFrame.infoLen++] = Byte0_UINT16(frameNo);  //FrameNo
-				txBsipFrame.bsip.info[txBsipFrame.infoLen++] = Byte1_UINT16(frameNo);  //FrameNo
-				for(uint8_t i = 0;i< NvmBufIndex;i++)
-				{					
-					txBsipFrame.bsip.info[txBsipFrame.infoLen++] = NvmBuffer[i];
-				}
-				txBsipFrame.infoLen = txBsipFrame.infoLen + 3;	 //msg_class_command + msg_id + msg_subindex
-				
-				if(FpgaUpdate_NoAck == 0)  
-				{								
-					xQueueSend(FpgaQueue,&txBsipFrame,(TickType_t)0);	
-				}else
-				{
-					FpgaUpdate_NoAck = 1;
-					pTxDOB->Status = HardwareError;
-					return;	
-				}			
-			}else if(FirmwareFlag == 3)   // Upgrade Modbus  software
-			{
-				memset(&NvmBuffer,0,FLASH_BUF_SIZE);					
-				if(frameNo == 0)
-				{					
-					NvmBuffer[NvmBufIndex++] = FIRMWARE_SOF;
-				}else
-				{
-					NvmBuffer[NvmBufIndex++] =(DataBlockFlag == LastBlock)? FIRMWARE_EOF: FIRMWARE_COF;
+					NvmFlash.Buf[NvmFlash.Index++] = FIRMWARE_COF;
 				} 
-				NvmBuffer[NvmBufIndex++] = pRxDOB->DataLen - 2;	
+				
+				NvmFlash.Buf[NvmFlash.Index++] = pRxDOB->DataLen - 2;
+				
 				for(i = 0;i < pRxDOB->DataLen;i++)
 				{
-					NvmBuffer[NvmBufIndex++]= pRxDOB->pData[i];
+					NvmFlash.Buf[NvmFlash.Index++]= pRxDOB->pData[i];
 				}		
-				if(FpgaUpdate_NoAck == 0)  
-				{
-					BSIPInfo_t txBsipFrame;	
-					txBsipFrame.bsip.msgclass=(MsgClassEnum)0x20;  		   //msg_class_command 
-					txBsipFrame.bsip.msgid = 0xF1;	   		   			   //msg_id     
-					txBsipFrame.bsip.subindex.byte=0x00;	   			   //msg_subindex 	
-					txBsipFrame.infoLen = NvmBufIndex + 3;              //msg_class_command+msg_id+msg_subindex 	
-					txBsipFrame.bsip.info = NvmBuffer;												
-					xQueueSend(FpgaQueue,&txBsipFrame,(TickType_t)0);	
+				if(pdTRUE==xSemaphoreTake(FpgaNfSemaphore,800))  
+				{		
+					txBsipFrame.infoLen = NvmFlash.Index + 3; //msg_class_command+msg_id+msg_subindex 	             
+					txBsipFrame.bsip.info = NvmFlash.Buf;												
+					xQueueSend(FpgaFWQueue,&txBsipFrame,(TickType_t)0);	
 				}else
 				{
-					FpgaUpdate_NoAck = 1;
+					xSemaphoreGive(FpgaNfSemaphore);
 					pTxDOB->Status = HardwareError;
 					return;	
-				}			
+				}							
+			}else if(FirmwareFlag == MODBUS_FIRMUPDATE) // Upgrade Modbus  software
+			{	
+				IF_ACDC_SetParamsRW(DEVICE_WRITE_SOFTWAREREG);				
+				memset(&NvmFlash,0,sizeof(NvmBuffer_t));
+				BSIPInfo_t txBsipFrame;	
+				txBsipFrame.bsip.msgclass=(MsgClassEnum)0x20;  		   //msg_class_command 
+				txBsipFrame.bsip.msgid = 0xF1;	   		   			   //msg_id     
+				txBsipFrame.bsip.subindex.byte=0x00;	   			   //msg_subindex 					
+				if(frameNo == 0)
+				{					
+					NvmFlash.Buf[NvmFlash.Index++] = FIRMWARE_SOF;
+					
+				}else if(DataBlockFlag == LastBlock)
+				{
+					NvmFlash.Buf[NvmFlash.Index++] = FIRMWARE_EOF;	
+				} else 
+				{
+					NvmFlash.Buf[NvmFlash.Index++] = FIRMWARE_COF;
+				} 
+				
+				NvmFlash.Buf[NvmFlash.Index++] = pRxDOB->DataLen - 2;
+				
+				for(i = 0;i < pRxDOB->DataLen;i++)
+				{
+					NvmFlash.Buf[NvmFlash.Index++]= pRxDOB->pData[i];
+				}
+				txBsipFrame.infoLen = NvmFlash.Index + 3;              	
+				txBsipFrame.bsip.info = NvmFlash.Buf;	
+				if(pdTRUE == xSemaphoreTake(ModbusNfSemaphore, 800))				
+				{
+					xQueueSend(ModbusFWQueue,&txBsipFrame,(TickType_t)0);	
+				}else
+				{
+					xSemaphoreGive(ModbusNfSemaphore);
+					pTxDOB->Status = HardwareError;
+					return;	
+				}							
 			}else
 			{
 				pTxDOB->Status = HardwareError;
 				return;	
 			} 
+			
 			//正确响应的DOB
 			pTxDOB->Status = NoErrorHaveData;
 			pTxDOB->DataType = DataType_UINT16;
@@ -3965,7 +4463,6 @@ static void Dealwith_Datablock_Firmware(DataObject_t* pRxDOB, DataObject_t* pTxD
 			pTxDOB->pData = &txDOBsDataBuf[txDOBsDataLen];
 			txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT16(frameNo);
 			txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT16(frameNo);
-			
 		}
 		else
 		{
@@ -4164,6 +4661,42 @@ static void ParseOneParamDOB(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
     case ID_DrainVoltOffset:
         Dealwith_DOB_DrainVoltOffset(pRxDOB, pTxDOB);
         break;
+	case ID_Factor_AC380_AVolt:
+		Dealwith_DOB_FactorAC380_AVoltage(pRxDOB, pTxDOB);
+		break;
+	case ID_Factor_AC380_ACurr:
+		Dealwith_DOB_FactorAC380_ACurrent(pRxDOB, pTxDOB);
+		break;
+	case ID_Factor_AC380_BVolt:
+		Dealwith_DOB_FactorAC380_BVoltage(pRxDOB, pTxDOB);
+		break;
+	case ID_Factor_AC380_BCurr:
+		Dealwith_DOB_FactorAC380_BCurrent(pRxDOB, pTxDOB);
+		break;
+	case ID_Factor_AC380_CVolt:
+		Dealwith_DOB_FactorAC380_CVoltage(pRxDOB, pTxDOB);
+		break;
+	case ID_Factor_AC380_CCurr:
+		Dealwith_DOB_FactorAC380_CCurrent(pRxDOB, pTxDOB);
+		break;
+	case ID_Factor_DCDC1_Volt:
+		Dealwith_DOB_FactorDCDC1_Voltage(pRxDOB, pTxDOB);
+		break;
+	case ID_Factor_DCDC1_Curr:
+		Dealwith_DOB_FactorDCDC1_Current(pRxDOB, pTxDOB);
+		break;
+	case ID_Factor_DCDC2_Volt:
+		Dealwith_DOB_FactorDCDC2_Voltage(pRxDOB, pTxDOB);
+		break;
+	case ID_Factor_DCDC2_Curr:
+		Dealwith_DOB_FactorDCDC2_Current(pRxDOB, pTxDOB);
+		break;
+	case ID_Factor_Way3_Current:
+		Dealwith_DOB_FactorWay3_Current(pRxDOB, pTxDOB);
+		break;
+	case ID_Factor_Way4_Current:
+		Dealwith_DOB_FactorWay4_Current(pRxDOB, pTxDOB);
+		break;
     // Readonly Monitor Parameters
 	case ID_MatchDCBias:
 		Dealwith_DOB_DCBias(pRxDOB, pTxDOB);

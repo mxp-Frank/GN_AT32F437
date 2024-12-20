@@ -54,73 +54,10 @@ void IF_Sensor_Device_Task(void)
 	 Sensor_Device_Task();
 }
 
-uint16_t IF_Get_Sensor_DCBias(void)
+uint16_t IF_Sensor_GetDCBias(void)
 {
 	uint16_t value = 0;
 	uint16_t AttenFactor = IF_UserParam_GetVDCFactor();
-	return value;
-}
-
-int32_t IF_Get_Sensor_ACInputVoltage(uint8_t Channel)
-{
-	int32_t value = 0;
-	switch(Channel)
-	{
-		case 0:value = Modbus_InputReg[0]; break;
-		case 1:value = Modbus_InputReg[10];break;
-		case 2:value = Modbus_InputReg[8]; break;
-		default:break;
-	}		
-	return value;
-}
-
-int32_t IF_Get_Sensor_ACInputCurrent(uint8_t Channel)
-{
-	int32_t value = 0;
-	switch(Channel)
-	{
-		case 0:value = Modbus_InputReg[1]; break;
-		case 1:value = Modbus_InputReg[11];break;
-		case 2:value = Modbus_InputReg[9]; break;
-		default:break;
-	}		
-	return value;
-}
-
-int32_t IF_Get_Sensor_PAVoltage(uint8_t Channel)
-{
-	int32_t value = 0;
-	switch(Channel)
-	{
-		case 0:value = Modbus_InputReg[5]; break;
-		case 1:value = Modbus_InputReg[7]; break;
-		default:break;
-	}	
-	return value;
-}
-int32_t IF_Get_Sensor_PACurrent(uint8_t Channel)
-{
-	int32_t value = 0;
-	switch(Channel)
-	{
-		case 0:value = Modbus_InputReg[4]; break;
-		case 1:value = Modbus_InputReg[6]; break;
-		case 2:value = Modbus_InputReg[2]; break;
-		case 3:value = Modbus_InputReg[3]; break;
-		default:break;
-	}		
-	return value;
-}
-
-int16_t IF_Get_Sensor_ACDCTemperature(uint8_t Channel)
-{
-	int16_t value = 0;
-	switch(Channel)
-	{
-		case 0:value = Modbus_InputReg[11]; break;
-		case 1:value = Modbus_InputReg[12]; break;
-		default:break;
-	}	
 	return value;
 }
 

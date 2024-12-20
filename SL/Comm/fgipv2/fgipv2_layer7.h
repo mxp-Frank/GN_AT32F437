@@ -94,6 +94,19 @@ typedef enum _ParamterIndex_t
 	ID_ACDCCurrentOffset		   = 0x421B,
 	ID_DrainVoltGain			   = 0x421C,
 	ID_DrainVoltOffset		   	   = 0x421D,
+	
+	ID_Factor_AC380_AVolt		   = 0x421E,
+	ID_Factor_AC380_ACurr		   = 0x421F,
+	ID_Factor_AC380_BVolt		   = 0x4220,
+	ID_Factor_AC380_BCurr		   = 0x4221,
+	ID_Factor_AC380_CVolt		   = 0x4222,
+	ID_Factor_AC380_CCurr		   = 0x4223,
+	ID_Factor_DCDC1_Volt		   = 0x4224,
+	ID_Factor_DCDC1_Curr		   = 0x4225,
+	ID_Factor_DCDC2_Volt		   = 0x4226,
+	ID_Factor_DCDC2_Curr		   = 0x4227,
+	ID_Factor_Way3_Current		   = 0x4228,
+	ID_Factor_Way4_Current		   = 0x4229,
 	//Configurable User parameters 
     ID_RegulationMode              = 0x4000,  // work mode, 0: Pfwd, 1: Pdlv 2:Vdc
 	ID_PfwdLimit				   = 0x4001,  //Forward power Limit
@@ -257,7 +270,13 @@ typedef struct _InfoFiled_t
 
 } InfoFiled_t, *PInfoFiled_t;
 
-
+typedef enum
+{
+	NO_FIRMUPDATE 		= 0x00,
+	MCU_FIRMUPDATE		= 0x01,
+	FPGA_FIRMUPDATE 	= 0x02,
+	MODBUS_FIRMUPDATE 	= 0x03,
+}FirmWareEnum;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 extern void SendTelegramError(uint8_t errorCode);
 extern void Dealwith_FGIPv2_Layer7(FGIPv2Frame_t *pRxFrame);

@@ -19,6 +19,7 @@ static FirmwareDataMsg_t FirmwareData =
     .DownFileLen = 0,
     .FileSign = APP_FILE_SIGN,
     .FpgaSign = FPGA_FILE_SIGN,
+	.ModbusSign = FPGA_FILE_SIGN,
     .DownFileSign = "00000000",
     .FlashBufIndex = 0,
     .DownloadFileIndex = 0,
@@ -108,7 +109,6 @@ void Dealwith_BSIP_Layer7(void)
 	default:
 		break;
 	}
-	//IF_NvmParam_ExecuteActionsAfterRsp();
 }
 
 /**
@@ -225,10 +225,11 @@ void BSIP_TxBufManagment(uint8_t port)
 void BSIP_FpgaFirmwareUpdate(uint8_t port)
 {
 	BSIPInfo_t BsipFrame;
-	if(pdTRUE == xQueueReceive(FpgaQueue, &BsipFrame, portMAX_DELAY)) //接受到FPGA升级包队列
+	uint8_t  txLayer2DataBuf[MAX_INFO_LEN];
+	uint16_t txLayer2DataLen; 
+	if(pdTRUE == xQueueReceive(FpgaFWQueue, &BsipFrame, portMAX_DELAY)) //接受到FPGA升级包队列
 	{	
-		uint8_t  txLayer2DataBuf[MAX_INFO_LEN + 2];
-		uint16_t txLayer2DataLen; 
+		memset(txLayer2DataBuf,0,MAX_INFO_LEN);
 		txLayer2DataBuf[txLayer2DataLen++]=BsipFrame.bsip.msgclass;  
 		txLayer2DataBuf[txLayer2DataLen++]=BsipFrame.bsip.msgid;
 		txLayer2DataBuf[txLayer2DataLen++]=BsipFrame.bsip.subindex.byte;
@@ -237,24 +238,72 @@ void BSIP_FpgaFirmwareUpdate(uint8_t port)
 			txLayer2DataBuf[txLayer2DataLen++]=BsipFrame.bsip.info[i];
 		}
 		SendLayer2Frame(port,txLayer2DataBuf,txLayer2DataLen);
-		if(pdTRUE == xSemaphoreTake(FpgaSemaphore, 200))
+		if(pdTRUE == xSemaphoreTake(FpgaReSemaphore, 300))
 		{	
 			NeedSend_ACK = 1;
-			FpgaUpdate_NoAck = 0;
+			xSemaphoreGive(FpgaNfSemaphore);
 		}else
 		{
 			SendLayer2Frame(port,txLayer2DataBuf,txLayer2DataLen);
-			if(pdTRUE == xSemaphoreTake(FpgaSemaphore, 200))
+			if(pdTRUE == xSemaphoreTake(FpgaReSemaphore, 300))
 			{	
 				NeedSend_ACK = 1;
-				FpgaUpdate_NoAck = 0;
+				xSemaphoreGive(FpgaNfSemaphore);
 			}else
-			{
-				FpgaUpdate_NoAck = 1;
+			{	
+				xSemaphoreGive(FpgaNfSemaphore);
 				//ReSend failed, do nothings;
+				FirmwareData.TargetDevice = DEVICE_COREBOARD;
+				
+			}
+		}
+	}
+}
+/**
+ * ************************************************************************
+ * @Brief :      
+ * ************************************************************************
+ */
+void BSIP_ModbusFirmwareUpdate(uint8_t port)
+{
+	BSIPInfo_t BsipFrame;
+	uint8_t  txLayer2DataBuf[MAX_INFO_LEN];
+	uint8_t   ModbusUpdateFrameLen; 
+	if(pdTRUE == xQueueReceive(ModbusFWQueue, &BsipFrame,5000)) //5s接收不到队列，跳转到读写其他参数
+	{		
+		memset(txLayer2DataBuf,0,MAX_INFO_LEN);
+		uint16_t txLayer2DataBufLen = BsipFrame.infoLen - 3;		
+		ModbusUpdateFrameLen = ((txLayer2DataBufLen)%2==0)? (txLayer2DataBufLen/2): ((txLayer2DataBufLen+1)/2);
+		for(uint16_t i= 0;i<txLayer2DataBufLen;i++)
+		{	
+			txLayer2DataBuf[i]=BsipFrame.bsip.info[i];
+		}
+						
+		MB_WriteNumHoldingReg_10H(MODBUS_ADDR, HOLD_REG_SW_START,ModbusUpdateFrameLen,(uint16_t*)txLayer2DataBuf);
+		if(pdTRUE == xSemaphoreTake(ModbusReSemaphore, 300))
+		{	
+			NeedSend_ACK = 1;
+			xSemaphoreGive(ModbusNfSemaphore); 
+		}else
+		{
+			MB_WriteNumHoldingReg_10H(MODBUS_ADDR, HOLD_REG_SW_START,ModbusUpdateFrameLen,(uint16_t*)txLayer2DataBuf);
+			if(pdTRUE == xSemaphoreTake(ModbusReSemaphore, 300))
+			{	
+				NeedSend_ACK = 1;
+				xSemaphoreGive(ModbusNfSemaphore);
+			}
+			else				
+			{
+				xSemaphoreGive(FpgaNfSemaphore);
+				IF_ACDC_SetParamsRW(DEVICE_READ_VERSIONREG);	 
 				FirmwareData.TargetDevice = DEVICE_COREBOARD;
 			}
 		}
+	}else
+	{
+		xSemaphoreGive(FpgaNfSemaphore);
+		IF_ACDC_SetParamsRW(DEVICE_READ_VERSIONREG);	 
+		FirmwareData.TargetDevice = DEVICE_COREBOARD;
 	}
 }
 /************************************************************************/
@@ -355,9 +404,7 @@ static void Dealwith_Debug_GetProcessData(uint8_t chnNo, uint8_t* pBuf)
  */
 static void Dealwith_Debug_FirmwareUpdate(uint8_t chnNo, uint8_t* pBuf)
 {//logic check pass!
-    uint8_t i = 0;
-    uint8_t j = 0;
-    uint8_t k = 0;
+    uint16_t i = 0;
 
     FirmwareFrameTypeEnum frameType = FIRMWARE_NOF;
     uint8_t frameLength = 0;
@@ -418,47 +465,37 @@ static void Dealwith_Debug_FirmwareUpdate(uint8_t chnNo, uint8_t* pBuf)
                 //接收到完整的识别码后
                 if(FirmwareData.DownloadFileIndex == (APP_FILE_SIGN_OFFSET + APP_FILE_SIGN_LEN))
                 {
-
-                    for (j = 0; j < APP_FILE_SIGN_LEN; j++)
-                    {
-                        if (FirmwareData.FileSign[j] != FirmwareData.DownFileSign[j])
-                        {
-                            break;
-                        }
-                    }
-
-                    if (j < APP_FILE_SIGN_LEN)
-                    {
-                        for (k = 0; k < APP_FILE_SIGN_LEN; k++)
-                        {
-                            if (FirmwareData.FpgaSign[k] != FirmwareData.DownFileSign[k])
-                            {
-                                break;
-                            }
-                        }
-
-                        if (k < APP_FILE_SIGN_LEN)
-                        {
-                            NeedSend_ACK = 0;
-                            NeedSend_RunningStatus = 1;
-                            return;
-                        }
-
-                        NeedSend_ACK = 0;
-                        FirmwareData.TargetDevice = DEVICE_FPGA;
-                        xQueueSend(FpgaQueue, &g_rxBsipFrame, (TickType_t)0);
-                        return;
-
-                    }
-
-                    FirmwareData.TargetDevice = DEVICE_COREBOARD;
-                    
-                    if ((FirmwareData.DownFileLen == 0) || (FirmwareData.DownFileLen > MAX_APP_FILE_SIZE))
-                    {
-                        NeedSend_ACK = 0;
-                        NeedSend_RunningStatus = 1;
-                        return;
-                    }
+					if(0==memcmp(FirmwareData.FileSign, FirmwareData.DownFileSign,APP_FILE_SIGN_LEN))
+					{
+						NeedSend_ACK = 0;
+						FirmwareData.TargetDevice = DEVICE_COREBOARD;
+						if ((FirmwareData.DownFileLen == 0) || (FirmwareData.DownFileLen > MAX_APP_FILE_SIZE))
+						{
+							NeedSend_ACK = 0;
+							NeedSend_RunningStatus = 1;
+							return;
+						}
+						
+					}else if (0==memcmp(FirmwareData.FpgaSign, FirmwareData.DownFileSign,APP_FILE_SIGN_LEN))
+					{
+						NeedSend_ACK = 0;
+						FirmwareData.TargetDevice = DEVICE_FPGA;
+						xQueueSend(FpgaFWQueue, &g_rxBsipFrame, (TickType_t)0);
+						return;
+					}
+					else if (0==memcmp(FirmwareData.ModbusSign, FirmwareData.DownFileSign,APP_FILE_SIGN_LEN))
+					{
+						NeedSend_ACK = 0;
+						FirmwareData.TargetDevice = DEVICE_MODBUS;
+						xQueueSend(ModbusFWQueue, &g_rxBsipFrame, (TickType_t)0);
+						return;
+					}
+					else 
+					{
+						NeedSend_ACK = 0;
+						NeedSend_RunningStatus = 1;
+						return;
+					}             
                 }
 
                 //把数据放入缓冲区
@@ -526,14 +563,22 @@ static void Dealwith_Debug_FirmwareUpdate(uint8_t chnNo, uint8_t* pBuf)
 
         }
         else if ((FirmwareData.TargetDevice == DEVICE_FPGA) && ((frameType == FIRMWARE_SOF) || (frameType == FIRMWARE_COF) || (frameType == FIRMWARE_EOF)))
-        {//FIRMWARE_SOF may be resended...
+        {	//FIRMWARE_SOF may be resended...
             if (frameType == FIRMWARE_EOF)
             {
                 FirmwareData.TargetDevice = DEVICE_COREBOARD;
             }
-
             NeedSend_ACK = 0;
-            xQueueSend(FpgaQueue, &g_rxBsipFrame, (TickType_t)0);
+			xQueueSend(FpgaFWQueue, &g_rxBsipFrame, (TickType_t)0);
+				
+        }else if ((FirmwareData.TargetDevice == DEVICE_MODBUS) && ((frameType == FIRMWARE_SOF) || (frameType == FIRMWARE_COF) || (frameType == FIRMWARE_EOF)))
+        {	//FIRMWARE_SOF may be resended...
+            if (frameType == FIRMWARE_EOF)
+            {
+                FirmwareData.TargetDevice = DEVICE_COREBOARD;
+            }
+            NeedSend_ACK = 0;
+			xQueueSend(ModbusFWQueue, &g_rxBsipFrame, (TickType_t)0);
         }
         else
         {

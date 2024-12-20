@@ -76,8 +76,8 @@ static void PT_Module_Cmd_Execute(void)
 		switch(DeviceCmd.cmdId)
 		{
 		/********************射频电源NVM读写设置*********************/
-		case CMD_SAVE_FACTORYPARAM:  //保存内存工厂配置到NVM   
-			IF_SL_Nvm_ParamsRW(Write_FS_IdentificationMask);
+		case CMD_SAVE_FSPARTSPARAM:  //保存内存工厂配置到NVM   
+			IF_SL_Nvm_ParamsRW(Write_Fs_PartsMask);
 		break;
 
 		case CMD_SAVE_FSCOMMONPARAM:	//保存内存工厂配置到NVM
@@ -92,8 +92,8 @@ static void PT_Module_Cmd_Execute(void)
 			IF_SL_Nvm_ParamsRW(Write_FS_UserMask);
 		break;
 
-		case CMD_READ_FACTORYPARAM: //读取工厂NVM到内存
-			IF_SL_Nvm_ParamsRW(Read_FS_IdentificationMask);
+		case CMD_READ_FSPARTSPARAM: //读取工厂NVM到内存
+			IF_SL_Nvm_ParamsRW(Write_Fs_PartsMask);
 		break;
 
 		case CMD_READ_FSCOMMONPARAM: //读取工厂NVM到内存
@@ -111,7 +111,6 @@ static void PT_Module_Cmd_Execute(void)
 		case CMD_SAVE_COMMONPARAM: //保存内存配置到NVM
 			IF_SL_Nvm_ParamsRW(Write_CommonMask);
 		break;
-
 		case CMD_SAVE_INTERNALPARAM: //保存内存配置到NVM
 			IF_SL_Nvm_ParamsRW(Write_InternalMask); 
 		break;
@@ -130,10 +129,9 @@ static void PT_Module_Cmd_Execute(void)
 		case CMD_READ_USERPARAM:	//读取NVM到内存
 			IF_SL_Nvm_ParamsRW(Read_UserMask);		
 		break;
-
 		case CMD_RESUME_ALLPARAM:	//读取NVM到内存
 			IF_SL_Nvm_ParamsRW(Write_AllResumeMask);		
-		break; 	
+		break; 
 		case CMD_SETBAUDRATE: //设置通信的波特率
 			IF_SL_SetUartBaudRate(DeviceCmd.cmdData.Val);
 		break;

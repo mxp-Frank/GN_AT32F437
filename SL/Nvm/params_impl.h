@@ -121,6 +121,7 @@ typedef struct _UserParam_t
 }UserParam_t;
 
 
+
 typedef struct _DefaultParam_t
 {
  uint8_t 	FactoryMode;         //工厂模式	
@@ -190,9 +191,9 @@ typedef struct _ProcessData_t
 } ProcessData_t;
 
 #define PARTS_PARAM_LEN					  		  sizeof(PartsParam_t)
-#define COMMUNICATION_PARAM_LEN                   sizeof(CommonParam_t)
+#define COMMUN_PARAM_LEN                   		  sizeof(CommonParam_t)
 #define INTERNAL_PARAM_LEN                        sizeof(InternalParam_t)
-#define USER_PARAM_LEN                            sizeof(UserParam_t)
+#define USER_PARAM_LEN                            sizeof(UserParam_t)	
 #define RUNNING_STATUS_LEN						  sizeof(RunningStatus_t)
 	
 #define PD_ONE_RECORD_LEN                         sizeof(PDORecord_t)
@@ -209,91 +210,130 @@ typedef struct _ProcessData_t
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 typedef enum
 {
-	ID_SAVE_FACTORY_PARAM 		,
+	ID_SAVE_FS_PARTS_PARAM    ,
 	ID_SAVE_FS_COMMON_PARAM		,
 	ID_SAVE_FS_INTERNAL_PARAM	,
 	ID_SAVE_FS_USER_PARAM	 	,
 	
+	ID_SAVE_PARTS_PARAM       ,
 	ID_SAVE_COMMON_PARAM		,
 	ID_SAVE_INTERNAL_PARAM		,
 	ID_SAVE_USER_PARAM			,
 	ID_SAVE_RFPWRVOLT_PARAM 	,
 	
-	ID_READ_FACTORY_PARAM		,
+	ID_READ_FS_PARTS_PARAM		,
 	ID_READ_FS_COMMON_PARAM		,
 	ID_READ_FS_INTERNAL_PARAM 	,
 	ID_READ_FS_USER_PARAM		,
-
+	
+	ID_READ_PARTS_PARAM			,
 	ID_READ_COMMON_PARAM		,
 	ID_READ_INTERNAL_PARAM		,
 	ID_READ_USER_PARAM			,
 	
 	ID_RESUME_ALLPARAMS			,
-	
 	//设置匹配器控制
 	ID_MOVE_LOADTOPOS			,
 	ID_MOVE_TUNETOPOS			,
+			
+	//设置波特率
+	ID_SET_BAUDRATE				,
+	//设置设备重启	
+	ID_SET_DEVICERESET			,			
 	
-	ID_SET_BAUDRATE				,			//设置波特率
-	ID_SET_DEVICERESET			,			//设置设备重启
 	ID_SET_ALLNUM				,
 
 } ActionsRSPEnum;
 
-//define statusWord Mask
-#define RF_STATUS_MASK     0x0001
-
 typedef union _StatusWord_t
 {
-	uint16_t word;
+	uint32_t Dword;
 
 	struct
 	{
-		uint16_t RFOnOrOff		  		: 1;  // bit0,  射频电源开关状态						(1)
-		uint16_t RFOnRequeseted   		: 1;  // bit1,  射频电源开关请求状态  					(1)
-		uint16_t MatchConnected   		: 1;  // bit2,  匹配器状态连接状态    					(1)
-		uint16_t MatchMode		  		: 1;  // bit3,  匹配器工作模式状态    					(1)  
-		uint16_t bit4	  				: 1;  // bit4,  射频电源控制状态      					(1)
-		uint16_t MotorMoving      		: 1;  // bit5,  匹配器电容移动状态        				(1) 
+		uint32_t RFOnOrOff		  		: 1;  // bit0,  射频电源开关状态						(1)
+		uint32_t RFOnRequeseted   		: 1;  // bit1,  射频电源开关请求状态  					(1)
+		uint32_t MatchConnected   		: 1;  // bit2,  匹配器状态连接状态    					(1)
+		uint32_t MatchMode		  		: 1;  // bit3,  匹配器工作模式状态    					(1)  
+		uint32_t bit4	  				: 1;  // bit4,  射频电源控制状态      					(1)
+		uint32_t MotorMoving      		: 1;  // bit5,  匹配器电容移动状态        				(1) 
 		
-		uint16_t RFWillswitchoff  		: 1;  // bit6,  射频电源反射功率超过阈值，即将关闭状态	(1) 		
-		uint16_t ExternalPulseshort     : 1;  // bit7,  脉冲值到达脉冲的上限或者下限. 			(1) 
-		uint16_t PowerAtLimit     	    : 1;  // bit8,  电压或电流超过内部SMPS的极限.			(1) 
+		uint32_t RFWillswitchoff  		: 1;  // bit6,  射频电源反射功率超过阈值，即将关闭状态	(1) 		
+		uint32_t ExternalPulseshort     : 1;  // bit7,  脉冲值到达脉冲的上限或者下限. 			(1) 
+		uint32_t PowerAtLimit     	    : 1;  // bit8,  电压或电流超过内部SMPS的极限.			(1) 
 		
-		uint16_t PforwMaximunReached    : 1;  // bit9,  达到真实位置所需的正向功率高于最大正向功率(1) 
-		uint16_t PreflAtLimit      	    : 1;  // bit10, 反射功率超过设置反射功率上限			(1) 
-		uint16_t PforwAtLimit     	    : 1;  // bit11, 正向功率超过设置正向功率上限			(1) 
-		uint16_t FrequecyAtLimit        : 1;  // bit12, 电源频率值到底脉冲的上限或者下限		(1)
-		uint16_t LocalOrRemote	  		: 2;  // bit13-14,  射频电源控制状态(0:UART_MODE 1:ANALOG_MODE 2:PANEL MODE)     (2)
-		uint16_t bit13 					: 1;  // bit13, 保留									(1) 
-		uint16_t bit14					: 1;  // bit14, 保留
-		uint16_t bit15					: 1;  // bit15, 保留
+		uint32_t PforwMaximunReached    : 1;  // bit9,  达到真实位置所需的正向功率高于最大正向功率(1) 
+		uint32_t PreflAtLimit      	    : 1;  // bit10, 反射功率超过设置反射功率上限			(1) 
+		uint32_t PforwAtLimit     	    : 1;  // bit11, 正向功率超过设置正向功率上限			(1) 
+		uint32_t FrequecyAtLimit        : 1;  // bit12, 电源频率值到底脉冲的上限或者下限		(1)
+		uint32_t LocalOrRemote	  		: 2;  // bit13-14,  射频电源控制状态(0:UART_MODE 1:ANALOG_MODE 2:PANEL MODE)     (2)
+		uint32_t bit13 					: 1;  // bit13, 保留									(1) 
+		uint32_t bit14					: 1;  // bit14, 保留
+		uint32_t bit15					: 1;  // bit15, 保留
+		uint32_t ACDCStatusOK			: 1;  // 保留
+		uint32_t ACDCEn_AC				: 1;  // 保留
+		uint32_t ACDCEn_PA				: 1;  // 保留	
+		uint32_t ACDCKout_Fb		    : 1;  // 保留
+		uint32_t bit20				    : 1;  // 保留
+		uint32_t bit21				    : 1;  // 保留	
+		uint32_t bit22				    : 1;  // 保留
+		uint32_t bit23				    : 1;  // 保留
+		uint32_t bit24				    : 1;  // 保留	
+		uint32_t bit25				    : 1;  // 保留
+		uint32_t bit26				    : 1;  // 保留
+		uint32_t bit27				    : 1;  // 保留	
+		uint32_t bit28				    : 1;  // 保留
+		uint32_t bit29				    : 1;  // 保留
+		uint32_t bit30				    : 1;  // 保留	
+		uint32_t bit31				    : 1;  // 保留
 	} bits;
 
 }StatusWord_t;
 
 typedef union _FaultWord_t
 {
-	uint16_t word;
+	uint32_t Dword;
 	struct
 	{
-		uint16_t InterlockOpen     	   : 1;  // bit0, InterLock故障
-		uint16_t OverPCBTempAlarm	   : 1;  // bit1, 主控板温度超过上限故障
-		uint16_t LowPower24VAlarm      : 1;  // bit2, 24V电压低故障
-		uint16_t OverCurrentAlarm      : 1;  // bit3, AC-DC 输出电流上限故障
-		uint16_t UnderVoltageAlarm     : 1;  // bit4, AC-DC 输出电压下限故障
-		uint16_t OverVoltageAlarm      : 1;  // bit5, AC-DC 输出电压上限故障
-		uint16_t OverDCTempAlarm   	   : 1;  // bit6, AC-DC 输出温度上限故障
-		uint16_t ADConversionFail      : 1;  // bit7, AC-DC 模拟电压转换故障
+		uint32_t InterlockOpen     	   		: 1;  // bit0, InterLock故障
+		uint32_t OverPCBTempAlarm	   		: 1;  // bit1, 主控板温度超过上限故障
+		uint32_t Power24VAlarm      		: 1;  // bit2, 24V电压低或高故障
+		uint32_t ACDCOverCurrentAlarm   	: 1;  // bit3, AC-DC 输出电流上限故障
+		uint32_t ACDCUnderVoltageAlarm      : 1;  // bit4, AC-DC 输出电压下限故障
+		uint32_t ACDCOverVoltageAlarm       : 1;  // bit5, AC-DC 输出电压上限故障
+		uint32_t ACDCOverDCTempAlarm   	    : 1;  // bit6, AC-DC 输出温度上限故障
+		uint32_t OverFpgaTempAlarm      	: 1;  // bit7, Fpga  输出温度异常故障
 		
-		uint16_t OverRFTempAlarm       : 1;  // bit8,  射频驱动板温度超过上限故障
-		uint16_t DCFanWorkAlarm        : 1;  // bit9,  AC-DC散热风扇故障
-		uint16_t RFFanOrWaterAlarm     : 1;  // bit10, 射频驱动板散热风扇故障
-		uint16_t HighPower24VAlarm	   : 1;  // bit2, 24V电压高故障
-		uint16_t OverFpgaTempAlarm	   : 1;  // bit1, FPGA温度超过上限故障
-		uint16_t bit13				   : 1;  // 保留
-		uint16_t bit14				   : 1;  // 保留
-		uint16_t bit15				   : 1;  // 保留		
+		uint32_t OverRFTempAlarm       		: 1;  // bit8,  射频驱动板温度超过上限故障
+		uint32_t ACDCFanWorkAlarm        	: 1;  // bit9,  AC-DC散热风扇故障
+		uint32_t RFFanOrWaterAlarm     		: 1;  // bit10, 射频驱动板散热风扇故障
+	
+		uint32_t AV380_HAlarm	   			: 1;  // bit11, AC380 A相电压高故障
+		uint32_t AV380_LAlarm				: 1;  // bit12, AC380 A相电压低故障
+		uint32_t AI380_HAlarm				: 1;  // bit13, AC380 A相电流高故障
+		
+		uint32_t BV380_HAlarm	   			: 1;  // bit14, AC380 B相电压高故障
+		uint32_t BV380_LAlarm				: 1;  // bit15, AC380 B相电压低故障
+		uint32_t BI380_HAlarm				: 1;  // bit16, AC380 B相电流高故障
+		
+		uint32_t CV380_HAlarm	   			: 1;  // bit17, AC380 C相电压高故障
+		uint32_t CV380_LAlarm				: 1;  // bit18, AC380 C相电压低故障
+		uint32_t CI380_HAlarm				: 1;  // bit19, AC380 C相电流高故障
+		
+		uint32_t DCDC1V_HAlarm				: 1;  // bit20, DCDC1  电压高故障
+		uint32_t DCDC1V_LAlarm				: 1;  // bit21, DCDC1  电压低故障
+		uint32_t DCDC1I_HAlarm				: 1;  // bit22, DCDC1  电流高故障
+		uint32_t DCDC1T_HAlarm				: 1;  // bit23, DCDC1  超时故障	
+		
+		uint32_t DCDC2V_HAlarm				: 1;  // bit24, DCDC2  电压高故障
+		uint32_t DCDC2V_LAlarm				: 1;  // bit25, DCDC2  电压低故障
+		uint32_t DCDC2_HAlarm				: 1;  // bit26, DCDC2  电流高故障
+		uint32_t DCDC2T_HAlarm				: 1;  // bit27, DCDC2  超时故障
+		
+		uint32_t bit28				   		: 1;  // bit28, 		
+		uint32_t bit29				   		: 1;  // bit29, 
+		uint32_t bit30				   		: 1;  // bit30, 
+		uint32_t bit31				   		: 1;  // bit31, 			
 	}bits;
 
 }FaultWord_t;
@@ -306,7 +346,6 @@ EXTERN FaultWord_t 		g_FaultWord;
 EXTERN StatusWord_t 	g_StatusWord;
 EXTERN ProcessData_t    g_ProcessData;
 EXTERN RunningStatus_t	g_RunningStatus;
-
 EXTERN uint8_t  FpgaVersion[FPGAWARE_VERSION_LEN];
 #if defined(__cplusplus)
 }

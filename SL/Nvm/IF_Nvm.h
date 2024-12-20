@@ -73,10 +73,12 @@ extern "C" {
 #define PRESETPARAM_NUM_ADDR						EEPROM_ADDR(2)      //系统预设参数
 #define SYSTEM_TOTALTIMES_ADDR						EEPROM_ADDR(3)      //系统运行总时间
 
-#define FACTORY_PARAM_ADDR                    		EEPROM_ADDR(10)     //工厂参数保存地址
+#define FACTORY_PARAM_FS_ADDR                    	EEPROM_ADDR(10)     //工厂参数保存地址
 #define COMMON_PARAM_FS_ADDR						EEPROM_ADDR(20)     //工厂模式下的通信参数保存地址
 #define INTERNAL_PARAM_FS_ADDR                   	EEPROM_ADDR(30)     //工厂模式下的内部参数保存地址
-#define USER_PARAM_FS_ADDR                          EEPROM_ADDR(50)     //工厂模式下的用户参数0保存地址
+#define USER_PARAM_FS_ADDR                          EEPROM_ADDR(50)     //工厂模式下的用户参数保存地址
+
+#define FACTORY_PARAM_ADDR                    		EEPROM_ADDR(40)     //工厂参数保存地址
 
 #define COMMON_PARAM_ADDR							EEPROM_ADDR(60)     //通信参数保存地址
 #define INTERNAL_PARAM_ADDR                         EEPROM_ADDR(70)     //内部参数保存地址
@@ -87,6 +89,14 @@ extern "C" {
 
 #define TEMP_PARAM_ADDR								EEPROM_ADDR(250)    //温度映射表
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+typedef struct
+{
+	uint16_t Index;
+	uint8_t  Buf[FLASH_SECTOR_SIZE]; 
+}NvmBuffer_t;
+
+extern NvmBuffer_t NvmFlash;
 uint8_t Read_BootloaderVersion(uint8_t* pBuf);
 
 uint8_t IF_NvmParam_EraseDownloadFlag(void);
@@ -116,8 +126,8 @@ void Load_ConfigParam(uint8_t value);
 /********************工程参数*************************/
 
 
-void Read_FS_IdentificationParam(uint8_t* pBuf);
-uint8_t Write_FS_IdentificationParam(uint8_t* pBuf);
+void Read_FS_PartsParam(uint8_t* pBuf);
+uint8_t Write_FS_PartsParam(uint8_t* pBuf);
 void Read_FS_CommonParam(uint8_t* pBuf);
 uint8_t Write_FS_CommonParam(uint8_t* pBuf);
 void Read_FS_InternalParam(uint8_t* pBuf);
@@ -125,6 +135,8 @@ uint8_t Write_FS_InternalParam(uint8_t* pBuf);
 void Read_FS_UserParam(uint8_t* pBuf);
 uint8_t Write_FS_UserParam(uint8_t* pBuf);
 /********************普通参数*************************/
+void Read_PartsParam(uint8_t* pBuf);
+uint8_t Write_PartsParam(uint8_t* pBuf);
 void Read_CommonParam(uint8_t* pBuf);
 uint8_t Write_CommonParam(uint8_t* pBuf);
 void Read_InternalParam(uint8_t* pBuf);

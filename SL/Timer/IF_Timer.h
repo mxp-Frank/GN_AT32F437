@@ -60,7 +60,7 @@ typedef struct _SystemTimer_t
 * Interface functions                                                         *
 ******************************************************************************/
 extern void IF_TimerInit(void);
-extern uint32_t Now(void);
+extern uint32_t  GetSysTickCnt(void);
 
 extern uint32_t IF_Timer_GetPowerUpTimer(void);
 extern uint32_t IF_Timer_GetRFOnUpTimer(void);

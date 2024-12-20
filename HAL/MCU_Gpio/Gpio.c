@@ -78,9 +78,7 @@ void IF_GpioOutPut(gpio_type *gpio_x, uint16_t pins, uint8_t outPutValue, uint8_
         {
             gpio_bits_reset(gpio_x, pins);
         }
-    }
-
-   
+    } 
 }
 
 

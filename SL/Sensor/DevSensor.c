@@ -77,13 +77,13 @@ void Sensor_Device_Task(void)
 		g_FaultWord.bits.InterlockOpen = 0;
 	}
 	uint16_t Power24Volt = IF_Sensor_GetPowerSupply();
-    if ( Power24Volt > POWER_24V_MAX)
+    if ( (Power24Volt > POWER_24V_MAX)||(Power24Volt < POWER_24V_MIN))
     {        
-         g_FaultWord.bits.HighPower24VAlarm = 1;   
+         g_FaultWord.bits.Power24VAlarm = 1;   
     }
-    else  if (Power24Volt < POWER_24V_MIN)
+    else 
     {
-        g_FaultWord.bits.LowPower24VAlarm = 0;
+        g_FaultWord.bits.Power24VAlarm = 0;
     }
 	
     if ( IF_Sensor_GetPCBTemperature()> TEMP_MAX)

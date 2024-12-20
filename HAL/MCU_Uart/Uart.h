@@ -84,7 +84,7 @@
 #define   COM4_UART                     UART7 //@attention: ! not USART6
 #define   COM4_UART_CLK                 CRM_UART7_PERIPH_CLOCK
 #define   COM4_UART_IRQn                UART7_IRQn
-#define   COM4_UART_BAUD                38400
+#define   COM4_UART_BAUD                115200
 #define   COM4_UART_IRQHandler          UART7_IRQHandler
 
 

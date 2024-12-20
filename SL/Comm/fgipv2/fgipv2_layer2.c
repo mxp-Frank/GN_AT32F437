@@ -21,9 +21,6 @@ uint32_t current_rx_time[PORT_NUM] = {0};
 //用于帧处理使用的变量，一次只能处理一条数据帧
 GlobeStatus_t g_GS[PORT_NUM];    //设备状态  
 
-extern uint32_t Now(void);
-
-
 /* FUNCTION *********************************************************************************
  * Function Name : ReceiveChar
  * Description   : 接收字节处理，一般在中断中调用
@@ -33,7 +30,7 @@ extern uint32_t Now(void);
  * END ***************************************************************************************/
 void ReceiveChar(uint8_t port, uint8_t ch)
 {
-	current_rx_time[port] = Now();
+	current_rx_time[port] = GetSysTickCnt();
 
 	if ((current_rx_time[port] - last_rx_time[port]) > 10)  //Frame timeout
 	{

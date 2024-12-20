@@ -30,7 +30,7 @@
 #include "stm32_crc32.h"
 #include "IF_Comm.h"
 
-#include "Modbus.h"
+#include "IF_Modbus.h"
 
 #include "bsip.h"
 #include "bsip_layer2.h"
@@ -74,7 +74,8 @@ extern void IF_SL_Sensor_Device_Task(void);
 extern void IF_SL_UartTask1(void);
 extern void IF_SL_UartTask2(void);
 extern void IF_SL_UartTask3(void);
-extern void IF_SL_UartTask4(void);
+extern void IF_SL_UartReciveTask4(void);
+extern void IF_SL_UartSendTask4(void);
 
 
 /**********Interface DAC SL**************/
@@ -150,6 +151,10 @@ extern void IF_SL_UserParam_SetSlowStartDelay(uint16_t value);
 extern uint16_t IF_SL_UserParam_GetSlowStopDelay(void);
 extern void IF_SL_UserParam_SetSlowStopDelay(uint16_t value);
 
+/****************Modbus SL***********************/
+void IF_SL_ACDC_SetParamsRW(ModBusTypeEnum ModbusType);
+
+
 /***************Sensor SL****************/
 extern void IF_SL_SensorTask(void);
 extern uint16_t IF_SL_Sensor_GetDCBias(void);
@@ -173,7 +178,7 @@ extern void IF_SL_Timer_ClearRFOffDelayTimeOutFlag(void);
 
 /****************Nvm SL***********************/
 extern void IF_SL_Nvm_WriteSystemResetTimes(void);
-extern void IF_SL_Nvm_ParamsRW(NVMMask_Enum NVM_Mask);
+extern void IF_SL_Nvm_ParamsRW(NVMRWMask_Enum NVMRW_Mask);
 
 extern void IF_SL_RFPower_UpdateProcessData(void);
 extern void IF_SL_RFPower_ClearProcessData(void);

@@ -23,30 +23,33 @@ extern "C" {
 #define EXTERN extern
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#define NVM_PARAM_MASK     						0x0001
+#define NVM_PARAM_MASK     						0x00000001
 
 typedef enum 
 {	
-	Read_FS_IdentificationMask	 = 	(NVM_PARAM_MASK<<0),
+	Read_Fs_PartsMask	 	     = 	(NVM_PARAM_MASK<<0),
 	Read_FS_CommonMask			 = 	(NVM_PARAM_MASK<<1),
 	Read_FS_InternalMask		 = 	(NVM_PARAM_MASK<<2),	
 	Read_FS_UserMask			 = 	(NVM_PARAM_MASK<<3),
 	
-	Write_FS_IdentificationMask  = 	(NVM_PARAM_MASK<<4),
-	Write_FS_CommonMask			 = 	(NVM_PARAM_MASK<<5),
-	Write_FS_InternalMask		 = 	(NVM_PARAM_MASK<<6),	
-	Write_FS_UserMask			 =	(NVM_PARAM_MASK<<7),
+	Write_Fs_PartsMask  	     = 	(NVM_PARAM_MASK<<5),
+	Write_FS_CommonMask			 = 	(NVM_PARAM_MASK<<6),
+	Write_FS_InternalMask		 = 	(NVM_PARAM_MASK<<7),	
+	Write_FS_UserMask			 =	(NVM_PARAM_MASK<<8),
 	
-	Read_CommonMask				 = 	(NVM_PARAM_MASK<<8),
-	Read_InternalMask			 = 	(NVM_PARAM_MASK<<9),	
-	Read_UserMask				 = 	(NVM_PARAM_MASK<<10),
+	Read_PartsMask	 		     = 	(NVM_PARAM_MASK<<10),
+	Read_CommonMask				 = 	(NVM_PARAM_MASK<<11),
+	Read_InternalMask			 = 	(NVM_PARAM_MASK<<12),	
+	Read_UserMask				 = 	(NVM_PARAM_MASK<<13),
 	
-	Write_CommonMask			 =  (NVM_PARAM_MASK<<11),
-	Write_InternalMask			 = 	(NVM_PARAM_MASK<<12),	
-	Write_UserMask				 = 	(NVM_PARAM_MASK<<13),
+	Write_PartsMask  	         = 	(NVM_PARAM_MASK<<15),
+	Write_CommonMask			 =  (NVM_PARAM_MASK<<16),
+	Write_InternalMask			 = 	(NVM_PARAM_MASK<<17),	
+	Write_UserMask				 = 	(NVM_PARAM_MASK<<18),
+	Write_ModbusMask			 = 	(NVM_PARAM_MASK<<19),
 	
-	Write_AllResumeMask			 =  (NVM_PARAM_MASK<<16), 	
-}NVMMask_Enum;
+	Write_AllResumeMask			 =  (NVM_PARAM_MASK<<20), 	
+}NVMRWMask_Enum;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 extern void Params_Init(void);
@@ -292,7 +295,7 @@ extern uint8_t IF_NvmParam_CheckDownloadFile(void);
 extern uint8_t IF_NvmParam_WriteDownloadFlag(void);
 
 extern void IF_Param_ExecuteActionsAfterRsp(void);
-extern void IF_NvmParamsRW(NVMMask_Enum NVM_Mask);
+extern void IF_NvmParamsRW(NVMRWMask_Enum NVM_Mask);
 
 #if defined(__cplusplus)
  }

@@ -32,27 +32,30 @@ typedef enum
 
 typedef enum
 {   //写入NVM参数
-	CMD_SAVE_FACTORYPARAM 		=0x01,
+	CMD_SAVE_FSPARTSPARAM 		=0x01,
 	CMD_SAVE_FSCOMMONPARAM 		=0x02,
 	CMD_SAVE_FSINTERNALPARAM 	=0x03,
 	CMD_SAVE_FSUSERPARAM 		=0x04,
 	
-	CMD_SAVE_COMMONPARAM 		=0x05,
-	CMD_SAVE_INTERNALPARAM	    =0x06,
-	CMD_SAVE_USERPARAM		    =0x07,
-	CMD_SAVE_CONFIGPARAM		=0x08,
+	CMD_SAVE_PARTSPARAM 		=0x05,
+	CMD_SAVE_COMMONPARAM 		=0x06,
+	CMD_SAVE_INTERNALPARAM	    =0x07,
+	CMD_SAVE_USERPARAM		    =0x08,
+
 	//读取NVM参数
-	CMD_READ_FACTORYPARAM 		=0x10,
+	
+	CMD_READ_FSPARTSPARAM 		=0x10,
 	CMD_READ_FSCOMMONPARAM 		=0x11,
 	CMD_READ_FSINTERNALPARAM 	=0x12,
 	CMD_READ_FSUSERPARAM 		=0x13,
 	
-	CMD_READ_COMMONPARAM 		=0x14,
-	CMD_READ_INTERNALPARAM	    =0x15,
-	CMD_READ_USERPARAM		    =0x16,
+	CMD_READ_PARTSPARAM 		=0x15,
+	CMD_READ_COMMONPARAM 		=0x16,
+	CMD_READ_INTERNALPARAM	    =0x17,
+	CMD_READ_USERPARAM		    =0x18,
 	
-	CMD_RESUME_ALLPARAM         =0x17,
-	CMD_READ_CONFIGPARAM        =0x18,
+	CMD_RESUME_ALLPARAM         =0x20,
+	CMD_READ_CONFIGPARAM        =0x21,
 
 	//控制匹配器
 	CMD_MOVETUNE				=0x80,
@@ -89,12 +92,15 @@ extern uint8_t FpgaUpdate_NoAck;
 extern QueueHandle_t UserQueue;
 extern QueueHandle_t FGIPv2Queue;
 extern QueueHandle_t BsipTxQueue;
-extern QueueHandle_t FpgaQueue;
-extern QueueHandle_t ModbusQueue;
+extern QueueHandle_t FpgaFWQueue;
+extern QueueHandle_t ModbusRxQueue;
+extern QueueHandle_t ModbusFWQueue;
 extern QueueHandle_t CmdQueue;
 
-extern SemaphoreHandle_t FpgaSemaphore;
-extern SemaphoreHandle_t ModbusSemaphore;
+extern SemaphoreHandle_t FpgaReSemaphore;
+extern SemaphoreHandle_t FpgaNfSemaphore;
+extern SemaphoreHandle_t ModbusReSemaphore;
+extern SemaphoreHandle_t ModbusNfSemaphore;
 /******************************************************************************
 * Interface functions                                                         *
 ******************************************************************************/
@@ -103,7 +109,8 @@ extern void IF_CommInit(void);
 extern void IF_UartTask1(void);
 extern void IF_UartTask2(void);
 extern void IF_UartTask3(void);
-extern void IF_UartTask4(void);
+extern void IF_UartReciveTask4(void);
+extern void IF_UartSendTask4(void);
 extern uint8_t SendToRxQueueFromISR(uint8_t port, pCommMsg_t pRxMsg);
 #if defined(__cplusplus)
  }

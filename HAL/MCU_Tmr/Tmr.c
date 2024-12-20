@@ -12,9 +12,13 @@
 #include "Tmr.h"
 #include "FreeRTOS.h"
 #include "task.h"
+
+#define FAM_PWM_PERIOD    40
+#define FAM_PWM_DUTY	  0
 /* CONST & MACROS */
 static uint32_t fac_us=0;							//us延时倍乘数
 static uint16_t fac_ms=0;							//ms延时倍乘数,在FreeRTOS下,代表每个节拍的ms数
+static uint16_t Fan_Pwm_TimeOut = 0;
 uint16_t FANS_Time_OVERcnt[4]={0};
 uint32_t FANS_Period_Val[4] ={0};
 uint16_t FANS_Curr_CCR_Val[4] = {0},FANS_Last_CCR_Val[4] = {0};
@@ -27,7 +31,7 @@ extern void xPortSysTickHandler(void);
 static void TIMER1_HAL_Init(void);
 
 static void TIMER2_PWM_Port_Init(void);
-static void TIMER2_PWM_Init(uint16_t ccr1_val);
+static void TIMER2_PWM_Init(void);
 
 static void TIMER3_InputCapture_Port_Init(void);
 static void TIMER3_InputCapture_Init(void);
@@ -50,15 +54,10 @@ __weak void TMR_1ms_Callback(void)
 {
 
 }
-__weak void TMR_Pulse_ISR_Callback(void)
+__weak void TMR_Modbus_ISR_Callback(void)
 {
 
 }
-
-void IF_Fan_PWM_Speed(uint16_t duty)
-{
-	tmr_channel_value_set(TMR1, TMR_SELECT_CHANNEL_1, duty*TMRPRD_1MS/100);
-}	
 
 uint16_t IF_Fan_FG_Speed(uint8_t FanChnNo,uint8_t duty)
 {
@@ -74,6 +73,21 @@ uint16_t IF_Fan_FG_Speed(uint8_t FanChnNo,uint8_t duty)
 	}	
 	return tempspd;
 }	
+
+void FAN_PWM_ISR_Callback(void)
+{
+	Fan_Pwm_TimeOut++;
+	if(Fan_Pwm_TimeOut > FAM_PWM_DUTY)
+	{
+		IF_GpioOutPut(FAN_PWM_PORT, FAN_PWM_PIN, 0, LOGIC_POUT);	//高电平有效
+	}
+	else if(Fan_Pwm_TimeOut>FAM_PWM_PERIOD)
+	{
+		Fan_Pwm_TimeOut = 0;
+		//IF_GpioOutPut(FAN_PWM_PORT, FAN_PWM_PIN, 1, LOGIC_POUT);	//高电平有效
+	}		
+}	
+
 /* FUNCTION *******************************************************************
  * Function Name : IF_TmrInit
  * Description   : 定时器初始化
@@ -88,11 +102,11 @@ void IF_TmrInit(void)
     TIMER1_HAL_Init();
 	//Fan硬件PWM时钟
 	TIMER2_PWM_Port_Init();
-	TIMER2_PWM_Init(50);
+	TIMER2_PWM_Init();
 	//Fan硬件InputCapture时钟
 	TIMER3_InputCapture_Port_Init();	
 	TIMER3_InputCapture_Init();
-	
+	//Modbus接收时钟
 	TIMER4_HAL_Init();
 }
 
@@ -125,7 +139,7 @@ static void TIMER1_HAL_Init(void)
     tmr_interrupt_enable(TMR6, TMR_OVF_INT, TRUE);
 
     /* tmr6 hall interrupt nvic init */
-    nvic_irq_enable(TMR6_DAC_GLOBAL_IRQn, 6, 0);
+    nvic_irq_enable(TMR6_DAC_GLOBAL_IRQn, 1, 0);
 
     /* enable tmr6 */
 #ifdef DEBUG_ON    
@@ -165,12 +179,13 @@ static void TIMER2_PWM_Port_Init(void)
 	gpio_default_para_init(&gpio_init_struct);
 	gpio_init_struct.gpio_drive_strength = GPIO_DRIVE_STRENGTH_STRONGER;
     gpio_init_struct.gpio_out_type  = GPIO_OUTPUT_PUSH_PULL;
-    gpio_init_struct.gpio_mode = GPIO_MODE_MUX;
+    gpio_init_struct.gpio_mode = GPIO_MODE_OUTPUT;
     gpio_init_struct.gpio_pull = GPIO_PULL_NONE;
 	
 	gpio_init_struct.gpio_pins = FAN_PWM_PIN;
 	gpio_init(FAN_PWM_PORT, &gpio_init_struct);
-	gpio_pin_mux_config(FAN_PWM_PORT, FAN_PWM_PIN_SOURCES, FAM_PWM_MUX);
+	IF_GpioOutPut(FAN_PWM_PORT, FAN_PWM_PIN, 0, LOGIC_POUT);	//高电平有效
+	
 }
 /* FUNCTION *******************************************************************
  * Function Name : TIMER2_PWM_Init
@@ -178,43 +193,51 @@ static void TIMER2_PWM_Port_Init(void)
  * Parameter	 : duty------占空比
  * Return        :  
  * END ***********************************************************************/
-static void TIMER2_PWM_Init(uint16_t duty)
+static void TIMER2_PWM_Init(void)
 {
-	tmr_output_config_type tmr_oc_init_structure;
 	crm_clocks_freq_type crm_clocks_freq_struct = {0};
-	tmr_cfg_type tmrCfg;
+    tmr_cfg_type tmrCfg;
 
-	/* get system clock */
-	crm_clocks_freq_get(&crm_clocks_freq_struct);
-	tmrCfg.tmrDiv = ((crm_clocks_freq_struct.apb2_freq * 2) / TMRCLK_28M) - 1;
-	
-	tmrCfg.tmrPeriod = TMRPRD_1MS;  //1ms period
+    /* get system clock */
+    crm_clocks_freq_get(&crm_clocks_freq_struct);
+    tmrCfg.tmrDiv = ((crm_clocks_freq_struct.apb2_freq * 2) / TMRCLK_28M) - 1;
+    tmrCfg.tmrPeriod = TMRPRD_25US;  //25us period
 
 	/* enable tmr1 clock */
 	crm_periph_clock_enable(CRM_TMR1_PERIPH_CLOCK, TRUE);
-
+    /* tmr5 configuration */
+   
 	/* time base configuration */
-	tmr_base_init(TMR1, tmrCfg.tmrPeriod, tmrCfg.tmrDiv);
-	tmr_cnt_dir_set(TMR1, TMR_COUNT_UP);
-	tmr_clock_source_div_set(TMR1, TMR_CLOCK_DIV1);
-	
-	tmr_output_default_para_init(&tmr_oc_init_structure);
-	tmr_oc_init_structure.oc_mode = TMR_OUTPUT_CONTROL_PWM_MODE_A;
-	tmr_oc_init_structure.oc_idle_state = FALSE;
-	tmr_oc_init_structure.oc_polarity = TMR_OUTPUT_ACTIVE_HIGH;
-	tmr_oc_init_structure.oc_output_state = TRUE;
-	
-	tmr_output_channel_config(TMR1, TMR_SELECT_CHANNEL_1, &tmr_oc_init_structure);
-	tmr_channel_value_set(TMR1, TMR_SELECT_CHANNEL_1, duty*TMRPRD_1MS/100);
-	
-	tmr_output_channel_buffer_enable(TMR1, TMR_SELECT_CHANNEL_1, TRUE);
-	
-	tmr_period_buffer_enable(TMR1, TRUE);
-	
-	/* tmr enable counter */
-	tmr_counter_enable(TMR1, TRUE);
-}
+    tmr_base_init(TMR1, tmrCfg.tmrPeriod, tmrCfg.tmrDiv);
+    tmr_cnt_dir_set(TMR1, TMR_COUNT_UP);
 
+    /* overflow interrupt enable */
+    tmr_interrupt_enable(TMR1, TMR_OVF_INT, TRUE);
+
+    /* tmr1 hall interrupt nvic init */
+    nvic_irq_enable(TMR1_OVF_TMR10_IRQn, 4, 0);
+	/* enable tmr1 */
+	#ifdef DEBUG_ON    
+		debug_apb1_periph_mode_set(DEBUG_TMR1_PAUSE, TRUE);
+	#endif
+    tmr_counter_enable(TMR1, TRUE);
+}
+/****************************************************************
+  * @brief  this function handles timer3 overflow handler.
+  *         TMR1 for LOAD1_MOTOR is 25us timer  
+  * @param  none
+  * @retval none
+  *****************************************************************/
+void TMR1_OVF_TMR10_IRQHandler(void)
+{
+    if(tmr_flag_get(TMR1, TMR_OVF_FLAG) == SET)
+    {
+        //user's callback
+        FAN_PWM_ISR_Callback();
+
+        tmr_flag_clear(TMR1, TMR_OVF_FLAG);
+    }
+}
 /* FUNCTION *******************************************************************
  * Function Name : TIMER3_InputCapture_Port_Init
  * Description   : PWM输入管脚Init
@@ -383,7 +406,7 @@ static void TIMER4_HAL_Init(void)
     /* get system clock */
     crm_clocks_freq_get(&crm_clocks_freq_struct);
     tmrCfg.tmrDiv = ((crm_clocks_freq_struct.apb2_freq * 2) / TMRCLK_28M) - 1;
-    tmrCfg.tmrPeriod = TMRPRD_5US;  //5us period
+    tmrCfg.tmrPeriod = TMRPRD_100US;  //100us period
 
 	/* enable tmr1 clock */
 	crm_periph_clock_enable(CRM_TMR5_PERIPH_CLOCK, TRUE);
@@ -397,7 +420,7 @@ static void TIMER4_HAL_Init(void)
     tmr_interrupt_enable(TMR5, TMR_OVF_INT, TRUE);
 
     /* tmr1 hall interrupt nvic init */
-    nvic_irq_enable(TMR5_GLOBAL_IRQn, 2, 0);
+    nvic_irq_enable(TMR5_GLOBAL_IRQn, 7, 0);
 	/* enable tmr5 */
 	#ifdef DEBUG_ON    
 		debug_apb1_periph_mode_set(DEBUG_TMR5_PAUSE, TRUE);
@@ -416,7 +439,7 @@ void TMR5_GLOBAL_IRQHandler(void)
     if(tmr_flag_get(TMR5, TMR_OVF_FLAG) == SET)
     {
         //user's callback
-        TMR_Pulse_ISR_Callback();
+        TMR_Modbus_ISR_Callback();
 		
         tmr_flag_clear(TMR5, TMR_OVF_FLAG);
     }
