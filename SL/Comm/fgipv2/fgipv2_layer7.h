@@ -65,10 +65,10 @@ typedef enum _ParamterIndex_t
 	ID_InputVrmsFactor			   = 0x4200,
 	ID_InputIrmsFactor			   = 0x4201,
 	ID_InputPhaseFactor			   = 0x4202,
-	ID_PIDProportion 			   = 0x4203,
-	ID_PIDIntegral 			   	   = 0x4204,
-	ID_PIDDerivatice 			   = 0x4205,
-	ID_PIDErrorThr 			       = 0x4206,
+	ID_PIDProportion 		       = 0x4203,
+	ID_PIDIntegral 		   		   = 0x4204,
+	ID_PIDDerivatice 		       = 0x4205,
+	ID_PIDErrorThr 		           = 0x4206,
 	ID_VoltPowerMap				   = 0x4207,
 	ID_SetVoltage				   = 0x4208,
 	ID_SetWorkMode                 = 0x4209,
@@ -107,6 +107,12 @@ typedef enum _ParamterIndex_t
 	ID_Factor_DCDC2_Curr		   = 0x4227,
 	ID_Factor_Way3_Current		   = 0x4228,
 	ID_Factor_Way4_Current		   = 0x4229,
+	
+	ID_PhasePowerMap               = 0x422A,
+	
+	ID_InputVrmsOffset			   = 0x422B,
+	ID_InputIrmsOffset			   = 0x422C,
+	ID_InputPhaseOffset			   = 0x422D,	
 	//Configurable User parameters 
     ID_RegulationMode              = 0x4000,  // work mode, 0: Pfwd, 1: Pdlv 2:Vdc
 	ID_PfwdLimit				   = 0x4001,  //Forward power Limit

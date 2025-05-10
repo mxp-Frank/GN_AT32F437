@@ -12,10 +12,10 @@
 #include "IF_SL_Cfg.h"
 #include "IF_HAL_Cfg.h"
 #include "IF_PT_SWC.h"
-#include "PT_ModuleInput.h"
 
 /* CONST & MACROS */
-#define QUEUE_LENGTH         	5        //队列长度
+#define MAIN_TASK_PERIOD        2    
+#define QUEUE_LENGTH         	8        //队列长度
 /* DATA STRUCTURES */
 
 /* LOCAL VARIABLES */
@@ -41,9 +41,9 @@ static void Pt_Interface_task_function(void *pvParameters);
 static void PT_Port_task_function(void *pvParameters);
 static void UserHMI_task_function(void *pvParameters);
 static void DebugHMI_task_function(void *pvParameters);
-static void Fpga_task_function(void *pvParameters);
-static void Modbus_Recvtask_function(void *pvParameters);
-static void Modbus_Sendtask_function(void *pvParameters);
+static void FpgaHMI_task_function(void *pvParameters);
+static void ModbusRecv_task_function(void *pvParameters);
+static void ModbusSend_task_function(void *pvParameters);
 static void HwTest_task_function(void *pvParameters);
 /************************************************************************/
 /* Global Functions Definitions                                          */
@@ -58,7 +58,8 @@ int main(void)
 		IF_SL_Bootloader();
     #endif 
     IF_SL_CfgInit();
-		
+	
+	delay_ms(100);
     /* disable global interrupt */
     __disable_irq(); 
 	
@@ -112,18 +113,18 @@ int main(void)
 	{ 
         DEBUG_Print("DebugHMI_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(Fpga_task_function,"fpga_task",512,NULL,2,&FpgaUpdateTask_Handler);
+	xReturn = xTaskCreate(FpgaHMI_task_function,"fpga_task",512,NULL,2,&FpgaUpdateTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Fpga_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
 	
-	xReturn = xTaskCreate(Modbus_Recvtask_function,"modbus_task",512,NULL,3,&ModbusRecvTask_Handler);
+	xReturn = xTaskCreate(ModbusRecv_task_function,"modbus_task",512,NULL,3,&ModbusRecvTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Modbus_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(Modbus_Sendtask_function,"modbus_task",512,NULL,3,&ModbusSendTask_Handler);
+	xReturn = xTaskCreate(ModbusSend_task_function,"modbus_task",512,NULL,3,&ModbusSendTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Modbus_task could not be created as there was insufficient heap memory remaining.\r\n");
@@ -155,7 +156,7 @@ static void PT_Port_task_function(void *pvParameters)
 		if(RATE_DO_EXECUTE(RATE_50_HZ, tick)) /** 50Hz 20ms update **/
 		{	
 			IF_PT_PortInput_Task();			   //端口输入接口			
-			IF_PT_PortOutput_Task();		   //PORT输出接口		
+			IF_Module_PortOutput_Task();		   //PORT输出接口		
 			IF_SL_ExecuteAction();						
 		}			
 		tick++;
@@ -184,31 +185,23 @@ static void Pt_Interface_task_function(void *pvParameters)
 /* Pt sensor task function: Pt sensor process */
 static void Pt_Sensor_task_function(void *pvParameters)
 {
-	uint32_t tick = 0;
-	portTickType lastWakeTime = xTaskGetTickCount();	
     while(1)
     {
-		vTaskDelayUntil(&lastWakeTime,MAIN_LOOP_DT);  //1ms周期延时	
-		if(RATE_DO_EXECUTE(RATE_200_HZ, tick)) 		/** 500Hz 5ms update **/
-		{
-			IF_SL_SensorTask();
-			xSemaphoreGive(mainSemaphore);
-		}
-		tick++;		
+		IF_SL_SensorTask();
+		xSemaphoreGive(mainSemaphore);
+		vTaskDelay(MAIN_TASK_PERIOD);
 	}
 }
 /* Pt main task function: Pt main process */
 static void Pt_Main_task_function(void *pvParameters)
 {
-	
-	IF_PT_SWCInit();
-	delay_ms(1000);
+	IF_Module_SWCInit();
     while(1)
     {
 		if(pdTRUE == xSemaphoreTake(mainSemaphore, portMAX_DELAY))
 		{
-			IF_PT_SensorInput_Task(); 	 	 		//Sensor输入接口
-			IF_PT_Main_Task();
+			IF_Module_SensorInput_Task();
+			IF_Module_Main_Task();
 		}				
 	}
 }
@@ -217,15 +210,14 @@ static void Pt_Main_task_function(void *pvParameters)
 static void HwTest_task_function(void *pvParameters)
 {
     portTickType	lastWakeTime;
-    lastWakeTime = xTaskGetTickCount();
-	
+    lastWakeTime = xTaskGetTickCount();	
     while(1)
     { 
 		IF_SL_Nvm_WriteSystemResetTimes(); 	
-		IF_SL_SetInterfaceOutput(IOSIG_DEBUGLED , ON);		
+		IF_SL_SetInterfaceOutput(IOSIGN_DEBUGLEDONOFF , ON);		
 		vTaskDelayUntil(&lastWakeTime, 500 / MAIN_LOOP_DT);
 	#ifndef BOOT
-		IF_SL_SetInterfaceOutput(IOSIG_DEBUGLED , OFF);	
+		IF_SL_SetInterfaceOutput(IOSIGN_DEBUGLEDONOFF , OFF);	
 		vTaskDelayUntil(&lastWakeTime, 500 / MAIN_LOOP_DT);
 	#endif
     }
@@ -266,9 +258,8 @@ static void DebugHMI_task_function(void *pvParameters)
  * Parameter     : 无
  * Return        : 无
  * END *********************************************************/
-static void Fpga_task_function(void *pvParameters)
+static void FpgaHMI_task_function(void *pvParameters)
 {
-	xSemaphoreGive(FpgaNfSemaphore);
     while(1)
     {
 		IF_SL_UartTask3();//blocked task
@@ -280,17 +271,15 @@ static void Fpga_task_function(void *pvParameters)
  * Parameter     : 无
  * Return        : 无
  * END *********************************************************/
-static void Modbus_Recvtask_function(void *pvParameters)
+static void ModbusRecv_task_function(void *pvParameters)
 {
-	
     while(1)
     {
 		IF_SL_UartReciveTask4();//blocked task
     }
 }
-static void Modbus_Sendtask_function(void *pvParameters)
+static void ModbusSend_task_function(void *pvParameters)
 {
-	xSemaphoreGive(ModbusNfSemaphore);
     while(1)
     {
 		IF_SL_UartSendTask4();//blocked task

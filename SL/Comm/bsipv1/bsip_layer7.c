@@ -295,14 +295,14 @@ void BSIP_ModbusFirmwareUpdate(uint8_t port)
 			else				
 			{
 				xSemaphoreGive(FpgaNfSemaphore);
-				IF_ACDC_SetParamsRW(DEVICE_READ_VERSIONREG);	 
+				IF_ACDC_SetParamsRWType(DEVICE_READ_VERSIONREG);	 
 				FirmwareData.TargetDevice = DEVICE_COREBOARD;
 			}
 		}
 	}else
 	{
 		xSemaphoreGive(FpgaNfSemaphore);
-		IF_ACDC_SetParamsRW(DEVICE_READ_VERSIONREG);	 
+		IF_ACDC_SetParamsRWType(DEVICE_READ_VERSIONREG);	 
 		FirmwareData.TargetDevice = DEVICE_COREBOARD;
 	}
 }
@@ -487,6 +487,7 @@ static void Dealwith_Debug_FirmwareUpdate(uint8_t chnNo, uint8_t* pBuf)
 					{
 						NeedSend_ACK = 0;
 						FirmwareData.TargetDevice = DEVICE_MODBUS;
+						IF_ACDC_SetParamsRWType(DEVICE_WRITE_SOFTWAREREG);
 						xQueueSend(ModbusFWQueue, &g_rxBsipFrame, (TickType_t)0);
 						return;
 					}
@@ -578,6 +579,7 @@ static void Dealwith_Debug_FirmwareUpdate(uint8_t chnNo, uint8_t* pBuf)
                 FirmwareData.TargetDevice = DEVICE_COREBOARD;
             }
             NeedSend_ACK = 0;
+			IF_ACDC_SetParamsRWType(DEVICE_WRITE_SOFTWAREREG);
 			xQueueSend(ModbusFWQueue, &g_rxBsipFrame, (TickType_t)0);
         }
         else
@@ -764,7 +766,7 @@ static uint8_t SendDebugData(uint8_t port,uint8_t chnNo, uint16_t frameNo)
     if (frameNo == 0)
     {
         DebugData.ExpectedFrameNo = 0;
-        DebugData.TxDataRemainLen = IF_GetTotalAMPDLength();
+        DebugData.TxDataRemainLen = IF_GetTotaltRFPwrPIDProcessDataLength();
     }
     else
     {
@@ -786,7 +788,7 @@ static uint8_t SendDebugData(uint8_t port,uint8_t chnNo, uint16_t frameNo)
     memset(g_FlashBuffer, 0, FLASH_BUF_SIZE);
     DebugData.CurrentBufLen = 0;
 
-    DebugData.CurrentBufLen = IF_GetAMPD(frameNo, g_FlashBuffer);
+    DebugData.CurrentBufLen = IF_GetRFPwrPIDProcessData(frameNo, g_FlashBuffer);
 
     DebugData.TxDataRemainLen -= DebugData.CurrentBufLen;
 

@@ -1489,7 +1489,7 @@ static void Dealwith_DOB_CmdSetPoint(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->DataLen  = 2;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 
-		uint16_t value = IF_CmdParam_GetSetPoint();
+		uint16_t value = IF_CmdParam_GetPwrPoint();
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT16(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT16(value);
 	}
@@ -1501,7 +1501,7 @@ static void Dealwith_DOB_CmdSetPoint(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 			uint16_t value = MAKE_UINT16( pRxDOB->pData[1],pRxDOB->pData[0]);
 			if (value <= MAX_POWER)
 			{
-				IF_CmdParam_SetSetPoint(value);
+				IF_CmdParam_SetPwrPoint(value);
 				pTxDOB->Status = NoErrorNoData;
 			}
 			else
@@ -1572,7 +1572,7 @@ static void Dealwith_DOB_CmdACDCCurrent(DataObject_t* pRxDOB, DataObject_t* pTxD
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int32_t value = IF_CmdParam_GetACDCCurrent();
+		int32_t value = IF_InternalParam_GetACDCCurrent();
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -1586,7 +1586,7 @@ static void Dealwith_DOB_CmdACDCCurrent(DataObject_t* pRxDOB, DataObject_t* pTxD
 			int32_t value = MAKE_UINT32(pRxDOB->pData[3],pRxDOB->pData[2], pRxDOB->pData[1],pRxDOB->pData[0]);
 			if (value >=0&&value <= MAX_ACDC_CURRENT)
 			{
-				IF_CmdParam_SetACDCCurrent(value);
+				IF_InternalParam_SetACDCCurrent(value);
 				pTxDOB->Status = NoErrorNoData;
 				
 			}
@@ -1792,7 +1792,44 @@ static void Dealwith_DOB_InputPhaseFactor(DataObject_t* pRxDOB, DataObject_t* pT
 		}
 	}
 }
-static void Dealwith_DOB_PIDProportion(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+static void Dealwith_DOB_InputVrmsOffset(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_SINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_InternalParam_GetSensorVrmsOffset();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_SINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_InternalParam_SetSensorVrmsOffset(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+
+static void Dealwith_DOB_InputIrmsOffset(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	if ((pTxDOB->SubIndex) != 0x01)
 	{
@@ -1806,7 +1843,7 @@ static void Dealwith_DOB_PIDProportion(DataObject_t* pRxDOB, DataObject_t* pTxDO
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 
-		int32_t value = IF_InternalParam_GetProportion();
+		int32_t value = IF_InternalParam_GetSensorIrmsOffset();
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -1818,7 +1855,85 @@ static void Dealwith_DOB_PIDProportion(DataObject_t* pRxDOB, DataObject_t* pTxDO
 		{
 			//数据类型正确才设置参数
 			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
-			IF_InternalParam_SetProportion(value);
+			IF_InternalParam_SetSensorIrmsOffset(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_InputPhaseOffset(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_SINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_InternalParam_GetSensorPhaseOffset();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_SINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_InternalParam_SetSensorPhaseOffset(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_PIDProportion(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+	int32_t value = 0;
+	uint8_t SubIndex = (pTxDOB->SubIndex);
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_SINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+		if (SubIndex == 0x01)
+		{
+			 value = IF_InternalParam_GetPhasePIDProportion();
+		}else
+		{
+			 value = IF_InternalParam_GetVoltPIDProportion();
+		} 
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_SINT32)
+		{
+			//数据类型正确才设置参数
+			value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			if (SubIndex == 0x01)
+			{
+				IF_InternalParam_SetPhasePIDProportion(value);
+			}else
+			{
+				IF_InternalParam_SetVoltPIDProportion(value);
+			} 
 			pTxDOB->Status = NoErrorNoData;
 		}
 		else
@@ -1829,20 +1944,21 @@ static void Dealwith_DOB_PIDProportion(DataObject_t* pRxDOB, DataObject_t* pTxDO
 }
 static void Dealwith_DOB_PIDIntegral(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
-
-	if ((pTxDOB->SubIndex) != 0x01)
-	{
-		pTxDOB->Status = UnknownSubIndex;
-		return;
-	}
+	int32_t value = 0;	
+	uint8_t SubIndex = pTxDOB->SubIndex;
 	if (rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-
-		int32_t value = IF_InternalParam_GetIntegral();
+		if (SubIndex == 0x01)
+		{
+			 value = IF_InternalParam_GetPhasePIDIntegral();
+		}else
+		{
+			 value = IF_InternalParam_GetVoltPIDIntegral();
+		} 
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -1853,8 +1969,14 @@ static void Dealwith_DOB_PIDIntegral(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		if (pRxDOB->DataType == DataType_SINT32)
 		{
 			//数据类型正确才设置参数
-			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
-			IF_InternalParam_SetIntegral(value);
+			value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			if (SubIndex == 0x01)
+			{
+				IF_InternalParam_SetPhasePIDIntegral(value);
+			}else 
+			{
+				IF_InternalParam_SetVoltPIDIntegral(value);
+			} 
 			pTxDOB->Status = NoErrorNoData;
 		}
 		else
@@ -1865,19 +1987,21 @@ static void Dealwith_DOB_PIDIntegral(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 }
 static void Dealwith_DOB_PIDDerivatice(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
-	if ((pTxDOB->SubIndex) != 0x01)
-	{
-		pTxDOB->Status = UnknownSubIndex;
-		return;
-	}
+	int32_t value = 0;	
+	uint8_t SubIndex = pTxDOB->SubIndex;
 	if (rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-
-		int32_t value = IF_InternalParam_GetDerivatice();
+		if (SubIndex == 0x01)
+		{
+			 value = IF_InternalParam_GetPhasePIDDerivatice();
+		}else 
+		{
+			 value = IF_InternalParam_GetVoltPIDDerivatice();
+		} 
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -1888,8 +2012,14 @@ static void Dealwith_DOB_PIDDerivatice(DataObject_t* pRxDOB, DataObject_t* pTxDO
 		if (pRxDOB->DataType == DataType_SINT32)
 		{
 			//数据类型正确才设置参数
-			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
-			IF_InternalParam_SetDerivatice(value);
+			value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			if (SubIndex == 0x01)
+			{
+				 IF_InternalParam_SetPhasePIDDerivatice(value);
+			}else
+			{
+				IF_InternalParam_SetVoltPIDDerivatice(value);
+			} 
 			pTxDOB->Status = NoErrorNoData;
 		}
 		else
@@ -1900,19 +2030,22 @@ static void Dealwith_DOB_PIDDerivatice(DataObject_t* pRxDOB, DataObject_t* pTxDO
 }
 static void Dealwith_DOB_PIDErrorThr(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
-	if ((pTxDOB->SubIndex) != 0x01)
-	{
-		pTxDOB->Status = UnknownSubIndex;
-		return;
-	}
+	int32_t value = 0;
+	uint8_t SubIndex =pTxDOB->SubIndex;
 	if (rxInfo.Cmd == ParameterRead)
 	{
+		
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-
-		int32_t value = IF_InternalParam_GetPIDErrorThr();
+		if (SubIndex == 0x01)
+		{
+			 value = IF_InternalParam_GetPhasePIDErrorThr();
+		}else
+		{
+			 value = IF_InternalParam_GetVoltPIDErrorThr();
+		} 
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -1923,8 +2056,14 @@ static void Dealwith_DOB_PIDErrorThr(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		if (pRxDOB->DataType == DataType_SINT32)
 		{
 			//数据类型正确才设置参数
-			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
-			IF_InternalParam_SetPIDErrorThr(value);
+			value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			if (SubIndex == 0x01)
+			{
+				 IF_InternalParam_SetPhasePIDErrorThr(value);
+			}else
+			{
+				IF_InternalParam_SetVoltPIDErrorThr(value);
+			} 	
 			pTxDOB->Status = NoErrorNoData;
 		}
 		else
@@ -1982,7 +2121,7 @@ static void Dealwith_DOB_PIDStartPower(DataObject_t* pRxDOB, DataObject_t* pTxDO
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 
-		int32_t value = IF_InternalParam_GetInitPoint();
+		int32_t value = IF_InternalParam_GetPhasePoint();
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -3146,7 +3285,6 @@ static void Dealwith_DOB_SensorVSWR(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
 		int32_t value = (IF_Fpga_GetSensor(ChnN_VSWR)+0.0005F)*1000;
-		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -3692,7 +3830,7 @@ static void Dealwith_DOB_CmdMatchMoveToCapPos(uint8_t capIndex,DataObject_t* pRx
 			uint16_t value = MAKE_UINT16(pRxDOB->pData[1], pRxDOB->pData[0]);
 			if (value <= 10000&&g_StatusWord.bits.MatchConnected)
 			{
-				IF_Cmd_SetMatchMoveToPos(capIndex, value);
+				IF_CmdParam_SetMatchMoveToPos(capIndex, value);
 				pTxDOB->Status = NoErrorNoData;
 			}
 			else
@@ -3930,7 +4068,7 @@ static void Dealwith_DOB_CmdSensorChannelNo(DataObject_t* pRxDOB, DataObject_t* 
 		pTxDOB->DataType = DataType_UINT8;
 		pTxDOB->DataLen  = 1;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		uint8_t value = IF_CmdParam_GetSensorChannelNo();
+		uint8_t value = IF_InternalParam_GetDDSChannelNo();
 		txDOBsDataBuf[txDOBsDataLen++] = value;
 	}
 	else if (rxInfo.Cmd == ParameterWrite)
@@ -3939,7 +4077,7 @@ static void Dealwith_DOB_CmdSensorChannelNo(DataObject_t* pRxDOB, DataObject_t* 
 		{
 			//数据类型正确才设置参数
 			uint8_t value =  pRxDOB->pData[0];
-			IF_CmdParam_SetSensorChannelNo(value);
+			IF_InternalParam_SetDDSChannelNo(value);
 			pTxDOB->Status = NoErrorNoData;
 		}
 		else
@@ -3962,7 +4100,7 @@ static void Dealwith_DOB_CmdWorkFrequency(DataObject_t* pRxDOB, DataObject_t* pT
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 
-		uint32_t value = IF_CmdParam_GetWorkFrequency();
+		uint32_t value = IF_InternalParam_GetWorkCenterFreq();
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -3974,7 +4112,7 @@ static void Dealwith_DOB_CmdWorkFrequency(DataObject_t* pRxDOB, DataObject_t* pT
 		{
 			//数据类型正确才设置参数
 			uint32_t value =  MAKE_UINT32(pRxDOB->pData[3],pRxDOB->pData[2],pRxDOB->pData[1],pRxDOB->pData[0]);	
-			IF_CmdParam_SetWorkFrequency(value);
+			IF_InternalParam_SetWorkCenterFreq(value);
 			pTxDOB->Status = NoErrorNoData;
 		}
 		else
@@ -3997,7 +4135,7 @@ static void Dealwith_DOB_CmdWorkPhase(DataObject_t* pRxDOB, DataObject_t* pTxDOB
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 
-		uint32_t value = IF_CmdParam_GetWorkPhase();
+		uint32_t value = IF_CmdParam_GetDDSWorkPhase();
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -4009,7 +4147,7 @@ static void Dealwith_DOB_CmdWorkPhase(DataObject_t* pRxDOB, DataObject_t* pTxDOB
 		{
 			//数据类型正确才设置参数
 			uint32_t value =  MAKE_UINT32(pRxDOB->pData[3],pRxDOB->pData[2],pRxDOB->pData[1],pRxDOB->pData[0]);	
-			IF_CmdParam_SetWorkPhase(value);
+			IF_CmdParam_SetDDSWorkPhase(value);
 			pTxDOB->Status = NoErrorNoData;
 		}
 		else
@@ -4088,8 +4226,64 @@ static void Dealwith_DOB_FactoryMode(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		}
 	}
 }
-
-
+static void Dealwith_DOB_VoltageToPowerMap(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+	uint16_t index = (pTxDOB->SubIndex)-1;
+	if(rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status = NotPermittedParam;
+		
+	}else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_SINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			if (value >=0 && value < MAX_ACDC_VOLT)
+			{
+				IF_NvmParam_SetVoltMapMap(value,index);
+				pTxDOB->Status = NoErrorNoData;
+			}
+			else
+			{
+				pTxDOB->Status = CheckFailedParam;
+			}
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_PhaseToPowerMap(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+	uint16_t index = (pTxDOB->SubIndex) - 1;	
+	if(rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status = NotPermittedParam;
+		
+	}else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_SINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			if (value <= MAX_MAP_POWER)
+			{
+				IF_NvmParam_SetPhaseMapMap(value,index);
+				pTxDOB->Status = NoErrorNoData;
+			}
+			else
+			{
+				pTxDOB->Status = CheckFailedParam;
+			}
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
 static void Dealwith_UnknownDOB(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	pTxDOB->Status = UnknownParam;
@@ -4153,7 +4347,7 @@ static void Dealwith_Datablock_AutoMatchProcessData(DataObject_t* pRxDOB, DataOb
 			ExpectedDataBlockID = ID_ProcessData;
 			ExpectedDataBlockCmd = DataBlockRead;
 
-			txDataBlockRemainLen = IF_GetTotalAMPDLength();
+			txDataBlockRemainLen = IF_GetTotaltRFPwrPIDProcessDataLength();
 		}
 		else
 		{
@@ -4187,7 +4381,7 @@ static void Dealwith_Datablock_AutoMatchProcessData(DataObject_t* pRxDOB, DataOb
 
 		memset(&NvmFlash, 0, sizeof(NvmBuffer_t));
 
-		NvmFlash.Index = IF_GetAMPD(frameNo, NvmFlash.Buf);
+		NvmFlash.Index = IF_GetRFPwrPIDProcessData(frameNo, NvmFlash.Buf);
 
 		txDataBlockRemainLen -= NvmFlash.Index;
 
@@ -4415,7 +4609,7 @@ static void Dealwith_Datablock_Firmware(DataObject_t* pRxDOB, DataObject_t* pTxD
 				}							
 			}else if(FirmwareFlag == MODBUS_FIRMUPDATE) // Upgrade Modbus  software
 			{	
-				IF_ACDC_SetParamsRW(DEVICE_WRITE_SOFTWAREREG);				
+				IF_ACDC_SetParamsRWType(DEVICE_WRITE_SOFTWAREREG);				
 				memset(&NvmFlash,0,sizeof(NvmBuffer_t));
 				BSIPInfo_t txBsipFrame;	
 				txBsipFrame.bsip.msgclass=(MsgClassEnum)0x20;  		   //msg_class_command 
@@ -4620,9 +4814,17 @@ static void ParseOneParamDOB(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
     case ID_InputIrmsFactor:
         Dealwith_DOB_InputIrmsFactor(pRxDOB, pTxDOB);
         break;
-
     case ID_InputPhaseFactor:
         Dealwith_DOB_InputPhaseFactor(pRxDOB, pTxDOB);
+        break;
+	case ID_InputVrmsOffset:
+		Dealwith_DOB_InputVrmsOffset(pRxDOB, pTxDOB);
+		break;
+    case ID_InputIrmsOffset:
+        Dealwith_DOB_InputIrmsOffset(pRxDOB, pTxDOB);
+        break;
+    case ID_InputPhaseOffset:
+        Dealwith_DOB_InputPhaseOffset(pRxDOB, pTxDOB);
         break;
     case ID_PIDProportion:
         Dealwith_DOB_PIDProportion(pRxDOB, pTxDOB);
@@ -4883,6 +5085,12 @@ static void ParseOneParamDOB(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		break;
 	case ID_Tune_ActualCapPos:
 		Dealwith_DOB_CmdMatchCapPos(TUNE,pRxDOB, pTxDOB);
+		break;
+	case ID_VoltPowerMap:
+		Dealwith_DOB_VoltageToPowerMap(pRxDOB, pTxDOB);
+		break;
+	case ID_PhasePowerMap:
+		Dealwith_DOB_PhaseToPowerMap(pRxDOB, pTxDOB);
 		break;
 	default:
 		Dealwith_UnknownDOB(pRxDOB, pTxDOB);

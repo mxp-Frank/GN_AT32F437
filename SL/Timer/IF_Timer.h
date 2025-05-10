@@ -47,13 +47,16 @@ typedef struct _SystemTimer_t
 	
 	uint32_t SlowStopDelayTimer;
 	uint8_t  SlowStopDelayFlag;
-
+	
 	uint32_t RFOffDelayTimer;
 	uint8_t  RFOffDelayFlag;
     uint8_t  RFOffDelayTimeOutFlag;
 	
 	uint32_t FanTimer;
 	uint32_t FanSpeedVal[4];
+	
+	uint32_t FanSlowOnTimer;
+	uint8_t Pwm_duty;
 } SystemTimer_t;
 
 /******************************************************************************
@@ -67,10 +70,10 @@ extern uint32_t IF_Timer_GetRFOnUpTimer(void);
 extern uint8_t IF_Timer_GetPowerUpDurationFlag(void);
 extern void IF_Timer_SetPowerUpDurationFlag(uint8_t OnorOff);
 
-extern uint16_t IF_Timer_GetRFSlowStartDelayTime(void);
+extern float IF_Timer_GetRFSlowStartDelayTime(void);
 extern void IF_Timer_SetRFSlowStartDelayFlag(uint8_t OnorOff);
 
-extern uint16_t IF_Timer_GetRFSlowStopDelayTime(void);
+extern float IF_Timer_GetRFSlowStopDelayTime(void);
 extern void IF_Timer_SetRFSlowStopDelayFlag(uint8_t OnorOff);
 extern uint8_t IF_Timer_GetRFSlowStopDelayTimeOutFlag(void);
 extern void IF_Timer_ClearRFSlowOffDelayTimeOutFlag(void);
@@ -80,7 +83,6 @@ extern uint8_t IF_Timer_GetRFOffDelayTimeOutFlag(void);
 extern void IF_Timer_ClearRFOffDelayTimeOutFlag(void);
 
 extern uint32_t  IF_Timer_GetFanSpeedValue(uint8_t FanChnNo);
-
 #if defined(__cplusplus)
 extern "C" }
 #endif /* __cplusplus */

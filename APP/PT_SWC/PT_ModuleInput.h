@@ -11,8 +11,6 @@
 #define _PT_MODULEINPUT_H_
 #include "stdint.h"
 
-extern void IF_PT_SensorInput_Task(void);
 extern void IF_PT_CmdExecute_Task(void);
-extern void IF_PT_KeyInput_Task(void);
 extern void IF_PT_PortInput_Task(void);
 #endif /* _PT_CMDINPUT_H_ */

@@ -33,8 +33,8 @@ extern uint16_t FANS_Last_CCR_Val[4];
  * Interface functions                                                         *
  ******************************************************************************/
 extern void IF_TmrInit(void);
-extern void IF_Fan_PWM_Speed(uint16_t duty);
-extern uint16_t IF_Fan_FG_Speed(uint8_t FanChnNo,uint8_t duty);
+
+extern void IF_FAN_PWM_Switch(uint8_t para);
 extern void delay_SuspendTick(void);
 extern void delay_ResumeTick(void);
 extern void delay_us(uint32_t nus);

@@ -17,9 +17,10 @@
 #include "IF_HAL_Cfg.h"
 
 /* CONST & MACROS */
-
+#define FAN_PWM_PERIOD    40
+#define FAN_PWM_DUTY(x)  (x*FAN_PWM_PERIOD/100)
 /* DATA STRUCTURES */
-
+static uint16_t Fan_Pwm_TimeOut = 0;
 /* LOCAL VARIABLES */
 static uint32_t sysTickCnt=0;
 
@@ -35,6 +36,9 @@ static void Check_RFSlowStopDelay(void);
 static void Check_RFReflectOffDelay(void);
 static void Check_PowerUpTimer(void);
 static void Check_RFOnTimer(void);
+
+static uint16_t Fan_FG_Speed(uint8_t FanChnNo);
+static void Check_FanSlowOnDelay(void);
 static void Check_FanSpeedTimer(void);
 
 static void Timer_ISR_Callback(void);
@@ -46,6 +50,20 @@ static void Timer_ISR_Callback(void);
 void TMR_1ms_Callback(void)
 {
     Timer_ISR_Callback();
+}
+
+void FAN_PWM_ISR_Callback(void)
+{
+	Fan_Pwm_TimeOut++;
+	if(Fan_Pwm_TimeOut == FAN_PWM_DUTY(SystemTimer.Pwm_duty))
+	{
+		IF_HAL_Fan_PWM_Switch(IO_HIGH);
+	}
+	else if(Fan_Pwm_TimeOut > FAN_PWM_PERIOD)
+	{
+		IF_HAL_Fan_PWM_Switch(IO_LOW);
+		Fan_Pwm_TimeOut = 0;
+	}		
 }
 
 /************************************************************************/
@@ -108,9 +126,17 @@ void IF_Timer_SetRFSlowStartDelayFlag(uint8_t OnorOff)
     }
 }
 
-uint16_t  IF_Timer_GetRFSlowStartDelayTime(void)
+float  IF_Timer_GetRFSlowStartDelayTime(void)
 {
-	return SystemTimer.SlowStartDelayTimer;
+	float fvalue = 0.0F;
+	if(SystemTimer.SlowStartDelayFlag)
+	{
+		fvalue = SystemTimer.SlowStartDelayTimer/IF_UserParam_GetSlowStartDelay();
+	}else
+	{
+		fvalue = 1.0F;
+	}
+	return  fvalue;
 }	
 
 /* FUNCTION *********************************************************************************
@@ -137,9 +163,17 @@ void IF_Timer_SetRFSlowStopDelayFlag(uint8_t OnorOff)
  * Parameter     : 
  * return        :                
  * END ***************************************************************************************/
-uint16_t IF_Timer_GetRFSlowStopDelayTime(void)
+float IF_Timer_GetRFSlowStopDelayTime(void)
 {
-    return SystemTimer.SlowStopDelayTimer;
+	float fvalue = 0.0F;
+	if(SystemTimer.SlowStopDelayFlag)
+	{
+		 fvalue = SystemTimer.SlowStopDelayTimer/IF_UserParam_GetSlowStopDelay();
+	}else
+	{
+		fvalue = 0.0F;
+	}	
+    return fvalue;
 }
 
 /* FUNCTION *********************************************************************************
@@ -187,6 +221,9 @@ uint32_t  IF_Timer_GetFanSpeedValue(uint8_t FanChnNo)
 {
 	return SystemTimer.FanSpeedVal[FanChnNo];
 }
+
+
+
 /************************************************************************/
 /* Local Functions Definitions                                          */
 /************************************************************************/
@@ -227,11 +264,11 @@ static void Check_RFSlowStopDelay(void)
 		{
 			SystemTimer.SlowStopDelayTimer = 0;
 		}
-	}
-	else
+	}else
 	{
 		SystemTimer.SlowStopDelayTimer = IF_UserParam_GetSlowStopDelay();
 	}
+	
 }
 
 /* FUNCTION *********************************************************************************
@@ -242,7 +279,6 @@ static void Check_RFSlowStopDelay(void)
  * END ***************************************************************************************/
 static void Check_RFReflectOffDelay(void)
 {
-
 	if (SystemTimer.RFOffDelayFlag)
 	{
 		SystemTimer.RFOffDelayTimer++;
@@ -299,10 +335,30 @@ static void Check_RFOnTimer(void)
 		SystemTimer.RFOnDuration = 0;
 	}
 }
+static uint16_t Fan_FG_Speed(uint8_t FanChnNo)
+{
+	uint16_t tempspd =0;
+	uint32_t temp = 60000000;  //60s=60*1000000
+	if(FANS_Period_Val[FanChnNo]==0)
+	{
+		tempspd =0;
+	}else
+	{
+		temp = temp*SystemTimer.Pwm_duty/100;
+		tempspd = temp/FANS_Period_Val[FanChnNo];
+	}	
+	return tempspd;
+}	
+/* FUNCTION *********************************************************************************
+ * Function Name : Check_FanSpeedTimer
+ * Description   : 风扇速度定时器回调函数
+ * Parameter     : 
+ * return        :                
+ * END ***************************************************************************************/
 static void Check_FanSpeedTimer(void)
 {
 	SystemTimer.FanTimer++;
-	if(SystemTimer.FanTimer>25)
+	if(SystemTimer.FanTimer > 25)
 	{
 		SystemTimer.FanTimer=0;
 		for(uint8_t i=0;i<4;i++)
@@ -316,12 +372,30 @@ static void Check_FanSpeedTimer(void)
 				SystemTimer.FanSpeedVal[i] =0;
 			}else
 			{
-				SystemTimer.FanSpeedVal[i]=IF_Fan_FG_Speed(i,50);
+				SystemTimer.FanSpeedVal[i]=Fan_FG_Speed(i);
 			}
 		}
 	}	
 }
-
+/* FUNCTION *********************************************************************************
+ * Function Name : Check_FanSlowOnDelay
+ * Description   : 风扇缓开启定时器回调函数
+ * Parameter     : 
+ * return        :                
+ * END ***************************************************************************************/
+static void Check_FanSlowOnDelay(void)
+{
+	SystemTimer.FanSlowOnTimer++;
+	if (SystemTimer.FanSlowOnTimer >= 50)       // 50ms时间到
+	{
+		SystemTimer.FanSlowOnTimer = 0;
+		if(SystemTimer.Pwm_duty >= 90)
+		{
+			SystemTimer.Pwm_duty = 90;
+		}
+		SystemTimer.Pwm_duty++;
+	}
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /* FUNCTION *********************************************************************************
  * Function Name : Timer_ISR_Callback
@@ -336,6 +410,7 @@ static void Timer_ISR_Callback(void)
 	Check_RFReflectOffDelay();
 	Check_RFSlowStartDelay();
 	Check_RFSlowStopDelay();
+	Check_FanSlowOnDelay();
 	Check_FanSpeedTimer();
 	
 }
@@ -383,126 +458,6 @@ uint32_t GetSysTickCnt(void)
 		return sysTickCnt;
 	}
 }
-
-///* FUNCTION *********************************************************************************
-// *
-// * Function Name : timestamp_to_localtime
-// * Description   : 时间戳转换成localtimer函数
-// * Parameter     : time -----时间戳，Time_t -----当地时间（年月日时分秒）
-// * Return        :
-// * END ***************************************************************************************/
-//static void timestamp_to_localtime(int32_t time,Time_t *t)
-//{
-//    unsigned int Pass4year;
-//    int hours_per_year;
-// 
-//    if(time < 0)
-//    {
-//        time = 0;
-//    }
-//    //取秒时间
-//    t->second=(int)(time % 60);
-//    time /= 60;
-//    //取分钟时间
-//    t->minute=(int)(time % 60);
-//    time /= 60;
-//    //取过去多少个四年，每四年有 1461*24 小时
-//    Pass4year=((unsigned int)time / (1461L * 24L));
-//    //计算年份
-//    t->year=(Pass4year << 2) + 1970;
-//    //四年中剩下的小时数
-//    time %= 1461L * 24L;
-//    //校正闰年影响的年份，计算一年中剩下的小时数
-//    for (;;)
-//    {
-//        //一年的小时数
-//        hours_per_year = 365 * 24;
-//        //判断闰年
-//        if((t->year & 3) == 0)
-//        {
-//            //是闰年，一年则多24小时，即一天
-//            hours_per_year += 24;
-//        }
-//        if(time < hours_per_year)
-//        {
-//            break;
-//        }
-//        t->year++;
-//        time -= hours_per_year;
-//    }
-//    //小时数
-//    t->hour=(int)(time % 24);
-//    //一年中剩下的天数
-//    time /= 24;
-//    //假定为闰年
-//    time++;
-//    //校正闰年的误差，计算月份，日期
-//    if((t->year & 3) == 0)
-//    {
-//        if(time > 60)
-//        {
-//            time--;
-//        }
-//        else
-//        {
-//            if(time == 60)
-//            {
-//                t->month = 1;
-//                t->day = 29;
-//                return ;
-//            }
-//        }
-//    }
-//    //计算月日
-//    for(t->month = 0; Days[t->month] < time; t->month++)
-//    {
-//        time -= Days[t->month];
-//    }
-// 
-//    t->day = (int)(time);
-//	
-//    /*时间校正*/
-//	t->month+=1;
-//	t->weekday+=1;
-//    return;
-//}
-///* FUNCTION *********************************************************************************
-// *
-// * Function Name : isleap
-// * Description   : 闰年计算
-// * Parameter     : year ---年
-// * Return        : 
-// * END ***************************************************************************************/ 
-//static int isleap(int year)
-//{
-//    return (year) % 4 == 0 && ((year) % 100 != 0 || (year) % 400 == 0);
-//}
-///* FUNCTION *********************************************************************************
-// *
-// * Function Name : mktimestamp
-// * Description   : localtimer转换成时间戳函数
-// * Parameter     : Time_t -----当地时间（年月日时分秒）
-// * Return        : 时间戳
-// * END ***************************************************************************************/ 
-//static int32_t mktimestamp( Time_t dt)
-//{
-//    int32_t result;
-//    int i =0;
-//    // 以平年时间计算的秒数
-//    result = (dt.year - 1970) * 365 * 24 * 3600 +
-//    (mon_yday[isleap(dt.year)][dt.month-1] + dt.day - 1) * 24 * 3600 +
-//    dt.hour * 3600 + dt.minute * 60 + dt.second;
-//    // 加上闰年的秒数
-//    for(i=1970; i < dt.year; i++)
-//    {
-//        if(isleap(i))
-//        {
-//            result += 24 * 3600;
-//        }
-//    }
-//    return(result);
-//}
-
 //*****************************************************************************
 //* END
 //*****************************************************************************

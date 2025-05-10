@@ -39,8 +39,7 @@ extern void Modbus_ReceiveChar(uint8_t port, uint8_t ch);
 extern void Modbus_TransmitChar(uint8_t port);
 extern void Modbus_TxBufManagment(uint8_t port);
 
-void IF_ACDC_SetParamsRW(ModBusTypeEnum ModbusType);
-ModBusTypeEnum IF_ACDC_GetParamsRW(void);
+void IF_ACDC_SetParamsRWType(ModBusTypeEnum ModbusType);
 
 //ACDC Sensor output value
 extern uint8_t IF_Sensor_GetInputKout_feedback(void);

@@ -26,6 +26,7 @@
 #include "IF_HAL_Cfg.h"
 #include "params_impl.h"
 #include "IF_Params_impl.h"
+#include "IF_Interface.h"
 
 #include "stm32_crc32.h"
 #include "IF_Comm.h"
@@ -48,20 +49,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-typedef enum
-{
-    IOSIG_DEBUGLED     			= 0,      
-    IOSIG_PWR12VON             	= 1, 
-	IOSIG_DC5VON        		= 2,   	
-    IOSIG_INTLOCKEN        		= 3,   
-    IOSIG_PWRONLED				= 4, 
-	IOSIG_FAULTLED				= 5, 
-	IOSIG_WARNINGLED			= 6, 
-	IOSIG_INTLOCKLED		    = 7, 
-	IOSIG_RFONLED		    	= 8, 
-	//Record array len
-    IOSIG_MAX            		= 9
-}IOSWEnum;
+
 /******************************************************************************
 * Interface functions                                                         *
 ******************************************************************************/
@@ -84,24 +72,19 @@ extern void IF_SL_EXDAC_SetForwardPowerOutput(float value);
 extern void IF_SL_EXDAC_SetACDCVoltageOutput(float value);
 
 /**********Interface Output SL**************/
-void IF_SL_SetInterfaceOutput(IOSWEnum IOSwitch,uint8_t value);
+extern void IF_SL_SetInterfaceOutput(IOSignEnum IOSwitch,uint8_t OnorOff);
 
 /**********Nvm Parameter SL**************/
 
-/**********Uart Parameter SL**************/
+/************Communication Parameters SL********/
 extern void IF_SL_SetUartBaudRate(uint8_t baudrate);
 
-/************Communication Parameters SL********/
-
 /************Internal Parameters SL********/
-extern float IF_SL_InternalParam_GetVSWRLimit(void);
-extern uint16_t IF_SL_InternalParam_GetInitPoint(void);
+extern uint16_t IF_SL_InternalParam_GetPhasePoint(void);
+
 /************User parameter SL************/
 extern uint8_t IF_SL_UserParam_GetStartMode(void);
 extern void IF_SL_UserParam_SetStartMode(uint8_t value);
-
-extern uint16_t IF_SL_CmdParam_GetSetPoint(void);
-extern void  IF_SL_CmdParam_SetSetPoint(uint16_t value);
 
 extern uint8_t IF_SL_UserParam_GetRegulationMode(void);
 extern void  IF_SL_UserParam_SetRegulationMode(uint8_t value);
@@ -134,7 +117,7 @@ extern void IF_SL_UserParam_SetDCBiasPowerLimit(uint16_t);
 
 extern uint16_t IF_SL_UserParam_GetReflectPowerThreshold(void);
 
-extern int32_t IF_SL_NvmParam_GetRFPwrTo50Volt(uint16_t index);
+extern int32_t IF_SL_NvmParam_GetVoltMap(uint16_t index);
 
 extern uint8_t IF_SL_UserParam_GetMatchMode(void);	
 extern void IF_SL_UserParam_SetMatchMode(uint8_t value);
@@ -151,10 +134,6 @@ extern void IF_SL_UserParam_SetSlowStartDelay(uint16_t value);
 extern uint16_t IF_SL_UserParam_GetSlowStopDelay(void);
 extern void IF_SL_UserParam_SetSlowStopDelay(uint16_t value);
 
-/****************Modbus SL***********************/
-void IF_SL_ACDC_SetParamsRW(ModBusTypeEnum ModbusType);
-
-
 /***************Sensor SL****************/
 extern void IF_SL_SensorTask(void);
 extern uint16_t IF_SL_Sensor_GetDCBias(void);
@@ -165,10 +144,10 @@ extern int16_t IF_SL_Get_Sensor_DCBias(void);
 /***************Timer SL****************/
 extern void IF_SL_Timer_SetPulseModeTimerFlag(uint8_t OnorOff);
 
-extern uint16_t IF_SL_Timer_GetRFSlowStartDelayTime(void);
+extern float IF_SL_Timer_GetRFSlowStartDelayTime(void);
 extern void IF_SL_Timer_SetRFSlowStartDelayFlag(uint8_t OnorOff);
 
-extern uint16_t IF_SL_Timer_GetRFSlowStopDelayTime(void);
+extern float IF_SL_Timer_GetRFSlowStopDelayTime(void);
 extern void IF_SL_Timer_SetRFSlowStopDelayFlag(uint8_t OnorOff);
 
 
@@ -180,15 +159,19 @@ extern void IF_SL_Timer_ClearRFOffDelayTimeOutFlag(void);
 extern void IF_SL_Nvm_WriteSystemResetTimes(void);
 extern void IF_SL_Nvm_ParamsRW(NVMRWMask_Enum NVMRW_Mask);
 
-extern void IF_SL_RFPower_UpdateProcessData(void);
-extern void IF_SL_RFPower_ClearProcessData(void);
+extern void IF_SL_UpdateRFPwrPIDProcessData(void);
+extern void IF_SL_ClearRFPwrPIDProcessData(void);
 /****************Cmd SL***********************/
 extern void IF_SL_ResetDevice(void);
-extern uint8_t IF_SL_CmdParam_GetPowerWorkMode(void);
-
+extern uint8_t IF_SL_CmdParam_GetLoopMode(void);
 extern uint8_t IF_SL_CmdParam_GetRFPowerState(void);
-extern void IF_SL_CmdParam_SetRFPowerState(uint8_t value);
-
+extern void IF_SL_CmdParam_SetRFPowerState(uint8_t ONorOFF);
+extern void IF_SL_CmdParam_SetACDCDriverState(uint8_t ONorOFF);
+extern void IF_SL_CmdParam_SetDDSDriverState(uint8_t ONorOFF);
+extern void IF_SL_CmdParam_SetDDSWorkPhase(uint32_t value);
+extern void IF_SL_CmdParam_SetACDCVoltage(uint32_t value);
+extern uint16_t IF_SL_CmdParam_GetPwrPoint(void);
+extern void  IF_SL_CmdParam_SetPwrPoint(uint16_t value);
 extern void IF_SL_ExecuteAction(void);
 
 #if defined(__cplusplus)

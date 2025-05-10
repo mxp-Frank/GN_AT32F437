@@ -36,12 +36,14 @@ extern "C" {
 
 #define FPGAWARE_VERSION_LEN        	 10
 
-#define RMS_VALUE						(134217728.0F)		//134217728= 65536*2048
-#define RAD_VALUE						(-1048576.0F)
-#define M_PI							(3.1416F)
-#define ARC								(57.29578F)			//57.29578=(180.0F/M_PI)
+#define M_PI							(double)(3.1415926F)
+#define ARC								(double)(57.29578F)			  //57.29578=(180.0F/M_PI)
+#define RAD_VALUE						(double)(-1048576.0F)
+	
+#define RMS_VALUE						(double)(134217728.0F)		 //134217728= 65536*2048	
+#define ARC_RAD_VALUE                   (double)(-0.0000546415143F)   //=(180.0F/M_PI)/1048576
 
-#define FREQ_2M_RATE					(0.015625F)		//0.015625=16/1024
+#define FREQ_2M_RATE					(double)(0.015625F)		     //0.015625=16/1024
 
 typedef struct _SensorReg_t
 {
@@ -61,8 +63,6 @@ typedef struct _SensorReg_t
 	int32_t ACDCSwitchSetting;
 }SensorReg_t;
 
-
-
 typedef struct _SensorData_t
 {
 	float Temp;  
@@ -78,7 +78,6 @@ typedef struct _SensorData_t
 	float R;
 	float X;
 	float VSWR;
-	float T_sq;
 	float Vpp; 	 //Vpp	
 }SensorData_t, *PSensorData_t;
 

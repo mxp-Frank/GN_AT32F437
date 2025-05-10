@@ -142,8 +142,8 @@ void RS485_UART_Callback(void)
 void IF_CommInit(void)
 {
 	FGIPv2_Init();
-	uint8_t value = IF_CommParam_GetDataRate();
-	IF_HAL_SetBaudRate(value);	
+//	uint8_t value = IF_CommParam_GetDataRate();
+//	IF_HAL_SetBaudRate(value);	
 }
 
 

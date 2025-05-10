@@ -86,7 +86,7 @@ extern "C" {
 #define USER_PARAM_ADDR                         	EEPROM_ADDR(80)     //用户参数1保存地址
 
 #define MAPVSPOWER_ADDR								EEPROM_ADDR(120)    //电压与功率映射表地址0~1000W
-
+#define MAPPHPOWER_ADDR								EEPROM_ADDR(200)    //相位与功率映射表地址0~1000W
 #define TEMP_PARAM_ADDR								EEPROM_ADDR(250)    //温度映射表
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -145,8 +145,11 @@ uint8_t Write_InternalParam(uint8_t* pBuf);
 void Read_UserParam(uint8_t* pBuf);
 uint8_t Write_UserParam(uint8_t* pBuf);
 
-void Read_RFPwrTo50VoltParam(uint8_t* pBuf);
-uint8_t Write_RFPwrTo50VoltParam(uint8_t* pBuf);
+void Read_VoltageMapParam(uint8_t* pBuf);
+uint8_t Write_VoltageMapParam(uint8_t* pBuf);
+
+void Read_PhaseMapParam(uint8_t* pBuf);
+uint8_t Write_PhaseMapParam(uint8_t* pBuf);
 
 void Read_SystemTotalTimesParam(uint8_t *pBuf);
 uint8_t Write_SystemTotalTimesParam(uint8_t *pBuf);

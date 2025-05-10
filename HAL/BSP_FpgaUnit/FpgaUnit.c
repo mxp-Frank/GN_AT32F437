@@ -316,7 +316,7 @@ uint8_t IF_FpgaReg_ReadStart(void)
 	while(DATA_FPGA_READ == 0)
 	{
 		timeOutCnt++;
-		if(timeOutCnt > 2)
+		if(timeOutCnt > 5)
 		{
 			error_flag = 1;
 			break;  //normal operation time is less 10us	

@@ -13,12 +13,12 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#define FAM_PWM_PERIOD    40
-#define FAM_PWM_DUTY	  0
+
+
 /* CONST & MACROS */
 static uint32_t fac_us=0;							//us延时倍乘数
 static uint16_t fac_ms=0;							//ms延时倍乘数,在FreeRTOS下,代表每个节拍的ms数
-static uint16_t Fan_Pwm_TimeOut = 0;
+
 uint16_t FANS_Time_OVERcnt[4]={0};
 uint32_t FANS_Period_Val[4] ={0};
 uint16_t FANS_Curr_CCR_Val[4] = {0},FANS_Last_CCR_Val[4] = {0};
@@ -58,34 +58,14 @@ __weak void TMR_Modbus_ISR_Callback(void)
 {
 
 }
-
-uint16_t IF_Fan_FG_Speed(uint8_t FanChnNo,uint8_t duty)
+__weak void FAN_PWM_ISR_Callback(void)
 {
-	uint16_t tempspd =0;
-	uint32_t temp = 60000000;  //60s=60*1000000
-	if(FANS_Period_Val[FanChnNo]==0)
-	{
-		tempspd =0;
-	}else
-	{
-		temp=temp*duty/100;
-		tempspd = temp/FANS_Period_Val[FanChnNo];
-	}	
-	return tempspd;
-}	
+	
+}
 
-void FAN_PWM_ISR_Callback(void)
+void IF_FAN_PWM_Switch(uint8_t para)
 {
-	Fan_Pwm_TimeOut++;
-	if(Fan_Pwm_TimeOut > FAM_PWM_DUTY)
-	{
-		IF_GpioOutPut(FAN_PWM_PORT, FAN_PWM_PIN, 0, LOGIC_POUT);	//高电平有效
-	}
-	else if(Fan_Pwm_TimeOut>FAM_PWM_PERIOD)
-	{
-		Fan_Pwm_TimeOut = 0;
-		//IF_GpioOutPut(FAN_PWM_PORT, FAN_PWM_PIN, 1, LOGIC_POUT);	//高电平有效
-	}		
+	IF_GpioOutPut(FAN_PWM_PORT, FAN_PWM_PIN, para, LOGIC_POUT);	//高电平有效	
 }	
 
 /* FUNCTION *******************************************************************
@@ -184,7 +164,7 @@ static void TIMER2_PWM_Port_Init(void)
 	
 	gpio_init_struct.gpio_pins = FAN_PWM_PIN;
 	gpio_init(FAN_PWM_PORT, &gpio_init_struct);
-	IF_GpioOutPut(FAN_PWM_PORT, FAN_PWM_PIN, 0, LOGIC_POUT);	//高电平有效
+	IF_GpioOutPut(FAN_PWM_PORT, FAN_PWM_PIN, 1, LOGIC_POUT);	//高电平有效
 	
 }
 /* FUNCTION *******************************************************************
@@ -234,7 +214,6 @@ void TMR1_OVF_TMR10_IRQHandler(void)
     {
         //user's callback
         FAN_PWM_ISR_Callback();
-
         tmr_flag_clear(TMR1, TMR_OVF_FLAG);
     }
 }

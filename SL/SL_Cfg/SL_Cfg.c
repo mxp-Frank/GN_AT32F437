@@ -41,6 +41,7 @@ void IF_SL_CfgInit(void)
     IF_SensorInit();
     IF_TimerInit();
 	IF_CommInit();
+	IF_InterfaceInit();	
 }
 	
 void IF_SL_WDOG_FEED(void)
@@ -142,21 +143,9 @@ int16_t IF_SL_Get_Sensor_DCBias(void)
 	return value;
 }	
 /**********************Interface  Output Layer****************************************/
-void IF_SL_SetInterfaceOutput(IOSWEnum IOSwitch,uint8_t value)
+void IF_SL_SetInterfaceOutput(IOSignEnum IOSwitch,uint8_t OnorOff)
 {
-	switch(IOSwitch)
-	{
-		case IOSIG_PWR12VON:    IF_HAL_Power12VOn_Switch(value);  	break;    
-		case IOSIG_DC5VON  :    IF_HAL_DC5VOnEnable_Switch(value);  break;    
-		case IOSIG_INTLOCKEN:   IF_HAL_IntLock_Enable_Switch(value);break; 
-		case IOSIG_DEBUGLED:    IF_HAL_PCBDebugLed_Switch(value); 	break;  		
-		case IOSIG_PWRONLED:    IF_HAL_PwrOnOffLed_Switch(value); 	break;    
-		case IOSIG_FAULTLED:	IF_HAL_FaultLed_Switch(value);    	break;    
-		case IOSIG_WARNINGLED:	IF_HAL_WarningLed_Switch(value);  	break;    
-		case IOSIG_INTLOCKLED:  IF_HAL_InterLockLed_Switch(value);  break;    
-		case IOSIG_RFONLED	:	IF_HAL_RFOnOffLed_Switch(value);  	break;    
-		default:break;
-	}	
+	 IF_SetNormalOutput_SIG(IOSwitch, OnorOff);
 }
 /*********************DAC SL **********************************/
 void IF_SL_EXDAC_SetReflectPowerOutput(float value)
@@ -173,53 +162,12 @@ void IF_SL_EXDAC_SetACDCVoltageOutput(float value)
 {
 	IF_HAL_EXDAC_SET(CHANNEL_C,value);
 }
-/**********************Communication Parameters*******************************/
-uint8_t IF_SL_CommParam_GetDeviceAddress(void)
-{
-	uint8_t value =0;
-	value = IF_CommParam_GetDeviceAddress();
-	return value;
-}
-void IF_SL_CommParam_SetDeviceAddress(uint8_t value)
-{
-	IF_CommParam_SetDeviceAddress(value);
-}
-
-//NetIP of parameter
-uint32_t IF_SL_CommParam_GetNetIP(void)
-{
-	uint32_t value = 0;
-    value = IF_CommParam_GetNetIP();
-	return value;
-}
-void IF_SL_CommParam_SetNetIP(uint32_t value)
-{
-	IF_CommParam_SetNetIP(value );
-}
-//DataRate of parameter
-uint8_t IF_SL_CommParam_GetDataRate(void)
-{
-	uint8_t value =0;
-	value = IF_CommParam_GetDataRate();
-	return value;	
-}
-
-void IF_SL_CommParam_SetDataRate(uint8_t value)
-{
-	IF_CommParam_SetDataRate(value );
-}
 /**********************Internal Parameters*******************************/
-float IF_SL_InternalParam_GetVSWRLimit(void)
-{
-	float fValue = 0;
-	fValue = 0.001F*IF_InternalParam_GetVSWRLimit();
-	return fValue;
-}	
-
-uint16_t IF_SL_InternalParam_GetInitPoint(void)
+//PhasePoint of parameter
+uint16_t IF_SL_InternalParam_GetPhasePoint(void)
 {
 	uint16_t Value = 0;
-	Value = IF_InternalParam_GetInitPoint();
+	Value = IF_InternalParam_GetPhasePoint();
 	return Value;
 }
 //PulseRFPowerThr of parameter 
@@ -302,7 +250,7 @@ void IF_SL_UserParam_SetForwardPowerLimit(uint16_t value)
 {	
 	IF_UserParam_SetForwardPowerLimit(value);
 }
-//ForwardPowerLimit of parameter 
+//ReflectPowerLimit of parameter 
 uint16_t  IF_SL_UserParam_GetReflectPowerLimit(void)
 {
 	uint16_t value = 0;
@@ -324,7 +272,7 @@ void  IF_SL_UserParam_SetDCBiasPowerLimit(uint16_t value)
 {	
 	IF_UserParam_SetDCBiasPowerLimit(value);
 }
-//ReflectPowerMode of parameter
+//ReflectPowerDelayOff of parameter
 uint8_t IF_SL_UserParam_GetReflectPowerDelayOff(void)
 {
 	return IF_UserParam_GetReflectPowerDelayOff();
@@ -335,7 +283,7 @@ uint16_t IF_SL_UserParam_GetReflectPowerThreshold(void)
 	value = IF_UserParam_GetReflectPowerThreshold();
 	return value;
 }
-
+//MatchMode of parameter
 uint8_t IF_SL_UserParam_GetMatchMode(void)
 {
 	uint8_t value = 0;
@@ -420,7 +368,7 @@ void IF_SL_Nvm_ParamsRW(NVMRWMask_Enum NVMRW_Mask)
 }
 
 /**********************Timer Layer*******************************************/
-uint16_t IF_SL_Timer_GetRFSlowStartDelayTime(void)
+float IF_SL_Timer_GetRFSlowStartDelayTime(void)
 {
 	return IF_Timer_GetRFSlowStartDelayTime();
 }	
@@ -429,7 +377,7 @@ void IF_SL_Timer_SetRFSlowStartDelayFlag(uint8_t OnorOff)
 {
 	IF_Timer_SetRFSlowStartDelayFlag(OnorOff);
 }
-uint16_t IF_SL_Timer_GetRFSlowStopDelayTime(void)
+float IF_SL_Timer_GetRFSlowStopDelayTime(void)
 {
 	return IF_Timer_GetRFSlowStopDelayTime();
 }
@@ -465,59 +413,55 @@ void IF_SL_ResetDevice(void)
 	NVIC_SystemReset();
 }
 //**************************************
-uint16_t  IF_SL_CmdParam_GetSetPoint(void)
+uint16_t  IF_SL_CmdParam_GetPwrPoint(void)
 {
-	uint16_t value = 0;	
-	float OffsetFactor = 0.001F*IF_UserParam_GetPowerOffsetFactor();
-	value = IF_CmdParam_GetSetPoint();   
-	return value;
+	return  IF_CmdParam_GetPwrPoint();   
 }
-void  IF_SL_CmdParam_SetSetPoint(uint16_t value)
+void  IF_SL_CmdParam_SetPwrPoint(uint16_t value)
 {
-	 IF_CmdParam_SetSetPoint(value);
+	IF_CmdParam_SetPwrPoint(value);   
 }
 //**************************************
-void IF_SL_CmdParam_SetRFPowerState(uint8_t value)
+void IF_SL_CmdParam_SetDDSDriverState(uint8_t ONorOFF)
 {
-	 IF_CmdParam_SetRFPowerState(value);
+	IF_CmdParam_SetDDSDriverState(ONorOFF);
 }
+//**************************************
+void IF_SL_CmdParam_SetACDCDriverState(uint8_t ONorOFF)
+{
+	 IF_CmdParam_SetACDCDriverState(ONorOFF);
+}
+//**************************************
 uint8_t IF_SL_CmdParam_GetRFPowerState(void)
 {
 	 return IF_CmdParam_GetRFPowerState();
 }
-//**************************************
-uint8_t IF_SL_CmdParam_GetPowerWorkMode(void)
+void IF_SL_CmdParam_SetRFPowerState(uint8_t ONorOFF)
 {
-	uint8_t value =0;
-	value = IF_CmdParam_GetPowerWorkMode();
-	return value;
+	IF_CmdParam_SetRFPowerState(ONorOFF);
+}
+//**************************************
+uint8_t IF_SL_CmdParam_GetLoopMode(void)
+{
+	return IF_CmdParam_GetPowerWorkMode();
+}
+void IF_SL_CmdParam_SetDDSWorkPhase(uint32_t value)
+{
+	 IF_CmdParam_SetDDSWorkPhase(value);
 }
 void IF_SL_CmdParam_SetACDCVoltage(uint32_t value)
 {
 	IF_CmdParam_SetACDCVoltage(value);
 }
 
-uint32_t IF_SL_CmdParam_GetACDCVoltage(void)
-{
-	uint32_t value = 0;
-	value = IF_CmdParam_GetACDCVoltage();
-	return value;
-}	
-
-void IF_SL_ACDC_SetParamsRW(ModBusTypeEnum ModbusType)
-{
-	IF_ACDC_SetParamsRW(ModbusType);
-}
-
-
 /*****************************************/
-void IF_SL_RFPower_UpdateProcessData(void)
+void IF_SL_UpdateRFPwrPIDProcessData(void)
 {
-	IF_UpdateAMPD();
+	IF_UpdateRFPwrPIDProcessData();
 }
-void IF_SL_RFPower_ClearProcessData(void)
+void IF_SL_ClearRFPwrPIDProcessData(void)
 {
-	IF_ClearAMPD();
+	IF_ClearRFPwrPIDProcessData();
 }
 /*****************************************/
 void IF_SL_ExecuteAction(void)

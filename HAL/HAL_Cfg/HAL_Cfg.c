@@ -43,9 +43,6 @@ void IF_HAL_CfgInit(void)
      IF_GpioInit();
      IF_AdcInit();
 	 IF_FlashInit();
-   
-     IF_WdogInit();
-
     // Initialize BSP Peripheral
      IF_FpgaUnitInit();
 	 IF_At24c256Init();
@@ -54,7 +51,8 @@ void IF_HAL_CfgInit(void)
 	 IF_IOGpioInit();
 	 IF_UartInit();
 	 IF_DS1339Init();	
-	 IF_SpiflashInit();  
+	 IF_SpiflashInit(); 
+	 IF_WdogInit();
 	
 }
 
@@ -132,11 +130,14 @@ uint8_t IF_HAL_InterLockDect_SigRead(void)
 	return IF_InterLockDect_SigRead();
 }
 
-
+void IF_HAL_Fan_PWM_Switch(uint8_t para)
+{
+	IF_FAN_PWM_Switch(para);
+}
 //PART 3 : DAC and Encoder 
 void IF_HAL_EXDAC_SET(uint16_t channel, float refVolt)
 {
-   uint16_t codeValue = (uint16_t)(refVolt * 4096/(2*EXDAC_VREF));
+   uint16_t codeValue = (uint16_t)(refVolt * EXDAC_REF/(2*EXDAC_VREF));
    IF_Dac5614WriteDAC(channel, codeValue);
 }
 
@@ -254,7 +255,6 @@ void IF_HAL_DS1339_SetTimer(time_t localtime)
 {
 	IF_DS1339_SetTimer(localtime);
 }
-
 
 /************************************************************************/
 /* Local Functions Definitions                                          */

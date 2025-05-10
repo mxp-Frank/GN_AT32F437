@@ -325,10 +325,7 @@ uint8_t IF_NvmParam_CheckRawDownloadFile(void)
  * END ***********************************************************************/
 void Write_SystemResetTimes(uint8_t resetTimes)
 {
-	uint8_t buf;
-
-	buf = resetTimes;
-
+	uint8_t buf = resetTimes;
 	IF_HAL_EEPROM_WriteBytes(SYSTEM_RESET_TIMES_ADDR, &buf, 1);
 }
 
@@ -493,17 +490,26 @@ uint8_t Write_UserParam(uint8_t* pBuf)
 	value = IF_HAL_EEPROM_WriteBytes(USER_PARAM_ADDR, pBuf, USER_PARAM_LEN);	
 	return value;
 }
-void Read_RFPwrTo50VoltParam(uint8_t* pBuf)
+void Read_VoltageMapParam(uint8_t* pBuf)
 {	
-	IF_HAL_EEPROM_ReadBytes(MAPVSPOWER_ADDR, pBuf, sizeof(uint32_t)*MAX_RFPWRVOL_NUM);	
+	IF_HAL_EEPROM_ReadBytes(MAPVSPOWER_ADDR, pBuf,  VOLTMAP_PARAM_LEN);	
 }
-uint8_t Write_RFPwrTo50VoltParam(uint8_t* pBuf)
+uint8_t Write_VoltageMapParam(uint8_t* pBuf)
 {
 	uint8_t value = 0;
-	value = IF_HAL_EEPROM_WriteBytes(MAPVSPOWER_ADDR, pBuf, sizeof(uint32_t)*MAX_RFPWRVOL_NUM);
+	value = IF_HAL_EEPROM_WriteBytes(MAPVSPOWER_ADDR, pBuf, VOLTMAP_PARAM_LEN);
 	return value ;
 }
-
+void Read_PhaseMapParam(uint8_t* pBuf)
+{	
+	IF_HAL_EEPROM_ReadBytes(MAPPHPOWER_ADDR, pBuf,  PHASEMAP_PARAM_LEN);	
+}
+uint8_t Write_PhaseMapParam(uint8_t* pBuf)
+{
+	uint8_t value = 0;
+	value = IF_HAL_EEPROM_WriteBytes(MAPPHPOWER_ADDR, pBuf, PHASEMAP_PARAM_LEN);
+	return value ;
+}
 static void Read_SystemTotalTimesParam(uint8_t *pBuf)
 {	
 	IF_HAL_EEPROM_ReadBytes(SYSTEM_TOTALTIMES_ADDR, pBuf, sizeof(uint32_t));	

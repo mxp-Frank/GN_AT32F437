@@ -27,28 +27,19 @@ extern "C" {
 
 typedef enum 
 {	
-	Read_Fs_PartsMask	 	     = 	(NVM_PARAM_MASK<<0),
-	Read_FS_CommonMask			 = 	(NVM_PARAM_MASK<<1),
-	Read_FS_InternalMask		 = 	(NVM_PARAM_MASK<<2),	
-	Read_FS_UserMask			 = 	(NVM_PARAM_MASK<<3),
 	
-	Write_Fs_PartsMask  	     = 	(NVM_PARAM_MASK<<5),
-	Write_FS_CommonMask			 = 	(NVM_PARAM_MASK<<6),
-	Write_FS_InternalMask		 = 	(NVM_PARAM_MASK<<7),	
-	Write_FS_UserMask			 =	(NVM_PARAM_MASK<<8),
-	
-	Read_PartsMask	 		     = 	(NVM_PARAM_MASK<<10),
-	Read_CommonMask				 = 	(NVM_PARAM_MASK<<11),
-	Read_InternalMask			 = 	(NVM_PARAM_MASK<<12),	
-	Read_UserMask				 = 	(NVM_PARAM_MASK<<13),
-	
-	Write_PartsMask  	         = 	(NVM_PARAM_MASK<<15),
-	Write_CommonMask			 =  (NVM_PARAM_MASK<<16),
-	Write_InternalMask			 = 	(NVM_PARAM_MASK<<17),	
-	Write_UserMask				 = 	(NVM_PARAM_MASK<<18),
-	Write_ModbusMask			 = 	(NVM_PARAM_MASK<<19),
-	
-	Write_AllResumeMask			 =  (NVM_PARAM_MASK<<20), 	
+	Write_Fs_PartsMask  	     = 	(NVM_PARAM_MASK<<0x00),
+	Write_FS_CommonMask			 = 	(NVM_PARAM_MASK<<0x01),
+	Write_FS_InternalMask		 = 	(NVM_PARAM_MASK<<0x02),	
+	Write_FS_UserMask			 =	(NVM_PARAM_MASK<<0x03),
+		
+	Write_PartsMask  	         = 	(NVM_PARAM_MASK<<0x05),
+	Write_CommonMask			 =  (NVM_PARAM_MASK<<0x06),
+	Write_InternalMask			 = 	(NVM_PARAM_MASK<<0x07),	
+	Write_UserMask				 = 	(NVM_PARAM_MASK<<0x08),
+	Write_ModbusMask			 = 	(NVM_PARAM_MASK<<0x09),
+	Write_VoltMapMask          =  (NVM_PARAM_MASK<<0x0A),
+	Write_PhaseMapMask         =  (NVM_PARAM_MASK<<0x0B),	
 }NVMRWMask_Enum;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,9 +94,9 @@ extern uint8_t IF_CommParam_GetDataRate(void);
 
 extern void IF_CommParam_SetEtherCatAddress(uint16_t value);
 extern uint16_t IF_CommParam_GetEtherCatAddress(void);
-//-------------------------------------------------------------------------------------------------
-//Executable Action
-
+//---------------------------------------------------------------
+extern void IF_CommParam_SetCommunicateType(uint8_t value);
+extern uint8_t IF_CommParam_GetCommunicateType(void);
 //-------------------------------------------------------------------------------------------------
 //PT Configurable Internal Parameters
 extern void IF_InternalParam_SetSensorVrmsFactor(int32_t value);
@@ -117,29 +108,50 @@ extern int32_t IF_InternalParam_GetSensorIrmsFactor(void);
 extern void IF_InternalParam_SetSensorPhaseFactor(int32_t value);
 extern int32_t IF_InternalParam_GetSensorPhaseFactor(void);
 
+extern void IF_InternalParam_SetSensorVrmsOffset(int32_t value);
+extern int32_t IF_InternalParam_GetSensorVrmsOffset(void);
+
+extern void IF_InternalParam_SetSensorIrmsOffset(int32_t value);
+extern int32_t IF_InternalParam_GetSensorIrmsOffset(void);
+
+extern void IF_InternalParam_SetSensorPhaseOffset(int32_t value);
+extern int32_t IF_InternalParam_GetSensorPhaseOffset(void);
+
 extern void IF_InternalParam_SetAnalogVoltRange(uint16_t value);
 extern uint16_t IF_InternalParam_GetAnalogVoltRange(void);
 
 extern void IF_InternalParam_SetAnalogRFPowerFactor(uint16_t value);
 extern uint16_t IF_InternalParam_GetAnalogRFPowerFactor(void);
 
-extern void IF_InternalParam_SetProportion(int32_t value);
-extern int32_t IF_InternalParam_GetProportion(void);
+extern void IF_InternalParam_SetPhasePIDProportion(int32_t value);
+extern int32_t IF_InternalParam_GetPhasePIDProportion(void);
 	
-extern void IF_InternalParam_SetIntegral(int32_t value);
-extern int32_t IF_InternalParam_GetIntegral(void);
+extern void IF_InternalParam_SetPhasePIDIntegral(int32_t value);
+extern int32_t IF_InternalParam_GetPhasePIDIntegral(void);
 
-extern void IF_InternalParam_SetDerivatice(int32_t value);
-extern int32_t IF_InternalParam_GetDerivatice(void);
+extern void IF_InternalParam_SetPhasePIDDerivatice(int32_t value);
+extern int32_t IF_InternalParam_GetPhasePIDDerivatice(void);
 
-extern void IF_InternalParam_SetPIDErrorThr(int32_t value);
-extern int32_t IF_InternalParam_GetPIDErrorThr(void);
+extern void IF_InternalParam_SetPhasePIDErrorThr(int32_t value);
+extern int32_t IF_InternalParam_GetPhasePIDErrorThr(void);
+
+extern void IF_InternalParam_SetVoltPIDProportion(int32_t value);
+extern int32_t IF_InternalParam_GetVoltPIDProportion(void);
+	
+extern void IF_InternalParam_SetVoltPIDIntegral(int32_t value);
+extern int32_t IF_InternalParam_GetVoltPIDIntegral(void);
+
+extern void IF_InternalParam_SetVoltPIDDerivatice(int32_t value);
+extern int32_t IF_InternalParam_GetVoltPIDDerivatice(void);
+
+extern void IF_InternalParam_SetVoltPIDErrorThr(int32_t value);
+extern int32_t IF_InternalParam_GetVoltPIDErrorThr(void);
 
 extern void IF_InternalParam_SetVSWRLimit(int32_t value);
 extern int32_t IF_InternalParam_GetVSWRLimit(void);
 
 extern void IF_InternalParam_StartPoint(int32_t value);
-extern int32_t IF_InternalParam_GetInitPoint(void);
+extern int32_t IF_InternalParam_GetPhasePoint(void);
 
 extern void IF_InternalParam_SetACDCVoltGain(int32_t value);
 extern int32_t IF_InternalParam_GetACDCVoltGain(void);
@@ -158,56 +170,61 @@ extern int32_t IF_InternalParam_GetDrainVoltGain(void);
 
 extern void IF_InternalParam_SetDrainVoltOffset(int32_t value);
 extern int32_t IF_InternalParam_GetDrainVoltOffset(void);
-
+//---------------------------------------------------------------
+extern uint8_t IF_InternalParam_GetDDSChannelNo(void);
+extern void IF_InternalParam_SetDDSChannelNo(uint8_t value);
+//---------------------------------------------------------------
+extern uint32_t IF_InternalParam_GetWorkCenterFreq(void);
+extern void IF_InternalParam_SetWorkCenterFreq(uint32_t value);
+//---------------------------------------------------------------
+extern uint32_t IF_InternalParam_GetACDCCurrent(void);
+extern void IF_InternalParam_SetACDCCurrent(uint32_t value);
+//---------------------------------------------------------------
+extern void IF_InternaleParam_SetFpgaPulsePowerThr(uint32_t value);
+extern uint32_t IF_InternalParam_GetFpgaPulsePowerThr(void);
+//---------------------------------------------------------------
+extern void IF_InternalParam_SetFpgaPulseSyncDelay(uint16_t value);
+extern uint16_t IF_InternalParam_GetFpgaPulseSyncDelay(void);
 //-------------------------------------------------------------------------------------------------
 //AM Configurable User Parameters
 extern void IF_UserParam_SetRegulationMode(uint8_t value);
 extern uint8_t IF_UserParam_GetRegulationMode(void);
-
+//---------------------------------------------------------------
 extern void IF_UserParam_SetForwardPowerLimit(uint16_t value);
 extern uint16_t IF_UserParam_GetForwardPowerLimit(void);
-
+//---------------------------------------------------------------
 extern void IF_UserParam_SetReflectPowerLimit(uint16_t value);
 extern uint16_t IF_UserParam_GetReflectPowerLimit(void);
-
+//---------------------------------------------------------------
 extern void IF_UserParam_SetDCBiasPowerLimit(uint16_t value);
 extern uint16_t IF_UserParam_GetDCBiasPowerLimit(void);
-
+//---------------------------------------------------------------
 extern void IF_UserParam_SetReflectPowerSwitchOff(uint8_t value);
 extern uint8_t IF_UserParam_GetReflectPowerSwitchOff(void);
-
+//---------------------------------------------------------------
 extern void IF_UserParam_SetReflectPowerThreshold(uint16_t value);
 extern uint16_t IF_UserParam_GetReflectPowerThreshold(void);
-
+//---------------------------------------------------------------
 extern void IF_UserParam_SetReflectPowerDelayOff(uint8_t value);
 extern uint8_t IF_UserParam_GetReflectPowerDelayOff(void);
-
+//---------------------------------------------------------------
 extern void IF_UserParam_SetSlowStartDelay(uint16_t value);
 extern uint16_t IF_UserParam_GetSlowStartDelay(void);
-
+//---------------------------------------------------------------
 extern void IF_UserParam_SetSlowStopDelay(uint16_t value);
 extern uint16_t IF_UserParam_GetSlowStopDelay(void);
-
-extern void IF_CommParam_SetCommunicateType(uint8_t value);
-extern uint8_t IF_CommParam_GetCommunicateType(void);
-
+//---------------------------------------------------------------
 extern void IF_UserParam_SetPulseMode(uint8_t value);
 extern uint8_t IF_UserParam_GetPulseMode(void);
-
+//---------------------------------------------------------------
 extern void IF_UserParam_SetSlowMode(uint8_t value);
 extern uint8_t IF_UserParam_GetSlowMode(void);
-
+//---------------------------------------------------------------
 extern void IF_UserParam_SetPulseFrequency(uint32_t value);
 extern uint32_t IF_UserParam_GetPulseFrequency(void);
-
+//---------------------------------------------------------------
 extern void IF_UserParam_SetPulseDutyCircle(uint8_t value);
 extern uint8_t IF_UserParam_GetPulseDutyCircle(void);
-
-extern void IF_InternaleParam_SetFpgaPulsePowerThr(uint32_t value);
-extern uint32_t IF_InternalParam_GetFpgaPulsePowerThr(void);
-
-extern void IF_InternalParam_SetFpgaPulseSyncDelay(uint16_t value);
-extern uint16_t IF_InternalParam_GetFpgaPulseSyncDelay(void);
 
 extern void IF_UserParam_SetAnalogVoltageRange(uint32_t value);
 extern uint32_t IF_UserParam_GetAnalogVoltageRange(void);
@@ -218,12 +235,17 @@ extern uint32_t IF_UserParam_GetVDCFactor(void);
 extern void IF_UserParam_SetMatchMode(uint8_t value);
 extern uint8_t IF_UserParam_GetMatchMode(void);
 
-
-extern void IF_UserParam_SetPowerOffsetFactor(int32_t value);
-extern int32_t IF_UserParam_GetPowerOffsetFactor(void);
+extern void IF_UserParam_SetVDCOffset(int32_t value);
+extern int32_t IF_UserParam_GetVDCOffset(void);
 /***************PT Control and Other Parameters********************/
-extern void IF_CmdParam_SetSetPoint(uint16_t value);
-extern uint16_t IF_CmdParam_GetSetPoint(void);
+extern void IF_NvmParam_SetVoltMapMap(int32_t value,uint16_t index);
+extern int32_t IF_NvmParam_GetVoltMapTable(uint16_t index);
+extern void IF_NvmParam_SetPhaseMapMap(int32_t value,uint16_t index);
+extern int32_t IF_NvmParam_GetPhaseMapTable(int32_t powermw);
+
+/***************PT Control and Other Parameters********************/
+extern void IF_CmdParam_SetPwrPoint(uint16_t value);
+extern uint16_t IF_CmdParam_GetPwrPoint(void);
 //---------------------------------------------------------------
 extern uint8_t IF_CmdParam_GetDDSDriverState(void);
 extern void IF_CmdParam_SetDDSDriverState(uint8_t value);
@@ -231,26 +253,14 @@ extern void IF_CmdParam_SetDDSDriverState(uint8_t value);
 extern uint32_t IF_CmdParam_GetACDCDriverState(void);
 extern void IF_CmdParam_SetACDCDriverState(uint32_t value);
 //---------------------------------------------------------------
-extern uint8_t IF_CmdParam_GetSensorChannelNo(void);
-extern void IF_CmdParam_SetSensorChannelNo(uint8_t value);
-//---------------------------------------------------------------
 extern void IF_CmdParam_SetPowerWorkMode(uint8_t value);
 extern uint8_t IF_CmdParam_GetPowerWorkMode(void);
 //---------------------------------------------------------------
 extern uint32_t IF_CmdParam_GetACDCVoltage(void);
 extern void IF_CmdParam_SetACDCVoltage(uint32_t value);
 //---------------------------------------------------------------
-extern uint32_t IF_CmdParam_GetACDCCurrent(void);
-extern void IF_CmdParam_SetACDCCurrent(uint32_t value);
-//---------------------------------------------------------------
-extern uint32_t IF_CmdParam_GetWorkFrequency(void);
-extern void IF_CmdParam_SetWorkFrequency(uint32_t value);
-//---------------------------------------------------------------
-extern uint32_t IF_CmdParam_GetWorkPhase(void);
-extern void IF_CmdParam_SetWorkPhase(uint32_t value);
-
-extern void IF_CmdParam_SetPowerWorkMode(uint8_t value);
-extern uint8_t IF_CmdParam_GetPowerWorkMode(void);
+extern uint32_t IF_CmdParam_GetDDSWorkPhase(void);
+extern void IF_CmdParam_SetDDSWorkPhase(uint32_t value);
 
 extern void IF_CmdParam_SetResetDevice(void);
 extern void IF_CmdParam_ResumeFactorySettings(void);
@@ -260,11 +270,11 @@ extern uint8_t IF_CmdParam_GetRFPowerState(void);
 
 extern void IF_CmdParam_SetFactoryMode(uint8_t value);
 extern uint8_t IF_CmdParam_GetFactoryMode(void);
-
-
+//-------------------------------------------------------------------------------------------------
+//Executable Action
 extern uint16_t IF_CmdParam_GetMatchCurrentPos(uint8_t capIndex);
 extern uint16_t IF_CmdParam_GetMatchMoveToPos(uint8_t capIndex);
-extern void IF_Cmd_SetMatchMoveToPos(uint8_t capIndex, uint16_t value);
+extern void IF_CmdParam_SetMatchMoveToPos(uint8_t capIndex, uint16_t value);
 //-------------------------------------------------------------------------------------------------
 
 void IF_NvmParam_SetPartsParams(uint8_t  *pBuf, uint16_t len);
@@ -277,13 +287,11 @@ void IF_NvmParam_SetUserParams(uint8_t  *pBuf, uint16_t len);
 void IF_NvmParam_GetUserParams(uint8_t  *pBuf, uint16_t len);
 //-------------------------------------------------------------------------------------------------
 
-
-extern uint32_t IF_GetTotalAMPDLength(void);
-extern uint16_t IF_GetAMPD(uint16_t frameNo, uint8_t* pBuf);
-extern void IF_UpdateAMPD(void);
-extern void IF_ClearAMPD(void);
-extern uint16_t IF_GetAMPDRecordNum(void);
-extern uint16_t IF_GetAMPDRecordNum(void);
+extern uint32_t IF_GetTotaltRFPwrPIDProcessDataLength(void);
+extern uint16_t IF_GetRFPwrPIDProcessData(uint16_t frameNo, uint8_t* pBuf);
+extern void IF_UpdateRFPwrPIDProcessData(void);
+extern void IF_ClearRFPwrPIDProcessData(void);
+extern uint16_t IF_GetRFPwrPIDProcessDataRecordNum(void);
 
 
 

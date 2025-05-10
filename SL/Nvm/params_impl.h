@@ -40,7 +40,10 @@ extern "C" {
 #define TRACKING_NUMBER_LEN            			48
 
 #define MAX_PD_RECORD_NUM               		1000
-#define MAX_RFPWRVOL_NUM						1000
+
+#define MAX_RFPWRVOL_NUM						250
+#define MAX_RFPWRPHS_NUM						250
+
 #pragma pack(push)
 #pragma pack(1)
 
@@ -73,14 +76,19 @@ typedef struct _InternalParam_t
 {              
     uint16_t AnalogVoltRange;				//AnaglogInterface Voltage Range 
 	uint16_t AnalogRFPowerFactor;           //AnaglogInterface Power Factor	 100 (0~10V)--(0~1000W)
+	
     int32_t VrmsFactor;						/* the InputSensor Vrms Probe Attenuation Factor */
     int32_t IrmsFactor;						/* the InputSensor Irms Probe Attenuation Factor */
     int32_t PhaseFactor;					/* the InputSensor Phase Probe Attenuation Factor */
+
+    int32_t VrmsOffset;						/* the InputSensor Vrms Probe Attenuation Factor */
+    int32_t IrmsOffset;						/* the InputSensor Irms Probe Attenuation Factor */
+    int32_t PhaseOffset;					/* the InputSensor Phase Probe Attenuation Factor */
 	
-	int32_t PIDProportion;
-	int32_t PIDIntegral;
-	int32_t PIDDerivatice;
-	int32_t PIDErrorThr;
+	int32_t PhasePIDProportion;
+	int32_t PhasePIDIntegral;
+	int32_t PhasePIDDerivatice;
+	int32_t PhasePIDErrorThr;
 	
 	int32_t  VSWRLimit;
 	int32_t  StartPoint;
@@ -88,11 +96,20 @@ typedef struct _InternalParam_t
 	uint16_t FpgaPulseSyncDelay;
 	
 	int32_t ACDCVoltGain;						/* the ACDCVolt Probe Attenuation Factor */
-    int32_t ACDCVoltOffset;					/* the ACDCVolt Probe Attenuation Offset */
+    int32_t ACDCVoltOffset;						/* the ACDCVolt Probe Attenuation Offset */
 	int32_t ACDCCurrentGain;					/* the ACDCCurrent Probe Attenuation Factor */
-    int32_t ACDCCurrentOffset;				/* the ACDCCurrent Probe Attenuation Offset */
-    int32_t DrainVoltGain;					/* the DrainVolt Probe Attenuation Factor */
+    int32_t ACDCCurrentOffset;					/* the ACDCCurrent Probe Attenuation Offset */
+    int32_t DrainVoltGain;						/* the DrainVolt Probe Attenuation Factor */
 	int32_t DrainVoltOffset;					/* the DrainVolt Probe Attenuation Offset */
+	
+	int32_t VoltPIDProportion;
+	int32_t VoltPIDIntegral;
+	int32_t VoltPIDDerivatice;
+	int32_t VoltPIDErrorThr;
+	
+	uint8_t  DDSChannelNo;                 
+	uint32_t WorkCenterFreq;
+	uint32_t ACDCCurrent;
 	
 } InternalParam_t;
 
@@ -117,27 +134,38 @@ typedef struct _UserParam_t
 	uint16_t SlowRFOnDelay;					//Slow delay power on
 	uint16_t SlowRFOffDelay;				//Slow delay power off
 	int32_t  VDCFactor;		             	//the VDC Sense Probe attenaction Factor 
-	uint16_t PowerOffsetFactor;				//output power Offset attenaction Factor
+	int32_t  VDCOffset;						//output power Offset attenaction Factor
 }UserParam_t;
 
 
 
-typedef struct _DefaultParam_t
+typedef struct _CmdCtrlParam_t
 {
  uint8_t 	FactoryMode;         //工厂模式	
  uint8_t 	RFPowerState;		 //射频电源工作状态    	  0：RF_OFF        1：RF_ON
  uint8_t 	DDSSignState;	     //射频电源驱动DDS工作状态   0：RF_OFF        1：RF_ON
  uint8_t    SetACDCState;        //设置射频电源AC-DC工作状态   0：RF_OFF        1：RF_ON
- uint8_t 	PowerWorkMode;	     //设置电源功率工作模式   0：正常模式      1：调试模式(开环模式)
- uint8_t 	SetChannelNo;	     //设置
- uint16_t   SetPointValue;       //设置射频电源功率  0~1000
+ uint8_t 	PowerWorkMode;	     //设置电源功率工作模式   1：正常模式         0：调试模式(开环模式)
+ uint16_t   SetPointValue;       //设置射频电源功率  0~18000
  uint32_t 	SetACDCVolt;	    //设置射频电源AC-DC电压值  0~160000
- uint32_t   SetACDCCurrent;     //设置射频电源AC-DC电流值，0-200
- uint32_t   SetWorkFreq;        //设置射频电源输出频率值，0-2000
- uint32_t   SetWorkPhase;       //设置射频电源输出相位值，0-2000
+ uint32_t   SetScanFreq;        //设置射频电源输出频率值，0-2000
+ uint32_t   DDSWorkPhase;       //设置射频电源输出相位值，0-165000
  uint16_t 	TargetPos[CAP_NUM];
- uint16_t   CurrentPos[CAP_NUM];
-}DefaultParam_t;
+ uint16_t   CurrentPos[CAP_NUM];	
+}CmdCtrlParam_t;
+
+
+typedef struct _VoltMapParam_t
+{
+	 uint16_t   len;
+	 uint32_t   Volt[MAX_RFPWRVOL_NUM]; 
+}VoltMapParam_t;
+
+typedef struct _PhaseMapParam_t
+{
+	uint16_t   len;
+	uint32_t   power[MAX_RFPWRVOL_NUM]; 
+}PhaseMapParam_t;
 
 //Running Status Info of the Core board...
 typedef struct _RunningStatus_t
@@ -175,6 +203,40 @@ typedef struct _RunningStatus_t
 	uint16_t FpgaPulseSyncDelay;
 
 } RunningStatus_t;
+
+typedef struct _ParamFactor_t
+{
+	double VrmsFactor;
+	double IrmsFactor;
+	double PhaseFactor;
+	
+	double VrmsOffset;
+	double IrmsOffset;
+	double PhaseOffset;	
+	
+	double DrainGain;
+	double DrainOffset;
+	
+	double ACDCVoltGain;
+	double ACDCVoltOffset;
+	
+	double ACDCCurrentGain;
+	double ACDCCurrentOffset;
+	
+	double VSWRLimit;
+	
+	double PhaseKp;
+	double PhaseKi;
+	double PhaseKd;
+	double PhaseEThr;
+	
+	double VoltKp;
+	double VoltKi;
+	double VoltKd;
+	double VoltEThr;
+	
+}ParamFactor_t;
+
 typedef struct _ProcessDataRecord_t
 {
     uint32_t  ACDCVolt;
@@ -186,14 +248,16 @@ typedef struct _ProcessDataRecord_t
 typedef struct _ProcessData_t
 {
     uint16_t RecordNum;
-    PDORecord_t *Records;
+    PDORecord_t Records[MAX_PD_RECORD_NUM];
 
 } ProcessData_t;
 
 #define PARTS_PARAM_LEN					  		  sizeof(PartsParam_t)
 #define COMMUN_PARAM_LEN                   		  sizeof(CommonParam_t)
 #define INTERNAL_PARAM_LEN                        sizeof(InternalParam_t)
-#define USER_PARAM_LEN                            sizeof(UserParam_t)	
+#define USER_PARAM_LEN                            sizeof(UserParam_t)
+#define VOLTMAP_PARAM_LEN						  sizeof(VoltMapParam_t)
+#define PHASEMAP_PARAM_LEN						  sizeof(PhaseMapParam_t)
 #define RUNNING_STATUS_LEN						  sizeof(RunningStatus_t)
 	
 #define PD_ONE_RECORD_LEN                         sizeof(PDORecord_t)
@@ -210,36 +274,27 @@ typedef struct _ProcessData_t
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 typedef enum
 {
-	ID_SAVE_FS_PARTS_PARAM    ,
+	ID_SAVE_FS_PARTS_PARAM    	,
 	ID_SAVE_FS_COMMON_PARAM		,
 	ID_SAVE_FS_INTERNAL_PARAM	,
 	ID_SAVE_FS_USER_PARAM	 	,
 	
-	ID_SAVE_PARTS_PARAM       ,
+	ID_SAVE_PARTS_PARAM       	,
 	ID_SAVE_COMMON_PARAM		,
 	ID_SAVE_INTERNAL_PARAM		,
 	ID_SAVE_USER_PARAM			,
-	ID_SAVE_RFPWRVOLT_PARAM 	,
+	ID_SAVE_VOLTMAP_PARAM 	    ,
+	ID_SAVE_PHASEMAP_PARAM 	    ,
 	
-	ID_READ_FS_PARTS_PARAM		,
-	ID_READ_FS_COMMON_PARAM		,
-	ID_READ_FS_INTERNAL_PARAM 	,
-	ID_READ_FS_USER_PARAM		,
-	
-	ID_READ_PARTS_PARAM			,
-	ID_READ_COMMON_PARAM		,
-	ID_READ_INTERNAL_PARAM		,
-	ID_READ_USER_PARAM			,
-	
-	ID_RESUME_ALLPARAMS			,
 	//设置匹配器控制
-	ID_MOVE_LOADTOPOS			,
-	ID_MOVE_TUNETOPOS			,
-			
+	ID_MOVE_LOADTOPOS			, //移动匹配器Load位置
+	ID_MOVE_TUNETOPOS			, //移动匹配器Tune位置
+	ID_SET_MATCHMODE            , //设置匹配器模式
+	
 	//设置波特率
-	ID_SET_BAUDRATE				,
+	ID_SET_BAUDRATE				,  //设置波特率
 	//设置设备重启	
-	ID_SET_DEVICERESET			,			
+	ID_SET_DEVICERESET			,  //设置设备复位			
 	
 	ID_SET_ALLNUM				,
 
@@ -267,13 +322,11 @@ typedef union _StatusWord_t
 		uint32_t PforwAtLimit     	    : 1;  // bit11, 正向功率超过设置正向功率上限			(1) 
 		uint32_t FrequecyAtLimit        : 1;  // bit12, 电源频率值到底脉冲的上限或者下限		(1)
 		uint32_t LocalOrRemote	  		: 2;  // bit13-14,  射频电源控制状态(0:UART_MODE 1:ANALOG_MODE 2:PANEL MODE)     (2)
-		uint32_t bit13 					: 1;  // bit13, 保留									(1) 
-		uint32_t bit14					: 1;  // bit14, 保留
 		uint32_t bit15					: 1;  // bit15, 保留
-		uint32_t ACDCStatusOK			: 1;  // 保留
-		uint32_t ACDCEn_AC				: 1;  // 保留
-		uint32_t ACDCEn_PA				: 1;  // 保留	
-		uint32_t ACDCKout_Fb		    : 1;  // 保留
+		uint32_t ACDCStatusOK			: 1;  // bit16, 保留
+		uint32_t ACDCEn_AC				: 1;  // bit17, 保留
+		uint32_t ACDCEn_PA				: 1;  // bit18, 保留	
+		uint32_t ACDCKout_Fb		    : 1;  // bit19, 保留
 		uint32_t bit20				    : 1;  // 保留
 		uint32_t bit21				    : 1;  // 保留	
 		uint32_t bit22				    : 1;  // 保留
@@ -344,6 +397,7 @@ typedef union _FaultWord_t
 // 以下是应用中使用到的变量或参数
 EXTERN FaultWord_t 		g_FaultWord;
 EXTERN StatusWord_t 	g_StatusWord;
+EXTERN ParamFactor_t 	g_FactorData;
 EXTERN ProcessData_t    g_ProcessData;
 EXTERN RunningStatus_t	g_RunningStatus;
 EXTERN uint8_t  FpgaVersion[FPGAWARE_VERSION_LEN];
