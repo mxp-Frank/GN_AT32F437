@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "arm_math.h"
-
+#include "common.h"
 #include "IF_PrjLib.h"
 #include "IF_Boot.h"
 #include "IF_Sensor.h"
@@ -58,6 +58,7 @@ extern void IF_SL_WDOG_FEED(void);
 extern void IF_SL_Bootloader(void);
 
 extern void IF_SL_Sensor_Device_Task(void);
+extern void IF_SL_Sensor_Fpga_Task(void);
 /**********Uart Interface SL **************/
 extern void IF_SL_UartTask1(void);
 extern void IF_SL_UartTask2(void);
@@ -135,7 +136,7 @@ extern uint16_t IF_SL_UserParam_GetSlowStopDelay(void);
 extern void IF_SL_UserParam_SetSlowStopDelay(uint16_t value);
 
 /***************Sensor SL****************/
-extern void IF_SL_SensorTask(void);
+
 extern uint16_t IF_SL_Sensor_GetDCBias(void);
 
 extern float IF_SL_Fpga_GetSensor(uint8_t ChnNo);

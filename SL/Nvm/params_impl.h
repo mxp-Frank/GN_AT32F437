@@ -160,7 +160,7 @@ typedef struct _CmdCtrlParam_t
  uint32_t PulseFreq;						//pulsing Frequency
  uint8_t  PulseDuty;						//pulsing Duty circle
 
- uint8_t  SyncMode;							//Sync Mode 0:sync  off 1:extenal sync 
+ uint8_t  SyncSource;						//Sync Source 0:sync  off 1:extenal sync 
  uint32_t SyncOutDelay;						//Sync out  delay
  uint8_t  SyncOutEnable;					//Sync Out  0:sysnc out off 1:sysnc out on
 	

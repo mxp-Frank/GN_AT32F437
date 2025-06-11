@@ -108,31 +108,31 @@ void IF_SL_UartSendTask4(void)
 
 //Sensor SL interface
 /* FUNCTION *********************************************************************************
- * Function Name : IF_SL_SensorTask
+ * Function Name : IF_SL_Sensor_Fpga_Task
  * Description   : Sensor任务函数接口
  * Parameter     : 
  * Parameter     :                               
  * END ***************************************************************************************/
-void IF_SL_SensorTask(void)
+void IF_SL_Sensor_Fpga_Task(void)
 {
-    IF_SensorTask();
+    IF_Sensor_Fpga_Task();
 }
 
 /* FUNCTION *********************************************************************************
- * Function Name : IF_SL_SensorTask
+ * Function Name : IF_SL_Sensor_Fpga_Task
  * Description   : Sensor任务函数接口
  * Parameter     : 
  * Parameter     :                               
  * END ***************************************************************************************/
 void IF_SL_Sensor_Device_Task(void)
 {
-	 Sensor_Device_Task();
+	 IF_Sensor_Device_Task();
 }
 /**********************Fpga Sensor Layer****************************************/
 float IF_SL_Fpga_GetSensor(uint8_t ChnNo)
 {
 	float value;
-	value = IF_Fpga_GetSensor(ChnNo);
+	value = IF_Fpga_GetMcuAlgSensor(ChnNo);
 	return value;
 }
 

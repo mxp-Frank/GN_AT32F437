@@ -2246,14 +2246,14 @@ uint8_t IF_CmdParam_GetPulseDutyCircle(void)
 {
 	return DevCmdParam.PulseDuty;
 }
-//SyncMode
+//SyncSource
 void IF_CmdParam_SetSyncSource(uint8_t value)
 {
-	DevCmdParam.SyncMode = value;
+	DevCmdParam.SyncSource = value;
 }
 uint8_t IF_CmdParam_GetSyncSource(void)
 {
-	return  DevCmdParam.SyncMode;
+	return  DevCmdParam.SyncSource;
 }
 /**********************************************************/
 
@@ -2359,9 +2359,9 @@ void IF_UpdateRFPwrPIDProcessData(void)
 		{
 			g_ProcessData.Records[g_ProcessData.RecordNum].ACDCVolt = IF_CmdParam_GetACDCVoltage();
 		}
-		g_ProcessData.Records[g_ProcessData.RecordNum].Pfwd = 1000*IF_Fpga_GetSensor(ChnN_Pfwd);
-		g_ProcessData.Records[g_ProcessData.RecordNum].Pref = 1000*IF_Fpga_GetSensor(ChnN_Pref);
-		g_ProcessData.Records[g_ProcessData.RecordNum].vswr = 1000*IF_Fpga_GetSensor(ChnN_VSWR);
+		g_ProcessData.Records[g_ProcessData.RecordNum].Pfwd = 1000*IF_Fpga_GetMcuAlgSensor(ChnN_Pfwd);
+		g_ProcessData.Records[g_ProcessData.RecordNum].Pref = 1000*IF_Fpga_GetMcuAlgSensor(ChnN_Pref);
+		g_ProcessData.Records[g_ProcessData.RecordNum].vswr = 1000*IF_Fpga_GetMcuAlgSensor(ChnN_VSWR);
 		g_ProcessData.RecordNum++;
 	 }
 }

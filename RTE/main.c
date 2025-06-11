@@ -187,7 +187,7 @@ static void Pt_Sensor_task_function(void *pvParameters)
 {
     while(1)
     {
-		IF_SL_SensorTask();
+		IF_SL_Sensor_Fpga_Task();
 		xSemaphoreGive(mainSemaphore);
 		vTaskDelay(MAIN_TASK_PERIOD);
 	}

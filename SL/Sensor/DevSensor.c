@@ -60,12 +60,12 @@ uint16_t IF_Sensor_GetPowerSupply(void)
 	return (adVolt * 11);
 }
 /* FUNCTION *********************************************************************************
- * Function Name : Sensor_Device_Task
+ * Function Name : Sensor_Device_Sample
  * Description   : Sensor设备任务函数
  * Parameter     : 
  * return        :                
  * END ***************************************************************************************/
-void Sensor_Device_Task(void)
+void Sensor_Device_Sample(void)
 {	
 	EXT_ADC_CtrlChannel_Scan();		
 	/******获取射频电源状态*****************/
@@ -94,7 +94,7 @@ void Sensor_Device_Task(void)
     {						
         g_FaultWord.bits.OverPCBTempAlarm = 0;
     }
-	if(IF_Fpga_GetSensor(ChnN_Temp)> TEMP_MAX)
+	if(IF_Fpga_GetMcuAlgSensor(ChnN_Temp)> TEMP_MAX)
 	{
 		 g_FaultWord.bits.OverFpgaTempAlarm = 1;     
 	}else

@@ -3200,7 +3200,7 @@ static void Dealwith_DOB_SensorTemperature(DataObject_t* pRxDOB, DataObject_t* p
 		pTxDOB->DataLen  = 2;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int16_t value = IF_Fpga_GetSensor(ChnN_Temp)*10;
+		int16_t value = IF_Fpga_GetMcuAlgSensor(ChnN_Temp)*10;
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT16(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT16(value);
@@ -3320,10 +3320,10 @@ static void Dealwith_DOB_SensorFreq(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
         if((pTxDOB->SubIndex) == 0x01)
 		{
-			 value = (IF_Fpga_GetSensor(ChnN_Freq)+0.0005F)*1000;
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Freq)+0.0005F)*1000;
 		}else
 		{
-			 value = (IF_Fpga_GetSensorAlg(ChnN_Freq)+0.0005F)*1000;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Freq)+0.0005F)*1000;
 		}
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -3346,10 +3346,10 @@ static void Dealwith_DOB_SensorVrms(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
         if((pTxDOB->SubIndex) == 0x01)
 		{
-			 value = (IF_Fpga_GetSensor(ChnN_Vrms)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Vrms)+0.0005F)*1000;;
 		}else
 		{
-			 value = (IF_Fpga_GetSensorAlg(ChnN_Vrms)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Vrms)+0.0005F)*1000;;
 		}
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -3371,10 +3371,10 @@ static void Dealwith_DOB_SensorIrms(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		if((pTxDOB->SubIndex) == 0x01)
 		{
-			 value = (IF_Fpga_GetSensor(ChnN_Irms)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Irms)+0.0005F)*1000;;
 		}else
 		{
-			 value = (IF_Fpga_GetSensorAlg(ChnN_Irms)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Irms)+0.0005F)*1000;;
 		}	
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -3396,10 +3396,10 @@ static void Dealwith_DOB_SensorPhase(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		if((pTxDOB->SubIndex) == 0x01)
 		{
-			 value = (IF_Fpga_GetSensor(ChnN_Phase)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Phase)+0.0005F)*1000;;
 		}else
 		{
-			 value = (IF_Fpga_GetSensorAlg(ChnN_Phase)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Phase)+0.0005F)*1000;;
 		}	
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -3422,10 +3422,10 @@ static void Dealwith_DOB_SensorPdlv(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		if((pTxDOB->SubIndex) == 0x01)
 		{
-			 value = (IF_Fpga_GetSensor(ChnN_Pdlv)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pdlv)+0.0005F)*1000;;
 		}else
 		{
-			 value = (IF_Fpga_GetSensorAlg(ChnN_Pdlv)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pdlv)+0.0005F)*1000;;
 		}	
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
@@ -3449,10 +3449,10 @@ static void Dealwith_DOB_SensorPfwd(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		if((pTxDOB->SubIndex) == 0x01)
 		{
-			 value = (IF_Fpga_GetSensor(ChnN_Pfwd)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pfwd)+0.0005F)*1000;;
 		}else
 		{
-			 value = (IF_Fpga_GetSensorAlg(ChnN_Pfwd)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pfwd)+0.0005F)*1000;;
 		}
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
@@ -3477,10 +3477,10 @@ static void Dealwith_DOB_SensorPref(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		if((pTxDOB->SubIndex) == 0x01)
 		{
-			 value = (IF_Fpga_GetSensor(ChnN_Pref)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pref)+0.0005F)*1000;;
 		}else
 		{
-			 value = (IF_Fpga_GetSensorAlg(ChnN_Pref)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pref)+0.0005F)*1000;;
 		}
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
@@ -3503,10 +3503,10 @@ static void Dealwith_DOB_SensorZ(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		if((pTxDOB->SubIndex) == 0x01)
 		{
-			 value = (IF_Fpga_GetSensor(ChnN_Z)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Z)+0.0005F)*1000;;
 		}else
 		{
-			 value = (IF_Fpga_GetSensorAlg(ChnN_Z)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Z)+0.0005F)*1000;;
 		}
 
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
@@ -3530,10 +3530,10 @@ static void Dealwith_DOB_SensorR(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		if((pTxDOB->SubIndex) == 0x01)
 		{
-			 value = (IF_Fpga_GetSensor(ChnN_R)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_R)+0.0005F)*1000;;
 		}else
 		{
-			 value = (IF_Fpga_GetSensorAlg(ChnN_R)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_R)+0.0005F)*1000;;
 		}
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
@@ -3557,10 +3557,10 @@ static void Dealwith_DOB_SensorX(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		if((pTxDOB->SubIndex) == 0x01)
 		{
-			 value = (IF_Fpga_GetSensor(ChnN_X)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_X)+0.0005F)*1000;;
 		}else
 		{
-			 value = (IF_Fpga_GetSensorAlg(ChnN_X)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_X)+0.0005F)*1000;;
 		}
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
@@ -3584,10 +3584,10 @@ static void Dealwith_DOB_SensorVSWR(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		if((pTxDOB->SubIndex) == 0x01)
 		{
-			 value = (IF_Fpga_GetSensor(ChnN_VSWR)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_VSWR)+0.0005F)*1000;;
 		}else
 		{
-			 value = (IF_Fpga_GetSensorAlg(ChnN_VSWR)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_VSWR)+0.0005F)*1000;;
 		}
 
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
@@ -3614,7 +3614,7 @@ static void Dealwith_DOB_SensorDrainVolt(DataObject_t* pRxDOB, DataObject_t* pTx
 		pTxDOB->DataLen  = 2;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		uint16_t value = IF_Fpga_GetSensor(ChnN_Drain);
+		uint16_t value = IF_Fpga_GetMcuAlgSensor(ChnN_Drain);
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT16(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT16(value);

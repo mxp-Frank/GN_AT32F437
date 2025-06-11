@@ -10,6 +10,7 @@
 #include "Sensor.h"
 #include "FpgaSensor.h"
 #include "DevSensor.h"
+#include "IF_Sensor.h"
 #include "IF_HAL_Cfg.h"
 #include "IF_SL_Cfg.h"
 /* CONST & MACROS */
@@ -34,24 +35,24 @@ void IF_SensorInit(void)
     IF_HAL_Sensor_MCU_Start();
 }
 /* FUNCTION *********************************************************************************
- * Function Name : IF_Sensor_Fpga_Task
+ * Function Name : IF_Sensor_Fpga_Sample
  * Description   : Sensor Fpga任务函数接口
  * Parameter     : 
  * return        :                
  * END ***************************************************************************************/
-void IF_SensorTask(void)
+void IF_Sensor_Fpga_Task(void)
 {
-    Sensor_Fpga_Task();
+    Sensor_Fpga_Sample();
 }
 /* FUNCTION *********************************************************************************
- * Function Name : IF_Sensor_Device_Task
+ * Function Name : IF_IF_Sensor_Device_Task
  * Description   : Sensor设备任务函数接口
  * Parameter     : 
  * return        :                
  * END ***************************************************************************************/
 void IF_Sensor_Device_Task(void)
 {
-	 Sensor_Device_Task();
+	 Sensor_Device_Sample();
 }
 
 uint16_t IF_Sensor_GetDCBias(void)

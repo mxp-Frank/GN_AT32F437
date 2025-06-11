@@ -68,4 +68,6 @@ static  uint32_t NTCtemperature[171]=
 };
 
 
+extern void Sensor_Device_Sample(void);
+
 #endif /* _SENSOR_1G_H_ */

@@ -23,36 +23,28 @@ extern "C" {
 * Interface functions                                                         *
 ******************************************************************************/
 extern void IF_SensorInit(void);
-extern void IF_SensorTask(void);
+extern void IF_Sensor_Fpga_Task(void);
+extern void IF_Sensor_Device_Task(void);
 
-extern uint8_t IF_Sensor_RFOnChk(void);
+
+
 extern uint16_t IF_Sensor_GetFanCurrent(void);
-
+//Sensor_1G output var
 extern int16_t IF_Sensor_GetPCBTemperature(void);
 extern uint16_t IF_Sensor_GetPowerSupply(void);
 extern int16_t IF_Sensor_GetRFTemperature(uint8_t Channel);
 
-//Sensor_1G output var
-extern float IF_Fpga_GetSensor(uint8_t ChnNo);
-extern float IF_Fpga_GetSensorAlg(uint8_t ChnNo);
+
+extern float IF_Fpga_GetMcuAlgSensor(uint8_t ChnNo);
+extern float IF_Fpga_GetRegAlgSensor(uint8_t ChnNo);
 
 extern uint8_t IF_Fpga_GetSyncInDutyCircle(void);
 extern uint32_t IF_Fpga_GetSyncInFrequency(void);
 extern uint8_t IF_Fpga_GetSyncOutMeasureDutyCircle(void);
 extern uint32_t IF_Fpga_GetSyncOutMeasureFrequency(void);
-
-extern uint16_t IF_Sensor_GetDCBias(void);
-
-
-extern void Sensor_Fpga_Task(void);
-extern uint8_t Sensor_RFOnChk(uint8_t UnitNo);
-
 extern uint8_t IF_Sensor_GetVersion(uint8_t *pBuf);
 
-extern void Sensor_Device_Task(void);
-
-
-
+extern uint16_t IF_Sensor_GetDCBias(void);
 
 #if defined(__cplusplus)
 }

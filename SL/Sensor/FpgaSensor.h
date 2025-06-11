@@ -23,6 +23,19 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#define FPGAWARE_VERSION_LEN        	 10
+#define M_PI							(double)(3.1415926F)
+#define ARC								(double)(57.29578F)			  //57.29578=(180.0F/M_PI)
+#define RAD_VALUE						(double)(-1048576.0F)
+	
+#define RMS_VALUE						(double)(134217728.0F)		 //134217728= 65536*2048	
+#define ARC_RAD_VALUE                   (double)(-0.0000546415143F)   //=(180.0F/M_PI)/1048576
+
+#define FREQ_2M_RATE					(double)(0.015625F)		     //0.015625=16/1024
+
+#define FPGA_SAMPLE_RATE				100
+
+//寄存器输出地址
 #define DDS_STATESWITCH_ADDR         	164
 #define DDS_CHANNELNO_ADDR				168
 #define DDS_FREQUENCY_ADDR         		172	
@@ -40,8 +53,8 @@ extern "C" {
 #define PULSEMODE_DUTY_ADDR				220
 #define PULSEMODE_FREQ_ADDR				224
 
-#define SYNCMODE_SWITCH_ADDR			208
-#define SYNCOUT_SWITCH_ADDR				212 
+#define SYNCSOURCE_SWITCH_ADDR			208
+#define SYNCOUT_ENABLE_ADDR				212 
 #define SYNCOUT_DELAY_ADDR				216
 
 #define FEED_COLLECTIONMODE_ADDR		228
@@ -51,22 +64,6 @@ extern "C" {
 #define PHASE_LEVELTOLEVEL_ADDR			240
 #define PHASE_STEPSPEED_ADDR			244
 #define PHASE_STEPTIMER_ADDR			248
-
-
-
-
-#define FPGAWARE_VERSION_LEN        	 10
-
-#define M_PI							(double)(3.1415926F)
-#define ARC								(double)(57.29578F)			  //57.29578=(180.0F/M_PI)
-#define RAD_VALUE						(double)(-1048576.0F)
-	
-#define RMS_VALUE						(double)(134217728.0F)		 //134217728= 65536*2048	
-#define ARC_RAD_VALUE                   (double)(-0.0000546415143F)   //=(180.0F/M_PI)/1048576
-
-#define FREQ_2M_RATE					(double)(0.015625F)		     //0.015625=16/1024
-
-#define FPGA_SAMPLE_FREQ				100
 
 typedef struct _SensorReg_t
 {
@@ -111,16 +108,16 @@ typedef struct _SensorReg_t
 	int32_t PulseDuty;
 	int32_t PulseFreq;
 	
-	int32_t SyncMode;
+	int32_t SyncSource;
 	int32_t SyncOutEnable;
 	int32_t SyncOutDelay;
 	
-
 	int32_t FeedCollectionMode;
 	int32_t FeedPreMask;
 	int32_t FeedPostMask;
+	
 	int32_t PhaseState2;
-	int32_t PhaseStep;
+	int32_t PhaseStepSpeed;
 	int32_t PhaseStepTimer;
 }SensorReg_t;
 
@@ -159,29 +156,8 @@ typedef enum Sensor_ChnN_t
 	 ChnN_Drain    	= 0x0D,
 }Sensor_ChnN_t;
 
-
-typedef union
-{
-	uint32_t Val;
-	uint8_t v[4];
-	uint16_t w[2];
-	struct
-	{
-		uint8_t LB;
-		uint8_t HB;	
-		uint8_t UB;
-		uint8_t MB;
-	}byte;
-}UINT32_Value;
-
-enum sensorType
-{
-	MUCSENSOR = 0,
-	FPGASENSOR = 1,	
-};
-
 extern void IF_FpgaSensor_ParamInit(void);
-
+extern void Sensor_Fpga_Sample(void);
 #if defined(__cplusplus)
 }
 #endif /* __cplusplus */
