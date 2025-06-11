@@ -174,7 +174,7 @@ extern int32_t IF_InternalParam_GetDrainVoltOffset(void);
 extern uint8_t IF_InternalParam_GetDDSChannelNo(void);
 extern void IF_InternalParam_SetDDSChannelNo(uint8_t value);
 //---------------------------------------------------------------
-extern uint32_t IF_InternalParam_GetWorkCenterFreq(void);
+extern uint32_t IF_InternalParam_GetDDSCenterFreq(void);
 extern void IF_InternalParam_SetWorkCenterFreq(uint32_t value);
 //---------------------------------------------------------------
 extern uint32_t IF_InternalParam_GetACDCCurrent(void);
@@ -185,6 +185,24 @@ extern uint32_t IF_InternalParam_GetFpgaPulsePowerThr(void);
 //---------------------------------------------------------------
 extern void IF_InternalParam_SetFpgaPulseSyncDelay(uint16_t value);
 extern uint16_t IF_InternalParam_GetFpgaPulseSyncDelay(void);
+
+extern uint8_t IF_InternalParam_GetFeedCollectionMode(void);
+extern void IF_InternalParam_SetFeedCollectionMode(uint8_t value);
+//---------------------------------------------------------------
+extern uint32_t IF_InternalParam_GetFeedPreMask(void);
+extern void IF_InternalParam_SetFeedPreMask(uint32_t value);
+//---------------------------------------------------------------
+extern uint32_t IF_InternalParam_GetFeedPostMask(void);
+extern void IF_InternalParam_SetFeedPostMask(uint32_t value);
+
+extern int32_t IF_InternalParam_GetPhaseState2(void);
+extern void IF_InternalParam_SetPhaseState2(int32_t value);
+//---------------------------------------------------------------
+extern uint32_t IF_InternalParam_GetPhaseStepSpeed(void);
+extern void IF_InternalParam_SetPhaseStepSpeed(uint32_t value);
+//---------------------------------------------------------------
+extern uint32_t IF_InternalParam_GetPhaseStepTimer(void);
+extern void IF_InternalParam_SetPhaseStepTimer(uint32_t value);
 //-------------------------------------------------------------------------------------------------
 //AM Configurable User Parameters
 extern void IF_UserParam_SetRegulationMode(uint8_t value);
@@ -213,19 +231,11 @@ extern uint16_t IF_UserParam_GetSlowStartDelay(void);
 //---------------------------------------------------------------
 extern void IF_UserParam_SetSlowStopDelay(uint16_t value);
 extern uint16_t IF_UserParam_GetSlowStopDelay(void);
-//---------------------------------------------------------------
-extern void IF_UserParam_SetPulseMode(uint8_t value);
-extern uint8_t IF_UserParam_GetPulseMode(void);
+
 //---------------------------------------------------------------
 extern void IF_UserParam_SetSlowMode(uint8_t value);
 extern uint8_t IF_UserParam_GetSlowMode(void);
 //---------------------------------------------------------------
-extern void IF_UserParam_SetPulseFrequency(uint32_t value);
-extern uint32_t IF_UserParam_GetPulseFrequency(void);
-//---------------------------------------------------------------
-extern void IF_UserParam_SetPulseDutyCircle(uint8_t value);
-extern uint8_t IF_UserParam_GetPulseDutyCircle(void);
-
 extern void IF_UserParam_SetAnalogVoltageRange(uint32_t value);
 extern uint32_t IF_UserParam_GetAnalogVoltageRange(void);
 
@@ -247,11 +257,11 @@ extern int32_t IF_NvmParam_GetPhaseMapTable(int32_t powermw);
 extern void IF_CmdParam_SetPwrPoint(uint16_t value);
 extern uint16_t IF_CmdParam_GetPwrPoint(void);
 //---------------------------------------------------------------
-extern uint8_t IF_CmdParam_GetDDSDriverState(void);
-extern void IF_CmdParam_SetDDSDriverState(uint8_t value);
+extern uint8_t IF_CmdParam_GetDDSDriverSwitch(void);
+extern void IF_CmdParam_SetDDSDriverSwitch(uint8_t value);
 //---------------------------------------------------------------
-extern uint32_t IF_CmdParam_GetACDCDriverState(void);
-extern void IF_CmdParam_SetACDCDriverState(uint32_t value);
+extern uint32_t IF_CmdParam_GetACDCDriverSwitch(void);
+extern void IF_CmdParam_SetACDCDriverSwitch(uint32_t value);
 //---------------------------------------------------------------
 extern void IF_CmdParam_SetPowerWorkMode(uint8_t value);
 extern uint8_t IF_CmdParam_GetPowerWorkMode(void);
@@ -265,11 +275,29 @@ extern void IF_CmdParam_SetDDSWorkPhase(uint32_t value);
 extern void IF_CmdParam_SetResetDevice(void);
 extern void IF_CmdParam_ResumeFactorySettings(void);
 
-extern void IF_CmdParam_SetRFPowerState(uint8_t value);
-extern uint8_t IF_CmdParam_GetRFPowerState(void);
+extern void IF_CmdParam_SetRFPowerSwitch(uint8_t value);
+extern uint8_t IF_CmdParam_GetRFPowerSwitch(void);
 
 extern void IF_CmdParam_SetFactoryMode(uint8_t value);
 extern uint8_t IF_CmdParam_GetFactoryMode(void);
+//---------------------------------------------------------------
+extern void IF_CmdParam_SetPulseMode(uint8_t value);
+extern uint8_t IF_CmdParam_GetPulseMode(void);
+
+extern void IF_CmdParam_SetPulseFrequency(uint32_t value);
+extern uint32_t IF_CmdParam_GetPulseFrequency(void);
+
+extern void IF_CmdParam_SetPulseDutyCircle(uint8_t value);
+extern uint8_t IF_CmdParam_GetPulseDutyCircle(void);
+//---------------------------------------------------------------
+extern void IF_CmdParam_SetSyncSource(uint8_t value);
+extern uint8_t IF_CmdParam_GetSyncSource(void);
+
+extern void IF_CmdParam_SetSyncOutDelay(uint32_t value);
+extern uint32_t IF_CmdParam_GetSyncOutDelay(void);
+
+extern void IF_CmdParam_SetSyncOutEnable(uint8_t value);
+extern uint8_t IF_CmdParam_GetSyncOutEnable(void);
 //-------------------------------------------------------------------------------------------------
 //Executable Action
 extern uint16_t IF_CmdParam_GetMatchCurrentPos(uint8_t capIndex);

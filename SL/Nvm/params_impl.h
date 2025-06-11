@@ -111,6 +111,14 @@ typedef struct _InternalParam_t
 	uint32_t WorkCenterFreq;
 	uint32_t ACDCCurrent;
 	
+	uint8_t  FeedCollectionMode;                 
+	uint32_t FeedPreMask;
+	uint32_t FeedPostMask;
+	
+	int32_t  PhaseState2;
+	int32_t PhaseStepSpeed;
+	uint32_t PhaseStepTimer;
+	
 } InternalParam_t;
 
 
@@ -125,10 +133,6 @@ typedef struct _UserParam_t
 	uint16_t PrefThr;						//Reflect Power Threshold;
 	uint8_t  PrefDelayOff;					//Delay time after reaching Reflect Power Threshould until RF is turn off.
 	
-	uint8_t  PulseMode;						//Pulse Mode 0:pulse off 1:internal pulsing 
-	uint32_t PulseFreq;						//pulsing Frequency
-	uint8_t  PulseDuty;						//pulsing Duty circle
-	
 	uint8_t  MatchMode;						//the match work mode
 	uint8_t  SlowMode;						//Slow delay enable/disable
 	uint16_t SlowRFOnDelay;					//Slow delay power on
@@ -142,6 +146,7 @@ typedef struct _UserParam_t
 typedef struct _CmdCtrlParam_t
 {
  uint8_t 	FactoryMode;         //工厂模式	
+	
  uint8_t 	RFPowerState;		 //射频电源工作状态    	  0：RF_OFF        1：RF_ON
  uint8_t 	DDSSignState;	     //射频电源驱动DDS工作状态   0：RF_OFF        1：RF_ON
  uint8_t    SetACDCState;        //设置射频电源AC-DC工作状态   0：RF_OFF        1：RF_ON
@@ -150,6 +155,15 @@ typedef struct _CmdCtrlParam_t
  uint32_t 	SetACDCVolt;	    //设置射频电源AC-DC电压值  0~160000
  uint32_t   SetScanFreq;        //设置射频电源输出频率值，0-2000
  uint32_t   DDSWorkPhase;       //设置射频电源输出相位值，0-165000
+	
+ uint8_t  PulseMode;						//Pulse Mode 0:pulse off 1:internal pulsing 
+ uint32_t PulseFreq;						//pulsing Frequency
+ uint8_t  PulseDuty;						//pulsing Duty circle
+
+ uint8_t  SyncMode;							//Sync Mode 0:sync  off 1:extenal sync 
+ uint32_t SyncOutDelay;						//Sync out  delay
+ uint8_t  SyncOutEnable;					//Sync Out  0:sysnc out off 1:sysnc out on
+	
  uint16_t 	TargetPos[CAP_NUM];
  uint16_t   CurrentPos[CAP_NUM];	
 }CmdCtrlParam_t;

@@ -204,41 +204,6 @@ void IF_SL_UserParam_SetRegulationMode(uint8_t value)
 {
 	IF_UserParam_SetRegulationMode(value);
 }
-//PulseMode of parameter
-uint8_t IF_SL_UserParam_GetPulseMode(void)
-{
-	uint8_t value = 0;
-	value = IF_UserParam_GetPulseMode();
-	return value;
-}
-
-void IF_SL_UserParam_SetPulseMode(uint8_t value)
-{
-	 IF_UserParam_SetPulseMode(value);
-}
-//PulseFrequency of parameter 
-uint32_t IF_SL_UserParam_GetPulseFrequency(void)
-{
-	uint32_t value =0;
-	value = IF_UserParam_GetPulseFrequency();
-	return value;
-}
-void IF_SL_UserParam_SetPulseFrequency(uint32_t value)
-{
-	IF_UserParam_SetPulseFrequency(value);
-}
-//PulseDutyCircle of parameter 
-uint16_t IF_SL_UserParam_GetPulseDutyCircle(void)
-{
-	uint16_t value = 0;
-	value = IF_UserParam_GetPulseDutyCircle();
-	return value;
-}	
-void IF_SL_UserParam_SetPulseDutyCircle(uint16_t value)
-{
-	IF_UserParam_SetPulseDutyCircle(value);
-}
-
 //ForwardPowerLimit of parameter 
 uint16_t IF_SL_UserParam_GetForwardPowerLimit(void)
 {
@@ -424,21 +389,21 @@ void  IF_SL_CmdParam_SetPwrPoint(uint16_t value)
 //**************************************
 void IF_SL_CmdParam_SetDDSDriverState(uint8_t ONorOFF)
 {
-	IF_CmdParam_SetDDSDriverState(ONorOFF);
+	IF_CmdParam_SetDDSDriverSwitch(ONorOFF);
 }
 //**************************************
 void IF_SL_CmdParam_SetACDCDriverState(uint8_t ONorOFF)
 {
-	 IF_CmdParam_SetACDCDriverState(ONorOFF);
+	 IF_CmdParam_SetACDCDriverSwitch(ONorOFF);
 }
 //**************************************
 uint8_t IF_SL_CmdParam_GetRFPowerState(void)
 {
-	 return IF_CmdParam_GetRFPowerState();
+	 return IF_CmdParam_GetRFPowerSwitch();
 }
 void IF_SL_CmdParam_SetRFPowerState(uint8_t ONorOFF)
 {
-	IF_CmdParam_SetRFPowerState(ONorOFF);
+	IF_CmdParam_SetRFPowerSwitch(ONorOFF);
 }
 //**************************************
 uint8_t IF_SL_CmdParam_GetLoopMode(void)

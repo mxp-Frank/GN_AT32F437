@@ -14,7 +14,7 @@
 #include "configDevice.h"
 /* CONST & MACROS */
 #define THRPOWER_RATE				(float)(0.01F)
-#define PID_TIMER				5	
+#define PID_TIMER					5	
 /* DATA STRUCTURES */
 /* LOCAL VARIABLES */
 static PID_Typedef PhasePID;
@@ -85,7 +85,7 @@ static float Module_PowerDriverCtrl(void)
 	float PowerSlowRate = 0.0F;
 	GN_Device.RFPwrState.Now = (RFEnum)IF_SL_CmdParam_GetRFPowerState();
 	/**********************射频功耗驱动开启状态*********************************/	
-	if (AM_RF_ON == GN_Device.RFPwrState.Now)
+	if (RF_ON == GN_Device.RFPwrState.Now)
 	{	
 		if(OFF == IF_SL_UserParam_GetSlowMode())  				//缓启动模式关闭
 		{
@@ -102,11 +102,11 @@ static float Module_PowerDriverCtrl(void)
 		if(OFF == IF_SL_UserParam_GetSlowMode())    			    //缓启动模式关闭
 		{
 			IF_SL_Timer_SetRFSlowStartDelayFlag(OFF);				//关闭缓启动定时器	
-			IF_SL_Timer_SetRFSlowStopDelayFlag(OFF);				//关闭缓启动定时器	
+			IF_SL_Timer_SetRFSlowStopDelayFlag(OFF);				//关闭缓关闭定时器	
 		}else 
 		{	
-			IF_SL_Timer_SetRFSlowStopDelayFlag(ON);
-			IF_SL_Timer_SetRFSlowStartDelayFlag(OFF);	
+			IF_SL_Timer_SetRFSlowStartDelayFlag(OFF);	    	//关闭缓启动定时器
+			IF_SL_Timer_SetRFSlowStopDelayFlag(ON);				//开启缓关闭定时器
 		}	
 		PowerSlowRate = IF_SL_Timer_GetRFSlowStopDelayTime();				
 	}
@@ -236,7 +236,6 @@ static void Module_ACDCOutputVoltage(float SetPIDVoltage)
  * END ***************************************************************************************/
 static uint32_t Module_CheckOutputPower(float SlowRate)
 {
-	uint32_t OutputPower = 0;
 	uint32_t SettingPower = SlowRate * IF_SL_CmdParam_GetPwrPoint();
 	/**********************功率监测，开启状态*********************************/
 	if(FWDREGULATION == IF_SL_UserParam_GetRegulationMode()) //前向功率模式下
@@ -285,8 +284,8 @@ static uint32_t Module_CheckOutputPower(float SlowRate)
 			g_StatusWord.bits.PreflAtLimit = OFF;
 		}			
 	}	
-	OutputPower = SettingPower - GN_Device.PowerThrDown;
-	return  OutputPower;
+	SettingPower = SettingPower - GN_Device.PowerThrDown;
+	return  SettingPower;
 }
  /* FUNCTION *********************************************************************************
  * Function  : PID_LookupTable

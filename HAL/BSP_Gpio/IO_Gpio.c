@@ -111,13 +111,13 @@ static void RFPowerPort_Init(void)
     gpio_init_struct.gpio_pins = 0;
     gpio_init_struct.gpio_pins = PW12V_ON_PIN;
     gpio_init(PW12V_ON_GPIO, &gpio_init_struct);
-	IF_GpioOutPut(PW12V_ON_GPIO, PW12V_ON_PIN, 1, LOGIC_NOUT);  
+	IF_GpioOutPut(PW12V_ON_GPIO, PW12V_ON_PIN, 1, LOGIC_POUT);  
 	
 	/*DC_5v on gpio output structure config*/
     gpio_init_struct.gpio_pins = 0;
     gpio_init_struct.gpio_pins = DC5V_ON_PIN;
     gpio_init(DC5V_ON_GPIO, &gpio_init_struct);
-	IF_GpioOutPut(DC5V_ON_GPIO, DC5V_ON_PIN, 1, LOGIC_NOUT);  
+	IF_GpioOutPut(DC5V_ON_GPIO, DC5V_ON_PIN, 1, LOGIC_POUT);  
 	
 	/*InterLock EN on gpio output structure config*/
     gpio_init_struct.gpio_pins = 0;

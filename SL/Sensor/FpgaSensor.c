@@ -20,19 +20,53 @@
 static SensorReg_t FpgaReg;					
 static SensorData_t OutputData;
 
+static uint32_t ReadVersion_Tick = 0;
+static float FpgaVrmsFactor = 0;
+static float FpgaIrmsFactor = 0;
+static float FpgaPhaseFactor = 0;
+
+static uint32_t FpgaPulseDuty = 0;
+static uint32_t FpgaPulseFreq = 0;
 
 /* FUNCTION PROTOTYPES */
 static uint8_t GetSensorRegisterValue(void);
 static void GetInputSensorValue(void);
 static void SetOutputSensorValue(void);
 static float GetVSWRReflectance(float vswr_r,float vswr_x);
-static void Fpga_SetDDSDriverSwitch(UINT32_Value WriteReg);
-static void Fpga_SetDDSChannelSetting(UINT32_Value WriteReg);
-static void Fpga_SetWorkFreqSetting(UINT32_Value WriteReg);
-static void Fpga_SetDDSWorkPhaseSetting(UINT32_Value WriteReg);
-static void Fpga_SetACDCVoltSetting(UINT32_Value WriteReg);
-static void Fpga_SetACDCurrentSetting(UINT32_Value WriteReg);
+static uint32_t Sensor_2G_GetMcuRegister(uint8_t RegAddress);
+
+static void Sensor_2G_GetSoftVersion(uint8_t RegAddress);
+
+static void Fpga_SetDDSStateSwitch(UINT32_Value WriteReg);
+static void Fpga_SetDDSChannelNumber(UINT32_Value WriteReg);
+static void Fpga_SetWorkDDSFrequency(UINT32_Value WriteReg);
+static void Fpga_SetDDSWorkPhase(UINT32_Value WriteReg);
+
 static void Fpga_SetACDCDriverSwitch(UINT32_Value WriteReg);
+static void Fpga_SetACDCVoltageSet(UINT32_Value WriteReg);
+static void Fpga_SetACDCurrentSetting(UINT32_Value WriteReg);
+
+static void  Fpga_SetFpgaSensorVrmsFactor(UINT32_Value WriteReg);
+static void  Fpga_SetFpgaSensorIrmsFactor(UINT32_Value WriteReg);
+static void  Fpga_SetFpgaSensorPhaseFactor(UINT32_Value WriteReg);
+
+static void  Fpga_SetPulseModeSwitch(UINT32_Value WriteReg);
+static void  Fpga_SetPulseModeDutyCircle(UINT32_Value WriteReg);
+static void  Fpga_SetPulseModeFrequency(UINT32_Value WriteReg);
+
+
+static void  Fpga_SetSyncModeSwitch(UINT32_Value WriteReg);
+static void  Fpga_SetSyncOutSwitch(UINT32_Value WriteReg);
+static void  Fpga_SetSyncOutDelay(UINT32_Value WriteReg);
+
+static void  Fpga_SetFeedCollectionMode(UINT32_Value WriteReg);
+static void  Fpga_SetFeedPreMask(UINT32_Value WriteReg);
+static void  Fpga_SetFeedPostMask(UINT32_Value WriteReg);
+
+static void  Fpga_SetPhaseLevelToLevel(UINT32_Value WriteReg);
+static void  Fpga_SetPhaseStepSpeed(UINT32_Value WriteReg);
+static void  Fpga_SetPhaseStepTimer(UINT32_Value WriteReg);
+
 /* FUNCTION *********************************************************************************
  * Function Name : IF_Sensor_2G_ParamInit
  * Description   : 得到二代VI传感器的数据初始化
@@ -42,7 +76,7 @@ static void Fpga_SetACDCDriverSwitch(UINT32_Value WriteReg);
 void IF_FpgaSensor_ParamInit(void)
 {
 	memset((void*)&FpgaReg,0,sizeof(SensorReg_t));
-	memset((void*)&OutputData,0,sizeof(SensorData_t));		   	
+	memset((void*)&OutputData,0,sizeof(SensorData_t));	
 }
 	
 /* FUNCTION *********************************************************************************
@@ -70,41 +104,70 @@ void Sensor_Fpga_Task(void)
  * END ***************************************************************************************/
 static uint8_t  GetSensorRegisterValue(void)
 {
-    uint8_t ret =OFF,j=0;
-    uint8_t regData[REGNUM_R] = {0};
 	
+    uint8_t ret =OFF;
     /*************************读取FPGA寄存器数据到寄存器缓冲区*******************************/
     if(0 == IF_HAL_FpgaReg_ReadStart())
 	{
-		for(uint16_t i = 0; i < REGNUM_R; i++)
+		ReadVersion_Tick++;
+		if(ReadVersion_Tick %1000 == 0)
 		{
-			regData[i] = IF_HAL_FpgaReg_Read(i);
+			Sensor_2G_GetSoftVersion(0);
 		}
-		// FPGA版本号转换成ASCII码
-		FpgaReg.Version[j++] = regData[3];
-		FpgaReg.Version[j++] = regData[2];
-		FpgaReg.Version[j++] = regData[1];
-		FpgaReg.Version[j++] = regData[0];
-		FpgaReg.Version[j++] = regData[7];	
-		FpgaReg.Version[j++] = regData[6];	
-		FpgaReg.Version[j++] = regData[5];	
-		FpgaReg.Version[j++] = regData[4];	
+		/***********************Read Register******************************/
+		FpgaReg.temperture    = Sensor_2G_GetMcuRegister(8);
+		FpgaReg.RFDrainVolt   = Sensor_2G_GetMcuRegister(12);
+		FpgaReg.FeedbackFreq  = Sensor_2G_GetMcuRegister(16);
+		FpgaReg.FeedbackVrms  = Sensor_2G_GetMcuRegister(20);
+		FpgaReg.FeedbackIrms  = Sensor_2G_GetMcuRegister(24);
+		FpgaReg.FeedbackPhase = Sensor_2G_GetMcuRegister(28);
+		/**********************************************************/
+		FpgaReg.AlgFreq   = Sensor_2G_GetMcuRegister(32);
+		FpgaReg.AlgVrms   = Sensor_2G_GetMcuRegister(36);
+		FpgaReg.AlgIrms   = Sensor_2G_GetMcuRegister(40);
+		FpgaReg.AlgPhase  = Sensor_2G_GetMcuRegister(44);
+		FpgaReg.AlgPdlv   = Sensor_2G_GetMcuRegister(48);
+		FpgaReg.AlgPfwd   = Sensor_2G_GetMcuRegister(52);
+		FpgaReg.AlgPref   = Sensor_2G_GetMcuRegister(56);
+		FpgaReg.AlgR   	  = Sensor_2G_GetMcuRegister(60);
+		FpgaReg.AlgX      = Sensor_2G_GetMcuRegister(64);
+		FpgaReg.AlgVSWR   = Sensor_2G_GetMcuRegister(68);
+		/**********************************************************/
+		FpgaReg.SyncInDuty  = Sensor_2G_GetMcuRegister(72);
+		FpgaReg.SyncInFreq  = Sensor_2G_GetMcuRegister(76);
+		FpgaReg.SyncOutDutyMeasure = Sensor_2G_GetMcuRegister(80);
+		FpgaReg.SyncOutFreqMeasure = Sensor_2G_GetMcuRegister(84);
 		
-		FpgaReg.temperture     	  = MAKE_UINT32(regData[11], regData[10], regData[9], regData[8]);
-		FpgaReg.RFDrainVolt  	  = MAKE_UINT32(regData[15], regData[14], regData[13], regData[12]);
-		FpgaReg.FeedbackFreq  	  = MAKE_UINT32(regData[19], regData[18], regData[17], regData[16]);
-		FpgaReg.FeedbackVrms      = MAKE_UINT32(regData[23], regData[22], regData[21], regData[20]);
-		FpgaReg.FeedbackIrms      = MAKE_UINT32(regData[27], regData[26], regData[25], regData[24]);
-		FpgaReg.FeedbackPhase 	  = MAKE_UINT32(regData[31], regData[30], regData[29], regData[28]);
+		/***********************Write Register***********************************/
+		FpgaReg.DDSStateSwitch  = Sensor_2G_GetMcuRegister(DDS_STATESWITCH_ADDR);
+		FpgaReg.DDSChannelNo 	= Sensor_2G_GetMcuRegister(DDS_CHANNELNO_ADDR);
+		FpgaReg.DDSFreqSet  	= Sensor_2G_GetMcuRegister(DDS_FREQUENCY_ADDR);
+		FpgaReg.DDSPhaseSet  	= Sensor_2G_GetMcuRegister(DDS_PAHSE_ADDR);
+		/**********************************************************/
+		FpgaReg.ACDCVoltageSet  = Sensor_2G_GetMcuRegister(ACDC_VOLTAGE_ADDR);
+		FpgaReg.ACDCCurrentSet  = Sensor_2G_GetMcuRegister(ACDC_CURRENT_ADDR);
+		FpgaReg.ACDCStateSwitch = Sensor_2G_GetMcuRegister(ACDC_STATESWITCH_ADDR);
+		/**********************************************************/
+		FpgaReg.VrmsFactor   = Sensor_2G_GetMcuRegister(FACTOR_VRMS_ADDR);
+		FpgaReg.IrmsFactor   = Sensor_2G_GetMcuRegister(FACTOR_IRMS_ADDR);
+		FpgaReg.PhaseFactor  = Sensor_2G_GetMcuRegister(FACTOR_PHASE_ADDR);
+		/**********************************************************/
+		FpgaReg.PulseMode    = Sensor_2G_GetMcuRegister(PULSEMODE_SWITCH_ADDR);
+		FpgaReg.PulseDuty    = Sensor_2G_GetMcuRegister(PULSEMODE_DUTY_ADDR);
+		FpgaReg.PulseFreq    = Sensor_2G_GetMcuRegister(PULSEMODE_FREQ_ADDR);
+		/**********************************************************/
+		FpgaReg.SyncMode       = Sensor_2G_GetMcuRegister(SYNCMODE_SWITCH_ADDR);
+		FpgaReg.SyncOutEnable  = Sensor_2G_GetMcuRegister(SYNCOUT_SWITCH_ADDR);
+		FpgaReg.SyncOutDelay   = Sensor_2G_GetMcuRegister(SYNCOUT_DELAY_ADDR);
+		/**********************************************************/
+		FpgaReg.FeedCollectionMode   = Sensor_2G_GetMcuRegister(FEED_COLLECTIONMODE_ADDR);
+		FpgaReg.FeedPreMask   = Sensor_2G_GetMcuRegister(FEED_PREMASK_ADDR);
+		FpgaReg.FeedPostMask  = Sensor_2G_GetMcuRegister(FEED_POSTMASK_ADDR);
+		/**********************************************************/
+		FpgaReg.PhaseState2   = Sensor_2G_GetMcuRegister(PHASE_LEVELTOLEVEL_ADDR);
+		FpgaReg.PhaseStep   = Sensor_2G_GetMcuRegister(PHASE_STEPSPEED_ADDR);
+		FpgaReg.PhaseStepTimer  = Sensor_2G_GetMcuRegister(PHASE_STEPTIMER_ADDR);
 		
-		
-		FpgaReg.DDSSignSwitch  	  = MAKE_UINT32(regData[167], regData[166], regData[165], regData[164]);
-		FpgaReg.ChannelSetting 	  = MAKE_UINT32(regData[171], regData[170], regData[169], regData[168]);
-		FpgaReg.FreqSetting  	  = MAKE_UINT32(regData[175], regData[174], regData[173], regData[172]);
-		FpgaReg.PhaseSetting  	  = MAKE_UINT32(regData[179], regData[178], regData[177], regData[176]);
-		FpgaReg.ACDCVoltSetting   = MAKE_UINT32(regData[183], regData[182], regData[181], regData[180]);
-		FpgaReg.ACDCCurrentSetting= MAKE_UINT32(regData[187], regData[186], regData[185], regData[184]);
-		FpgaReg.ACDCSwitchSetting = MAKE_UINT32(regData[191], regData[190], regData[189], regData[188]);
 		ret = ON;
 	}
     IF_HAL_FpgaReg_ReadEnd();	
@@ -119,16 +182,13 @@ static uint8_t  GetSensorRegisterValue(void)
  * END ***************************************************************************************/
 static void GetInputSensorValue(void)	
 {
-	float cosRad =0,sinRad =0,Z =0,R =0, X = 0,vswr_t =0,P_dlv =0,P_fwd =0,P_ref =0,VSWR = 100;
+	float PhaseRad =0,cosRad =0,sinRad =0,Z =0,R =0, X = 0,vswr_t =0,P_dlv =0,P_fwd =0,P_ref =0,VSWR = 100;
 	
 	float Freq =  (1026 - FpgaReg.FeedbackFreq)* FREQ_2M_RATE; 
-	float V_rms = FpgaReg.FeedbackVrms*(g_FactorData.VrmsFactor * Freq + g_FactorData.VrmsOffset);
-    float I_rms = FpgaReg.FeedbackIrms*(g_FactorData.IrmsFactor * Freq + g_FactorData.IrmsOffset);
-	float Phase = FpgaReg.FeedbackPhase*ARC_RAD_VALUE + (g_FactorData.PhaseFactor * Freq + g_FactorData.PhaseOffset);
-	
-//	float temp = (FpgaReg.temperture*503.975F)/4096.0F-273.15F;
-//	float DrainVot = DrainGain*(FpgaReg.RFDrainVolt/4096.0F)*2.048F*0.9877F+DrainOffset;
-	
+	float V_rms = FpgaReg.FeedbackVrms*FpgaVrmsFactor/RMS_VALUE;
+    float I_rms = FpgaReg.FeedbackIrms*FpgaIrmsFactor/RMS_VALUE;
+	float Phase = FpgaReg.FeedbackPhase*ARC_RAD_VALUE + FpgaPhaseFactor;
+
 	float temp = (0.123041F*FpgaReg.temperture - 273.15F);
 	float DrainVot = g_FactorData.DrainGain*FpgaReg.RFDrainVolt + g_FactorData.DrainOffset;
 	float P_abs = V_rms*I_rms;
@@ -143,7 +203,7 @@ static void GetInputSensorValue(void)
     }	
 	if(V_rms >= POWER_RATIO||I_rms >= POWER_RATIO||P_abs >= POWER_RATIO)
 	{
-		 double PhaseRad = Phase/ARC;
+		 PhaseRad = Phase/ARC;
 		 cosRad = arm_cos_f32(PhaseRad);
 		 sinRad = arm_sin_f32(PhaseRad);
 		 Z = V_rms/I_rms;
@@ -194,29 +254,127 @@ float IF_Fpga_GetSensor(uint8_t ChnN)
 	}
     return fvalue;
 }
+float IF_Fpga_GetSensorAlg(uint8_t ChnN)
+{
+	float fvalue = 0.0F;
+	switch(ChnN)
+	{
+		case ChnN_Freq:  fvalue = FpgaReg.AlgFreq/1000000.0F;break; 
+		case ChnN_Vrms:  fvalue = FpgaReg.AlgVrms/1000.0F;	break; 
+		case ChnN_Irms:  fvalue = FpgaReg.AlgIrms/1000.0F;  break;
+		case ChnN_Phase: fvalue = FpgaReg.AlgPhase/1000.0F;	break;
+		case ChnN_Pdlv:  fvalue = FpgaReg.AlgPdlv/1000.0F;	break;
+		case ChnN_Pfwd:  fvalue = FpgaReg.AlgPfwd/1000.0F;	break;
+		case ChnN_Pref:  fvalue = FpgaReg.AlgPref/1000.0F;	break;
+		case ChnN_Z:  	 fvalue = FpgaReg.AlgVrms/FpgaReg.AlgIrms;break;
+		case ChnN_R:	 fvalue = FpgaReg.AlgR/1000.0F;		break;
+		case ChnN_X:	 fvalue = FpgaReg.AlgX/1000.0F;		break;
+		case ChnN_VSWR:  fvalue = FpgaReg.AlgVSWR/1000.0F;	break;
+	}
+    return fvalue;
+}
+
+uint8_t IF_Fpga_GetSyncInDutyCircle(void)
+{
+	uint8_t value =0;
+	value = 100* FpgaReg.SyncInDuty/FpgaReg.SyncInFreq;
+	return value;
+}
+uint32_t IF_Fpga_GetSyncInFrequency(void)
+{
+	uint8_t value =FpgaReg.SyncInFreq/FPGA_SAMPLE_FREQ;
+	value = 1000000/value;
+	return value;
+}
+uint8_t IF_Fpga_GetSyncOutMeasureDutyCircle(void)
+{
+	uint8_t value = 0;
+	value = 100* FpgaReg.SyncOutDutyMeasure/FpgaReg.SyncOutFreqMeasure;
+	return value;  
+}
+uint32_t IF_Fpga_GetSyncOutMeasureFrequency(void)
+{
+	uint32_t value = FpgaReg.SyncOutFreqMeasure/FPGA_SAMPLE_FREQ;
+	value = 1000000/value;
+	return value;
+}	
+
 static void SetOutputSensorValue(void)
 {
 	UINT32_Value WriteReg;
+	/******************DDS设置**************************/
 	WriteReg.Val = IF_InternalParam_GetDDSChannelNo();
-	Fpga_SetDDSChannelSetting(WriteReg);	
+	Fpga_SetDDSChannelNumber(WriteReg);
 	
-	WriteReg.Val = IF_InternalParam_GetWorkCenterFreq();	
-	Fpga_SetWorkFreqSetting(WriteReg);	
+	WriteReg.Val = IF_InternalParam_GetDDSCenterFreq();	
+	Fpga_SetWorkDDSFrequency(WriteReg);
 	
+	WriteReg.Val = IF_CmdParam_GetDDSWorkPhase();	
+	Fpga_SetDDSWorkPhase(WriteReg);
+	
+	WriteReg.Val = IF_CmdParam_GetDDSDriverSwitch();	
+	Fpga_SetDDSStateSwitch(WriteReg);	
+	
+	/******************AC-DC设置**************************/
 	WriteReg.Val = IF_InternalParam_GetACDCCurrent();	
 	Fpga_SetACDCurrentSetting(WriteReg);
 	
-	WriteReg.Val = IF_CmdParam_GetDDSDriverState();
-	Fpga_SetDDSDriverSwitch(WriteReg);
-	
-	WriteReg.Val = IF_CmdParam_GetACDCDriverState();
-	Fpga_SetACDCDriverSwitch(WriteReg);
-	
 	WriteReg.Val = IF_CmdParam_GetACDCVoltage();
-	Fpga_SetACDCVoltSetting(WriteReg);
+	Fpga_SetACDCVoltageSet(WriteReg);
+	
+	WriteReg.Val = IF_CmdParam_GetACDCDriverSwitch();
+	Fpga_SetACDCDriverSwitch(WriteReg);
+
+	/******************Sensor Factor设置**************************/
+	WriteReg.Val = FpgaVrmsFactor*1000;
+	Fpga_SetFpgaSensorVrmsFactor(WriteReg);
+	
+	WriteReg.Val = FpgaIrmsFactor*1000;
+	Fpga_SetFpgaSensorIrmsFactor(WriteReg);
+	
+	WriteReg.Val = FpgaPhaseFactor*1000;
+	Fpga_SetFpgaSensorPhaseFactor(WriteReg);
+	
+    /******************脉冲设置**************************/
+	WriteReg.Val = IF_CmdParam_GetPulseMode();
+	Fpga_SetPulseModeSwitch(WriteReg);
+	
+	WriteReg.Val = IF_CmdParam_GetPulseFrequency();
+	Fpga_SetPulseModeFrequency(WriteReg);
+	
+	WriteReg.Val = IF_CmdParam_GetPulseDutyCircle();
+	Fpga_SetPulseModeDutyCircle(WriteReg);
+	
+	/******************同步设置**************************/
+	WriteReg.Val = IF_CmdParam_GetSyncSource();
+	Fpga_SetSyncModeSwitch(WriteReg);
+	
+	WriteReg.Val = IF_CmdParam_GetSyncOutEnable();
+	Fpga_SetSyncOutSwitch(WriteReg);
+	
+	WriteReg.Val = IF_CmdParam_GetSyncOutDelay();
+	Fpga_SetSyncOutDelay(WriteReg);
+	
+	/******************输出同步设置**************************/
+	WriteReg.Val = IF_InternalParam_GetFeedCollectionMode();
+	Fpga_SetFeedCollectionMode( WriteReg);
+	
+	WriteReg.Val = IF_InternalParam_GetFeedPreMask();
+	Fpga_SetFeedPreMask( WriteReg);
+	
+	WriteReg.Val = IF_InternalParam_GetFeedPostMask();
+	Fpga_SetFeedPostMask( WriteReg);
+	
+	/******************相位设置**************************/
+	WriteReg.Val = IF_InternalParam_GetPhaseState2();
+	Fpga_SetPhaseLevelToLevel( WriteReg);
+	
+	WriteReg.Val = IF_InternalParam_GetPhaseStepSpeed();
+	Fpga_SetPhaseStepSpeed( WriteReg);
+	
+	WriteReg.Val = IF_InternalParam_GetPhaseStepTimer();
+	Fpga_SetPhaseStepTimer( WriteReg);
 		
-	WriteReg.Val = IF_CmdParam_GetDDSWorkPhase();	
-	Fpga_SetDDSWorkPhaseSetting(WriteReg);		   
 }	
 
 
@@ -230,79 +388,107 @@ uint8_t IF_Sensor_GetVersion(uint8_t *pBuf)
 	}
     return j;
 }
+/* FUNCTION *********************************************************************************
+ * Function Name : Sensor_2G_GetSoftVersion
+ * Description   : 读取Fpga软件版本
+ * Parameter     : 
+ *                                 
+ * END ***************************************************************************************/
+static void Sensor_2G_GetSoftVersion(uint8_t RegAddress)
+{
+	uint8_t j=0, regData[8] = {0};
+	for(uint16_t i = 0; i < 8; i++)
+	{
+		regData[i] = IF_HAL_FpgaReg_Read(RegAddress+i);
+	}
+	 FpgaReg.Version[j++] = regData[3];
+	 FpgaReg.Version[j++] = regData[2];
+	 FpgaReg.Version[j++] = regData[1];
+	 FpgaReg.Version[j++] = regData[0];
+	 FpgaReg.Version[j++] = regData[7];	
+	 FpgaReg.Version[j++] = regData[6];	
+	 FpgaReg.Version[j++] = regData[5];	
+	 FpgaReg.Version[j++] = regData[4];
+}	
+
 
 /* FUNCTION *********************************************************************************
- * Function Name : IF_Fpga_SetDDSDriverSwitch
+ * Function Name : Fpga_SetDDSStateSwitch
  * Description   : 设置DDS信号开关
  * Parameter     : value -----开关值
  *                                 
  * END ***************************************************************************************/
-static void  Fpga_SetDDSDriverSwitch(UINT32_Value WriteReg)
+static void  Fpga_SetDDSStateSwitch(UINT32_Value WriteReg)
 {
-	if(FpgaReg.DDSSignSwitch != WriteReg.Val)
+	if(FpgaReg.DDSStateSwitch != WriteReg.Val)
 	{
 		for(uint8_t i = 0;i < 4;i++)
 		{
-			IF_HAL_FpgaReg_Write(DDS_SWITCHSTATE_ADDR + i,WriteReg.v[i]);
+			IF_HAL_FpgaReg_Write(DDS_STATESWITCH_ADDR + i,WriteReg.v[i]);
 		}
 	}
 }
 /* FUNCTION *********************************************************************************
- * Function Name : Fpga_SetDDSChannelSetting
+ * Function Name : Fpga_SetDDSChannelNumber
  * Description   : 设置通道信号量
  * Parameter     : value -----通道信号值
  *                                 
  * END ***************************************************************************************/
-static void  Fpga_SetDDSChannelSetting(UINT32_Value WriteReg)
+static void  Fpga_SetDDSChannelNumber(UINT32_Value WriteReg)
 {
-	if(FpgaReg.ChannelSetting != WriteReg.Val)
+	if(FpgaReg.DDSChannelNo != WriteReg.Val)
 	{
 		for(uint8_t i = 0;i < 4;i++)
 		{
-			IF_HAL_FpgaReg_Write(CHANNEL_SETTING_ADDR + i,WriteReg.v[i]);
+			IF_HAL_FpgaReg_Write(DDS_CHANNELNO_ADDR + i,WriteReg.v[i]);
 		}
 	}
 }
 /* FUNCTION *********************************************************************************
- * Function Name : IF_Fpga_SetWorkFreqSetting
+ * Function Name : Fpga_SetWorkDDSFrequency
  * Description   : 设置频率信号值
- * Parameter     : value -----频率值
+ * Parameter     : value -----频率值(kHz)
  *                                 
  * END ***************************************************************************************/
-static void  Fpga_SetWorkFreqSetting(UINT32_Value WriteReg)
+static void  Fpga_SetWorkDDSFrequency(UINT32_Value WriteReg)
 {	
-	if(FpgaReg.FreqSetting != WriteReg.Val)
+	float fvalue = 0;
+	if(FpgaReg.DDSFreqSet != WriteReg.Val)
 	{
+		fvalue = WriteReg.Val/1000.0F;	//(MHz)
+		FpgaVrmsFactor = g_FactorData.VrmsFactor *fvalue + g_FactorData.VrmsOffset;
+		FpgaIrmsFactor = g_FactorData.IrmsFactor *fvalue + g_FactorData.IrmsOffset;
+		FpgaPhaseFactor= g_FactorData.PhaseFactor*fvalue + g_FactorData.PhaseOffset;	
 		for(uint8_t i = 0;i < 4;i++)
 		{
-			IF_HAL_FpgaReg_Write(FREQUENCY_SETTING_ADDR + i,WriteReg.v[i]);
+			IF_HAL_FpgaReg_Write(DDS_FREQUENCY_ADDR + i,WriteReg.v[i]);
 		}
 	}
 }
 /* FUNCTION *********************************************************************************
- * Function Name : Fpga_SetDDSWorkPhaseSetting
+ * Function Name : Fpga_SetDDSStateSwitchState
  * Description   : 设置相位信号值
  * Parameter     : value -----相位值
  *                                 
  * END ***************************************************************************************/
-static void  Fpga_SetDDSWorkPhaseSetting(UINT32_Value WriteReg)
+static void  Fpga_SetDDSWorkPhase(UINT32_Value WriteReg)
 {	
 	WriteReg.Val = WriteReg.Val/10;
-	if(FpgaReg.PhaseSetting != WriteReg.Val)
+	if(FpgaReg.DDSPhaseSet != WriteReg.Val)
 	{
 		for(uint8_t i = 0;i < 4;i++)
 		{
-			IF_HAL_FpgaReg_Write(PAHSE_SETTING_ADDR + i,WriteReg.v[i]);
+			IF_HAL_FpgaReg_Write(DDS_PAHSE_ADDR + i,WriteReg.v[i]);
 		}
 	}
 }
 /* FUNCTION *********************************************************************************
- * Function Name : Fpga_SetACDCVoltSetting
+ * Function Name : Fpga_SetACDCVoltageSet
  * Description   : 设置电压信号值
  * Parameter     : value -----电压值
  *                                 
  * END ***************************************************************************************/
-static void  Fpga_SetACDCVoltSetting(UINT32_Value WriteReg)
+static void  Fpga_SetACDCVoltageSet(UINT32_Value WriteReg)
 {	
 	double fvalue = 0;
 //	double Gain = IF_InternalParam_GetACDCVoltGain()/1000.0F;
@@ -326,7 +512,7 @@ static void  Fpga_SetACDCVoltSetting(UINT32_Value WriteReg)
 		fvalue = (WriteReg.Val- g_FactorData.ACDCVoltOffset);
 	}
 	WriteReg.Val =(uint32_t)(fvalue/g_FactorData.ACDCVoltGain + 8191.5F);
-	if(FpgaReg.ACDCVoltSetting != WriteReg.Val)
+	if(FpgaReg.ACDCVoltageSet != WriteReg.Val)
 	{
 		for(uint8_t i = 0;i < 4;i++)
 		{
@@ -357,7 +543,7 @@ static void  Fpga_SetACDCurrentSetting(UINT32_Value WriteReg)
 //	WriteReg.Val =(uint32_t)(fvalue6*16384.0F);
 	
 	WriteReg.Val =(uint32_t)(g_FactorData.ACDCCurrentGain*WriteReg.Val - g_FactorData.ACDCCurrentOffset);
-	if(FpgaReg.ACDCCurrentSetting != WriteReg.Val)
+	if(FpgaReg.ACDCCurrentSet != WriteReg.Val)
 	{
 		for(uint8_t i = 0;i < 4;i++)
 		{
@@ -367,17 +553,213 @@ static void  Fpga_SetACDCurrentSetting(UINT32_Value WriteReg)
 }
 /* FUNCTION *********************************************************************************
  * Function Name : Fpga_SetACDCDriverSwitch
- * Description   : 设置ACDC开关信号值
+ * Description   : 设置开关信号值
  * Parameter     : value -----开关信号值
  *                                 
  * END ***************************************************************************************/
 static void  Fpga_SetACDCDriverSwitch(UINT32_Value WriteReg)
 {	
-	if(FpgaReg.ACDCSwitchSetting != WriteReg.Val)
+	if(FpgaReg.ACDCStateSwitch != WriteReg.Val)
 	{
 		for(uint8_t i = 0;i < 4;i++)
 		{
-			IF_HAL_FpgaReg_Write(ACDC_SWITCHSTATE_ADDR + i,WriteReg.v[i]);
+			IF_HAL_FpgaReg_Write(ACDC_STATESWITCH_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+
+
+/* FUNCTION *********************************************************************************
+ * Function Name : Fpga_SetACDCDriverSwitch
+ * Description   : 设置ACDC开关信号值
+ * Parameter     : value -----开关信号值
+ *                                 
+ * END ***************************************************************************************/
+static void  Fpga_SetFpgaSensorVrmsFactor(UINT32_Value WriteReg)
+{	
+
+	if(FpgaReg.VrmsFactor != WriteReg.Val)
+	{
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(FACTOR_VRMS_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+static void  Fpga_SetFpgaSensorIrmsFactor(UINT32_Value WriteReg)
+{	
+	if(FpgaReg.IrmsFactor != WriteReg.Val)
+	{
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(FACTOR_IRMS_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+static void  Fpga_SetFpgaSensorPhaseFactor(UINT32_Value WriteReg)
+{	
+	if(FpgaReg.PhaseFactor != WriteReg.Val)
+	{
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(FACTOR_PHASE_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+/* FUNCTION *********************************************************************************
+ * Function Name : Fpga_SetPulseModeSwitch
+ * Description   : 设置脉冲模式开关信号值
+ * Parameter     : value -----开关信号值
+ *                                 
+ * END ***************************************************************************************/
+static void  Fpga_SetPulseModeSwitch(UINT32_Value WriteReg)
+{	
+	if(FpgaReg.PulseMode != WriteReg.Val)
+	{
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(PULSEMODE_SWITCH_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+static void  Fpga_SetPulseModeFrequency(UINT32_Value WriteReg)
+{	
+	if(WriteReg.Val > 0)FpgaPulseFreq = 1000000*FPGA_SAMPLE_FREQ/WriteReg.Val;
+	if(FpgaReg.PulseFreq != FpgaPulseFreq)
+	{
+		WriteReg.Val = FpgaPulseFreq;
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(PULSEMODE_FREQ_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+static void  Fpga_SetPulseModeDutyCircle(UINT32_Value WriteReg)
+{	
+	FpgaPulseDuty = FpgaPulseFreq*WriteReg.Val/100;
+	if(FpgaReg.PulseDuty != WriteReg.Val)
+	{
+		WriteReg.Val = FpgaPulseDuty;
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(PULSEMODE_DUTY_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+
+/* FUNCTION *********************************************************************************
+ * Function Name : Fpga_SetSyncMode
+ * Description   : 设置脉冲模式开关信号值
+ * Parameter     : value -----开关信号值
+ *                                 
+ * END ***************************************************************************************/
+static void  Fpga_SetSyncModeSwitch(UINT32_Value WriteReg)
+{	
+	if(FpgaReg.SyncMode != WriteReg.Val)
+	{
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(SYNCMODE_SWITCH_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+static void  Fpga_SetSyncOutSwitch(UINT32_Value WriteReg)
+{	
+	if(FpgaReg.SyncOutEnable != WriteReg.Val)
+	{
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(SYNCOUT_SWITCH_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+static void  Fpga_SetSyncOutDelay(UINT32_Value WriteReg)
+{	
+	WriteReg.Val  = FPGA_SAMPLE_FREQ * WriteReg.Val;
+	if(FpgaReg.SyncOutDelay != WriteReg.Val)
+	{
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(SYNCOUT_DELAY_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+
+/* FUNCTION *********************************************************************************
+ * Function Name : Fpga_SetFeedCollectionMode
+ * Description   : 设置脉冲模式开关信号值
+ * Parameter     : value -----开关信号值
+ *                                 
+ * END ***************************************************************************************/
+static void  Fpga_SetFeedCollectionMode(UINT32_Value WriteReg)
+{	
+	if(FpgaReg.FeedCollectionMode != WriteReg.Val)
+	{
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(FEED_COLLECTIONMODE_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+static void  Fpga_SetFeedPreMask(UINT32_Value WriteReg)
+{	
+	WriteReg.Val = FPGA_SAMPLE_FREQ*WriteReg.Val;
+	if(FpgaReg.FeedPreMask != WriteReg.Val)
+	{
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(FEED_PREMASK_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+static void  Fpga_SetFeedPostMask(UINT32_Value WriteReg)
+{	
+	WriteReg.Val = FPGA_SAMPLE_FREQ*WriteReg.Val;
+	if(FpgaReg.FeedPostMask != WriteReg.Val)
+	{
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(FEED_POSTMASK_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+
+/* FUNCTION *********************************************************************************
+ * Function Name : Fpga_SetFeedSample
+ * Description   : 设置脉冲模式开关信号值
+ * Parameter     : value -----开关信号值
+ *                                 
+ * END ***************************************************************************************/
+static void  Fpga_SetPhaseLevelToLevel(UINT32_Value WriteReg)
+{	
+	WriteReg.Val = WriteReg.Val/10;
+	if(FpgaReg.PhaseState2 != WriteReg.Val)
+	{
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(PHASE_LEVELTOLEVEL_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+static void  Fpga_SetPhaseStepSpeed(UINT32_Value WriteReg)
+{	
+	WriteReg.Val = WriteReg.Val/10;
+	if(FpgaReg.FeedPreMask != WriteReg.Val)
+	{
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(PHASE_STEPSPEED_ADDR + i,WriteReg.v[i]);
+		}
+	}
+}
+static void  Fpga_SetPhaseStepTimer(UINT32_Value WriteReg)
+{	
+	WriteReg.Val = FPGA_SAMPLE_FREQ*WriteReg.Val/1000;
+	if(FpgaReg.FeedPostMask != WriteReg.Val)
+	{
+		for(uint8_t i = 0;i < 4;i++)
+		{
+			IF_HAL_FpgaReg_Write(PHASE_STEPTIMER_ADDR + i,WriteReg.v[i]);
 		}
 	}
 }
@@ -408,6 +790,23 @@ static float GetVSWRReflectance(float vswr_r,float vswr_x)
     arm_sqrt_f32(vswr_sqrt, &vswr_t);
 	return vswr_t;
 }
+/* FUNCTION *********************************************************************************
+ * Function Name : Sensor_2G_GetMcuRegister
+ * Description   : 得到MCU寄存器的参数
+ * Parameter     : 
+ *                                 
+ * END ***************************************************************************************/
+static uint32_t Sensor_2G_GetMcuRegister(uint8_t RegAddress)
+{
+	UINT32_VAL RegData;
+	for(uint8_t i = 0; i <  + 4;i++)
+	{
+		RegData.v[i] = IF_HAL_FpgaReg_Read(RegAddress+i);
+	}
+	return RegData.Val;
+}
+
+
 //*****************************************************************************
 //* END
 //*****************************************************************************

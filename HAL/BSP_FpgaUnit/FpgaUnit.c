@@ -320,8 +320,7 @@ uint8_t IF_FpgaReg_ReadStart(void)
 		{
 			error_flag = 1;
 			break;  //normal operation time is less 10us	
-		}
-		delay_us(1); 
+		} 
 	}
 	return error_flag;
 }

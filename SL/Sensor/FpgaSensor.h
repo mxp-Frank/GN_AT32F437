@@ -23,16 +23,37 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define REGNUM_R 						512
-#define REGNUM_W 						512
+#define DDS_STATESWITCH_ADDR         	164
+#define DDS_CHANNELNO_ADDR				168
+#define DDS_FREQUENCY_ADDR         		172	
+#define DDS_PAHSE_ADDR                  176
 
-#define DDS_SWITCHSTATE_ADDR         	164
-#define CHANNEL_SETTING_ADDR			168
-#define FREQUENCY_SETTING_ADDR         	172	
-#define PAHSE_SETTING_ADDR              176
+#define ACDC_STATESWITCH_ADDR           188
 #define ACDC_VOLTAGE_ADDR         		180
 #define ACDC_CURRENT_ADDR         		184
-#define ACDC_SWITCHSTATE_ADDR           188
+
+#define FACTOR_VRMS_ADDR				192
+#define FACTOR_IRMS_ADDR				196
+#define FACTOR_PHASE_ADDR				200
+
+#define PULSEMODE_SWITCH_ADDR			204
+#define PULSEMODE_DUTY_ADDR				220
+#define PULSEMODE_FREQ_ADDR				224
+
+#define SYNCMODE_SWITCH_ADDR			208
+#define SYNCOUT_SWITCH_ADDR				212 
+#define SYNCOUT_DELAY_ADDR				216
+
+#define FEED_COLLECTIONMODE_ADDR		228
+#define FEED_PREMASK_ADDR		    	232
+#define FEED_POSTMASK_ADDR				236
+
+#define PHASE_LEVELTOLEVEL_ADDR			240
+#define PHASE_STEPSPEED_ADDR			244
+#define PHASE_STEPTIMER_ADDR			248
+
+
+
 
 #define FPGAWARE_VERSION_LEN        	 10
 
@@ -45,6 +66,8 @@ extern "C" {
 
 #define FREQ_2M_RATE					(double)(0.015625F)		     //0.015625=16/1024
 
+#define FPGA_SAMPLE_FREQ				100
+
 typedef struct _SensorReg_t
 {
 	uint8_t Version[FPGAWARE_VERSION_LEN];
@@ -54,13 +77,51 @@ typedef struct _SensorReg_t
     int32_t FeedbackVrms;
 	int32_t FeedbackIrms;
 	int32_t FeedbackPhase;
-	int32_t DDSSignSwitch;
-	int32_t ChannelSetting;
-	int32_t FreqSetting;
-	int32_t PhaseSetting;
-	int32_t ACDCVoltSetting;
-	int32_t ACDCCurrentSetting;
-	int32_t ACDCSwitchSetting;
+	
+	int32_t AlgFreq;  
+	int32_t AlgVrms;
+	int32_t AlgIrms;
+	int32_t AlgPhase;  //unit: angle degree, not radiums
+	int32_t AlgPdlv;
+	int32_t AlgPfwd;
+	int32_t AlgPref;
+	int32_t AlgR;
+	int32_t AlgX;
+	int32_t AlgVSWR;
+	
+	int32_t SyncInDuty;
+	int32_t SyncInFreq;
+	
+	int32_t SyncOutDutyMeasure;
+	int32_t SyncOutFreqMeasure;
+	
+	int32_t DDSStateSwitch;
+	int32_t DDSChannelNo;
+	int32_t DDSFreqSet;
+	int32_t DDSPhaseSet;
+	int32_t ACDCVoltageSet;
+	int32_t ACDCCurrentSet;
+	int32_t ACDCStateSwitch;
+	
+	int32_t VrmsFactor;
+	int32_t IrmsFactor;
+	int32_t PhaseFactor;
+	
+	int32_t PulseMode;
+	int32_t PulseDuty;
+	int32_t PulseFreq;
+	
+	int32_t SyncMode;
+	int32_t SyncOutEnable;
+	int32_t SyncOutDelay;
+	
+
+	int32_t FeedCollectionMode;
+	int32_t FeedPreMask;
+	int32_t FeedPostMask;
+	int32_t PhaseState2;
+	int32_t PhaseStep;
+	int32_t PhaseStepTimer;
 }SensorReg_t;
 
 typedef struct _SensorData_t
@@ -113,9 +174,13 @@ typedef union
 	}byte;
 }UINT32_Value;
 
-extern void IF_FpgaSensor_ParamInit(void);
-extern float IF_Get_Sensor(uint8_t ChnN);
+enum sensorType
+{
+	MUCSENSOR = 0,
+	FPGASENSOR = 1,	
+};
 
+extern void IF_FpgaSensor_ParamInit(void);
 
 #if defined(__cplusplus)
 }

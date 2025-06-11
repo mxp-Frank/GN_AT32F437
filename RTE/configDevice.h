@@ -10,10 +10,10 @@
 #ifndef _CONFIGDEVICE_H_
 #define _CONFIGDEVICE_H_
 
-#define BOOTLOADER_VERSION                       "CB_0.0.9"
+#define BOOTLOADER_VERSION                       "CB_0.1.0"
 #define BOOTLOADER_VERSION_LEN                   16
 
-#define SOFTWARE_VERSION                         "CA_0.0.9"
+#define SOFTWARE_VERSION                         "CA_0.1.0"
 #define SOFTWARE_VERSION_LEN                     16
 
 #define MODBUS_FILE_SIGN                        "acdc_017"
@@ -25,9 +25,6 @@
 
 #define MANUAL								0
 #define AUTO                                1
-
-#define RF_OFF         						0
-#define RF_ON          						1
 
 #define	FWDREGULATION   					0
 #define LOADREGULATION  					1

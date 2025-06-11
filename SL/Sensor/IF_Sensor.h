@@ -34,6 +34,13 @@ extern int16_t IF_Sensor_GetRFTemperature(uint8_t Channel);
 
 //Sensor_1G output var
 extern float IF_Fpga_GetSensor(uint8_t ChnNo);
+extern float IF_Fpga_GetSensorAlg(uint8_t ChnNo);
+
+extern uint8_t IF_Fpga_GetSyncInDutyCircle(void);
+extern uint32_t IF_Fpga_GetSyncInFrequency(void);
+extern uint8_t IF_Fpga_GetSyncOutMeasureDutyCircle(void);
+extern uint32_t IF_Fpga_GetSyncOutMeasureFrequency(void);
+
 extern uint16_t IF_Sensor_GetDCBias(void);
 
 

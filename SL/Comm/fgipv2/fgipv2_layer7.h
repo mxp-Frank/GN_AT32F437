@@ -8,8 +8,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define MAX_PRESET_NUM             50
-
 typedef enum _CommandCode_t
 {
 	TelegramError   = 0xFE,    //Telegram error (as response of the slave, if the telegram structure is not correct).
@@ -112,7 +110,17 @@ typedef enum _ParamterIndex_t
 	
 	ID_InputVrmsOffset			   = 0x422B,
 	ID_InputIrmsOffset			   = 0x422C,
-	ID_InputPhaseOffset			   = 0x422D,	
+	ID_InputPhaseOffset			   = 0x422D,
+	
+	ID_SyncSource				   = 0x422E,
+	ID_SyncOutEnable			   = 0x422F,
+	ID_SyncOutDelay				   = 0x4230,
+	ID_FeedCollectionMode		   = 0x4231,
+	ID_FeedPreMask				   = 0x4232,
+	ID_FeedPostMask				   = 0x4233,
+	ID_PhaseState2                 = 0x4234,
+	ID_PhaseStepSpeed			   = 0x4235,
+	ID_PhaseStepTimer			   = 0x4236,
 	//Configurable User parameters 
     ID_RegulationMode              = 0x4000,  // work mode, 0: Pfwd, 1: Pdlv 2:Vdc
 	ID_PfwdLimit				   = 0x4001,  //Forward power Limit
@@ -170,6 +178,11 @@ typedef enum _ParamterIndex_t
 	ID_PATemperature4			   = 0x4627,
 	ID_ACDCTemperature1			   = 0x4628,
 	ID_ACDCTemperature2			   = 0x4629,
+	
+	ID_SyncInFreq		   = 0x4630,
+	ID_SyncInDuty		   = 0x463A,
+	ID_SyncOutFreqMeasure		   = 0x463B,
+	ID_SyncOutDutyMeasure		   = 0x463C,
 	
     ID_Load_ActualCapPos           = 0x460A,
 	ID_Tune_ActualCapPos           = 0x460B,

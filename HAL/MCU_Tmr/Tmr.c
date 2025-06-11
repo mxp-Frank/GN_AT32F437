@@ -195,7 +195,7 @@ static void TIMER2_PWM_Init(void)
     tmr_interrupt_enable(TMR1, TMR_OVF_INT, TRUE);
 
     /* tmr1 hall interrupt nvic init */
-    nvic_irq_enable(TMR1_OVF_TMR10_IRQn, 4, 0);
+    nvic_irq_enable(TMR1_OVF_TMR10_IRQn, 6, 0);
 	/* enable tmr1 */
 	#ifdef DEBUG_ON    
 		debug_apb1_periph_mode_set(DEBUG_TMR1_PAUSE, TRUE);
@@ -314,7 +314,7 @@ static void TIMER3_InputCapture_Init(void)
 	
 	/* tmr2 trigger interrupt nvic init */
 	nvic_priority_group_config(NVIC_PRIORITY_GROUP_4);
-	nvic_irq_enable(TMR3_GLOBAL_IRQn, 4, 0);
+	nvic_irq_enable(TMR3_GLOBAL_IRQn, 7, 0);
 
 	/* enable tmr3 */
 	tmr_counter_enable(TMR3, TRUE);

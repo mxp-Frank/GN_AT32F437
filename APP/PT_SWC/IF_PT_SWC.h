@@ -47,8 +47,8 @@ typedef struct
 }LoopMode_t;
 typedef enum
 {
-    AM_RF_OFF        = 0,
-    AM_RF_ON         = 1
+    RF_OFF        = 0,
+    RF_ON         = 1
 }RFEnum;
 
 typedef struct

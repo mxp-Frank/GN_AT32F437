@@ -271,8 +271,10 @@ static void Check_InternalParam(void)
 		InternalParam.VSWRLimit= 1500;
 		InternalParam.AnalogVoltRange= 10000;
 		InternalParam.AnalogRFPowerFactor= 10000;
+		InternalParam.FeedPreMask = 40;		
 		InternalParam.ACDCCurrent = MAX_ACDC_CURRENT;
-		InternalParam.WorkCenterFreq = CENTER_FREQUENTY;	
+		InternalParam.WorkCenterFreq = CENTER_FREQUENTY;
+		
 	}	
 	//检查所有参数范围(参数有范围值)
    if(InternalParam.VSWRLimit < 1000)
@@ -308,12 +310,12 @@ static void Check_InternalParam(void)
 
 static void ConvertUnit_InternalParam(InternalParam_t *pInternalParam)
 {
-	g_FactorData.VrmsFactor  = pInternalParam->VrmsFactor/(1000.0F*RMS_VALUE);
-	g_FactorData.IrmsFactor  = pInternalParam->IrmsFactor/(1000.0F*RMS_VALUE);
+	g_FactorData.VrmsFactor  = pInternalParam->VrmsFactor/(1000.0F);
+	g_FactorData.IrmsFactor  = pInternalParam->IrmsFactor/(1000.0F);
 	g_FactorData.PhaseFactor = pInternalParam->PhaseFactor/1000.0F;
 	
-	g_FactorData.VrmsOffset  = pInternalParam->VrmsOffset/(1000.0F*RMS_VALUE);
-	g_FactorData.IrmsOffset  = pInternalParam->IrmsOffset/(1000.0F*RMS_VALUE);
+	g_FactorData.VrmsOffset  = pInternalParam->VrmsOffset/(1000.0F);
+	g_FactorData.IrmsOffset  = pInternalParam->IrmsOffset/(1000.0F);
 	g_FactorData.PhaseOffset = pInternalParam->PhaseOffset/1000.0F;
 	
 	g_FactorData.DrainGain   = (0.9877F *pInternalParam->DrainVoltGain)/(1000.0F*2000.0F);
@@ -336,6 +338,7 @@ static void ConvertUnit_InternalParam(InternalParam_t *pInternalParam)
 	g_FactorData.VoltKi  = pInternalParam->VoltPIDIntegral/1000.0F;
 	g_FactorData.VoltKd  = pInternalParam->VoltPIDDerivatice/1000.0F;
 	g_FactorData.VoltEThr= pInternalParam->VoltPIDErrorThr/1000.0F;
+	/*********************************************************************************/	
 }
 /* FUNCTION ***********************************************************************
  * Function Name : Check_UserParam
@@ -356,7 +359,6 @@ static void Check_Fs_UserParam(void)
 	{
 		memset(&Fs_UserParam, 0, USER_PARAM_LEN);
 		Fs_UserParam.PrefDelayOff = 15;	
-		Fs_UserParam.PulseDuty = 50;
 		Fs_UserParam.SlowRFOnDelay = 10;
 		Fs_UserParam.SlowRFOffDelay = 10;
 		Fs_UserParam.VDCFactor = MAX_VDCATTEN;
@@ -378,10 +380,6 @@ static void Check_Fs_UserParam(void)
 	{
 		Fs_UserParam.MatchMode = 0;
 	}
-	if(Fs_UserParam.PulseMode > 1) 
-	{
-		Fs_UserParam.PulseMode= 0;
-	}
 	if(Fs_UserParam.PrefMode > 1) 
 	{
 		Fs_UserParam.PrefMode = 0;
@@ -389,14 +387,6 @@ static void Check_Fs_UserParam(void)
 	if(Fs_UserParam.PrefDelayOff > MAX_REFLECTDELAY) 
 	{
 		Fs_UserParam.PrefDelayOff = 15;
-	}
-	if(Fs_UserParam.PulseFreq > 1000000) 
-	{
-		Fs_UserParam.PulseFreq = 0;
-	}
-	if(Fs_UserParam.PulseDuty >= 100) 
-	{
-		Fs_UserParam.PulseDuty = 50;
 	}
 	if(Fs_UserParam.SlowRFOnDelay > MAX_SLOWDELAY) 
 	{
@@ -440,7 +430,6 @@ static void Check_UserParam(void)
 	{
 		memset(&UserParam, 0, USER_PARAM_LEN);
 		UserParam.PrefDelayOff = 15;	
-		UserParam.PulseDuty = 50;
 		UserParam.SlowRFOnDelay = 10;
 		UserParam.SlowRFOffDelay = 10;
 		UserParam.VDCFactor = MAX_VDCATTEN;
@@ -462,10 +451,7 @@ static void Check_UserParam(void)
 	{
 		UserParam.MatchMode = 0;
 	}
-	if(UserParam.PulseMode > 1) 
-	{
-		UserParam.PulseMode= 0;
-	}
+
 	if(UserParam.PrefMode > 1) 
 	{
 		UserParam.PrefMode = 0;
@@ -473,14 +459,6 @@ static void Check_UserParam(void)
 	if(UserParam.PrefDelayOff > MAX_REFLECTDELAY) 
 	{
 		UserParam.PrefDelayOff = 15;
-	}
-	if(UserParam.PulseFreq > 1000000) 
-	{
-		UserParam.PulseFreq = 0;
-	}
-	if(UserParam.PulseDuty >= 100) 
-	{
-		UserParam.PulseDuty = 50;
 	}
 	if(UserParam.SlowRFOnDelay > MAX_SLOWDELAY) 
 	{
@@ -1651,9 +1629,10 @@ void IF_InternalParam_SetDDSChannelNo(uint8_t value)
 	ActionsRSP[ID_SAVE_INTERNAL_PARAM] = ON;
 }
 //---------------------------------------------------------------
-uint32_t IF_InternalParam_GetWorkCenterFreq(void)
+uint32_t IF_InternalParam_GetDDSCenterFreq(void)
 {
 	uint32_t value = 0;
+	
 	if(ON==IF_CmdParam_GetFactoryMode())
 	{
 		value = Fs_InternalParam.WorkCenterFreq;
@@ -1695,6 +1674,146 @@ void IF_InternalParam_SetACDCCurrent(uint32_t value)
 		ActionsRSP[ID_SAVE_FS_INTERNAL_PARAM]= ON;	
 	}
 	InternalParam.ACDCCurrent  = value;
+	ActionsRSP[ID_SAVE_INTERNAL_PARAM] = ON;	
+}
+
+//---------------------------------------------------------------
+uint8_t IF_InternalParam_GetFeedCollectionMode(void)
+{
+	uint8_t value = 0;
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{
+		value = Fs_InternalParam.FeedCollectionMode;
+	}else
+	{
+		value = InternalParam.FeedCollectionMode;
+	}
+	return value;  
+}
+void IF_InternalParam_SetFeedCollectionMode(uint8_t value)
+{	
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{	
+		Fs_InternalParam.FeedCollectionMode  = value;
+		ActionsRSP[ID_SAVE_FS_INTERNAL_PARAM]= ON;	
+	}
+	InternalParam.FeedCollectionMode  = value;
+	ActionsRSP[ID_SAVE_INTERNAL_PARAM] = ON;	
+}
+//---------------------------------------------------------------
+uint32_t IF_InternalParam_GetFeedPreMask(void)
+{
+	uint32_t value = 0;
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{
+		value = Fs_InternalParam.FeedPreMask;
+	}else
+	{
+		value = InternalParam.FeedPreMask;
+	}
+	return value;  
+}
+void IF_InternalParam_SetFeedPreMask(uint32_t value)
+{	
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{	
+		Fs_InternalParam.FeedPreMask  = value;
+		ActionsRSP[ID_SAVE_FS_INTERNAL_PARAM]= ON;	
+	}
+	InternalParam.FeedPreMask  = value;
+	ActionsRSP[ID_SAVE_INTERNAL_PARAM] = ON;	
+}
+//---------------------------------------------------------------
+uint32_t IF_InternalParam_GetFeedPostMask(void)
+{
+	uint32_t value = 0;
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{
+		value = Fs_InternalParam.FeedPostMask;
+	}else
+	{
+		value = InternalParam.FeedPostMask;
+	}
+	return value;  
+}
+void IF_InternalParam_SetFeedPostMask(uint32_t value)
+{	
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{	
+		Fs_InternalParam.FeedPostMask  = value;
+		ActionsRSP[ID_SAVE_FS_INTERNAL_PARAM]= ON;	
+	}
+	InternalParam.FeedPostMask  = value;
+	ActionsRSP[ID_SAVE_INTERNAL_PARAM] = ON;	
+}
+
+//---------------------------------------------------------------
+int32_t IF_InternalParam_GetPhaseState2(void)
+{
+	uint32_t value = 0;
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{
+		value = Fs_InternalParam.PhaseState2;
+	}else
+	{
+		value = InternalParam.PhaseState2;
+	}
+	return value;  
+}
+void IF_InternalParam_SetPhaseState2(int32_t value)
+{	
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{	
+		Fs_InternalParam.PhaseState2  = value;
+		ActionsRSP[ID_SAVE_FS_INTERNAL_PARAM]= ON;	
+	}
+	InternalParam.PhaseState2  = value;
+	ActionsRSP[ID_SAVE_INTERNAL_PARAM] = ON;	
+}
+//---------------------------------------------------------------
+uint32_t IF_InternalParam_GetPhaseStepSpeed(void)
+{
+	uint32_t value = 0;
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{
+		value = Fs_InternalParam.PhaseStepSpeed;
+	}else
+	{
+		value = InternalParam.PhaseStepSpeed;
+	}
+	return value;  
+}
+void IF_InternalParam_SetPhaseStepSpeed(uint32_t value)
+{	
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{	
+		Fs_InternalParam.PhaseStepSpeed  = value;
+		ActionsRSP[ID_SAVE_FS_INTERNAL_PARAM]= ON;	
+	}
+	InternalParam.PhaseStepSpeed  = value;
+	ActionsRSP[ID_SAVE_INTERNAL_PARAM] = ON;	
+}
+//---------------------------------------------------------------
+uint32_t IF_InternalParam_GetPhaseStepTimer(void)
+{
+	uint32_t value = 0;
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{
+		value = Fs_InternalParam.PhaseStepTimer;
+	}else
+	{
+		value = InternalParam.PhaseStepTimer;
+	}
+	return value;  
+}
+void IF_InternalParam_SetPhaseStepTimer(uint32_t value)
+{	
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{	
+		Fs_InternalParam.PhaseStepTimer  = value;
+		ActionsRSP[ID_SAVE_FS_INTERNAL_PARAM]= ON;	
+	}
+	InternalParam.PhaseStepTimer  = value;
 	ActionsRSP[ID_SAVE_INTERNAL_PARAM] = ON;	
 }
 //-------------------------------------------------------------------------------------------------
@@ -1844,87 +1963,6 @@ uint8_t IF_UserParam_GetReflectPowerDelayOff(void)
 	}else
 	{
 		value = UserParam.PrefDelayOff;
-	}
-	return value;
-}
-//PulseMode
-/**********************************************************/
-void IF_UserParam_SetPulseMode(uint8_t value)
-{
-	if(ON==IF_CmdParam_GetFactoryMode())
-	{	
-		Fs_UserParam.PulseMode = value;
-		ActionsRSP[ID_SAVE_FS_USER_PARAM]= ON;		
-	}
-	UserParam.PulseMode = value;
-	ActionsRSP[ID_SAVE_USER_PARAM] = ON;	
-}
-uint8_t IF_UserParam_GetPulseMode(void)
-{
-	uint8_t value = 0;
-	if(ON==IF_CmdParam_GetFactoryMode())
-	{	
-		value = Fs_UserParam.PulseMode;
-	}else
-	{
-		value = UserParam.PulseMode;		
-	}
-	return value;
-}
-/**********************************************************/
-void IF_UserParam_SetPulseFrequency(uint32_t value)
-{
-	/*****检查占空比周期，高电平时间小于15us*******/
-	if(10000*IF_UserParam_GetPulseDutyCircle()/value < 15)  
-	{
-		IF_UserParam_SetPulseDutyCircle(15*value/10000);	
-	}
-	if(ON==IF_CmdParam_GetFactoryMode())
-	{	
-		Fs_UserParam.PulseFreq = value;
-		ActionsRSP[ID_SAVE_FS_USER_PARAM]= ON;		
-	}
-	UserParam.PulseFreq = value;
-	ActionsRSP[ID_SAVE_USER_PARAM] = ON;			
-}
-uint32_t IF_UserParam_GetPulseFrequency(void)
-{
-	uint32_t value = 0;
-	if(ON==IF_CmdParam_GetFactoryMode())
-	{	
-		value = Fs_UserParam.PulseFreq;
-	}else
-	{
-		value = UserParam.PulseFreq;	
-	}
-	return value;
-}
-/**********************************************************/
-void IF_UserParam_SetPulseDutyCircle(uint8_t value)
-{ 
-	/*****************检查占空比周期<15us***************************/
-	if(10000*value/IF_UserParam_GetPulseFrequency()<15)
-	{	
-		value = FloatToUINT16(0.0015F*IF_UserParam_GetPulseFrequency());
-	}
-	if(ON==IF_CmdParam_GetFactoryMode())
-	{	
-		Fs_UserParam.PulseDuty = value;
-		ActionsRSP[ID_SAVE_FS_USER_PARAM]= ON;	
-	}
-	UserParam.PulseDuty = value;
-	ActionsRSP[ID_SAVE_USER_PARAM] = ON;		
-}
-
-uint8_t IF_UserParam_GetPulseDutyCircle(void)
-{
-	uint8_t value = 0;
-	if(ON==IF_CmdParam_GetFactoryMode())
-	{	
-		value = Fs_UserParam.PulseDuty;
-	}else
-	{
-		value = UserParam.PulseDuty;	
 	}
 	return value;
 }
@@ -2126,29 +2164,29 @@ void IF_CmdParam_ResumeFactorySettings(void)
 	ActionsRSP[ID_SAVE_USER_PARAM]= ON;		
 }
 //---------------------------------------------------------------
-uint8_t IF_CmdParam_GetRFPowerState(void)
+uint8_t IF_CmdParam_GetRFPowerSwitch(void)
 {
 	return DevCmdParam.RFPowerState;
 }
-void IF_CmdParam_SetRFPowerState(uint8_t value)
+void IF_CmdParam_SetRFPowerSwitch(uint8_t value)
 {
 	DevCmdParam.RFPowerState = value;
 }
 //---------------------------------------------------------------
-uint8_t IF_CmdParam_GetDDSDriverState(void)
+uint8_t IF_CmdParam_GetDDSDriverSwitch(void)
 {
 	return DevCmdParam.DDSSignState;		
 }	
-void IF_CmdParam_SetDDSDriverState(uint8_t value)
+void IF_CmdParam_SetDDSDriverSwitch(uint8_t value)
 {
 	DevCmdParam.DDSSignState = value;
 }
 //---------------------------------------------------------------
-uint32_t IF_CmdParam_GetACDCDriverState(void)
+uint32_t IF_CmdParam_GetACDCDriverSwitch(void)
 {
 	return DevCmdParam.SetACDCState;  
 }
-void IF_CmdParam_SetACDCDriverState(uint32_t value)
+void IF_CmdParam_SetACDCDriverSwitch(uint32_t value)
 {
 	DevCmdParam.SetACDCState = value;
 }
@@ -2178,6 +2216,64 @@ uint32_t IF_CmdParam_GetDDSWorkPhase(void)
 void IF_CmdParam_SetDDSWorkPhase(uint32_t value)
 {
 	DevCmdParam.DDSWorkPhase  = value;	
+}
+//PulseMode
+/**********************************************************/
+void IF_CmdParam_SetPulseMode(uint8_t value)
+{
+	DevCmdParam.PulseMode = value;
+}
+uint8_t IF_CmdParam_GetPulseMode(void)
+{
+	return  DevCmdParam.PulseMode;
+}
+/**********************************************************/
+void IF_CmdParam_SetPulseFrequency(uint32_t value)
+{
+	DevCmdParam.PulseFreq = value;				
+}
+uint32_t IF_CmdParam_GetPulseFrequency(void)
+{
+	return DevCmdParam.PulseFreq;;
+}
+/**********************************************************/
+void IF_CmdParam_SetPulseDutyCircle(uint8_t value)
+{ 
+	DevCmdParam.PulseDuty = value;	
+}
+
+uint8_t IF_CmdParam_GetPulseDutyCircle(void)
+{
+	return DevCmdParam.PulseDuty;
+}
+//SyncMode
+void IF_CmdParam_SetSyncSource(uint8_t value)
+{
+	DevCmdParam.SyncMode = value;
+}
+uint8_t IF_CmdParam_GetSyncSource(void)
+{
+	return  DevCmdParam.SyncMode;
+}
+/**********************************************************/
+
+void IF_CmdParam_SetSyncOutDelay(uint32_t value)
+{
+	DevCmdParam.SyncOutDelay = value;				
+}
+uint32_t IF_CmdParam_GetSyncOutDelay(void)
+{
+	return DevCmdParam.SyncOutDelay;
+}
+/**********************************************************/
+void IF_CmdParam_SetSyncOutEnable(uint8_t value)
+{ 
+	DevCmdParam.SyncOutEnable = value;	
+}
+
+uint8_t IF_CmdParam_GetSyncOutEnable(void)
+{
+	return DevCmdParam.SyncOutEnable;
 }
 //---------------------------------------------------------------
 void IF_CmdParam_SetPwrPoint(uint16_t value)
