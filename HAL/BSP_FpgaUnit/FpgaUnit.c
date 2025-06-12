@@ -312,14 +312,13 @@ uint8_t IF_FpgaReg_ReadStart(void)
 	uint8_t timeOutCnt = 0;
 	FpgaData_PortInit(DATA_INPUT); //Setup Data port Input
 	DATA_START_HIGH; 
-	//timeout is 5us
-	while(DATA_FPGA_READ == 0)
+	while(DATA_FPGA_READ == 0)//normal operation time is less 10us	
 	{
 		timeOutCnt++;
-		if(timeOutCnt > 5)
+		if(timeOutCnt > 10)
 		{
 			error_flag = 1;
-			break;  //normal operation time is less 10us	
+			break;  
 		} 
 	}
 	return error_flag;
@@ -346,59 +345,48 @@ uint8_t IF_FpgaReg_Read(uint16_t regAddr)
      DATA_CLK_HIGH;
      DATA_CLK_LOW;
 
-     //step3: set data direction
-//     FpgaData_PortInit(DATA_INPUT);
-
-     //step4: set 2 clks
-     DATA_CLK_LOW;
-     DATA_CLK_HIGH;
-     DATA_CLK_LOW;
-
-     DATA_CLK_LOW;
-     DATA_CLK_HIGH;
-     DATA_CLK_LOW;
-
      //step5: get data
-     if(SET == DATA_D0_READ)
-     {
-         result |= 0x01;
-     }
+//     if(SET == DATA_D0_READ)
+//     {
+//         result |= 0x01;
+//     }
 
-     if(SET == DATA_D1_READ)
-     {
-         result |= 0x02;
-     }
+//     if(SET == DATA_D1_READ)
+//     {
+//         result |= 0x02;
+//     }
 
-     if(SET == DATA_D2_READ)
-     {
-         result |= 0x04;
-     }
+//     if(SET == DATA_D2_READ)
+//     {
+//         result |= 0x04;
+//     }
 
-     if(SET == DATA_D3_READ)
-     {
-         result |= 0x08;
-     }
+//     if(SET == DATA_D3_READ)
+//     {
+//         result |= 0x08;
+//     }
 
-     if(SET == DATA_D4_READ)
-     {
-         result |= 0x10;
-     }
+//     if(SET == DATA_D4_READ)
+//     {
+//         result |= 0x10;
+//     }
 
-     if(SET == DATA_D5_READ)
-     {
-         result |= 0x20;
-     }
+//     if(SET == DATA_D5_READ)
+//     {
+//         result |= 0x20;
+//     }
 
-     if(SET == DATA_D6_READ)
-     {
-         result |= 0x40;
-     }
+//     if(SET == DATA_D6_READ)
+//     {
+//         result |= 0x40;
+//     }
 
-     if(SET == DATA_D7_READ)
-     {
-         result |= 0x80;
-     }
+//     if(SET == DATA_D7_READ)
+//     {
+//         result |= 0x80;
+//     }
 
+	 result = READ_DATA_D0D7_PORT;
      //step6: set ctrl singal
      DATA_RE_LOW; //Reg Disable
 

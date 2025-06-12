@@ -179,6 +179,16 @@ extern "C" {
  #define DATA_D5_READ   	     IF_GpioInPut(DATA_D5_PORT, DATA_D5_PIN, ACTIVE_HIGH)
  #define DATA_D6_READ   	     IF_GpioInPut(DATA_D6_PORT, DATA_D6_PIN, ACTIVE_HIGH)
  #define DATA_D7_READ   	     IF_GpioInPut(DATA_D7_PORT, DATA_D7_PIN, ACTIVE_HIGH)
+ 
+ #define READ_DATA_D0D7_PORT	 (gpio_input_data_bit_read(DATA_D0_PORT,DATA_D0_PIN)<<0) |	\
+								 (gpio_input_data_bit_read(DATA_D1_PORT,DATA_D1_PIN)<<1) |	\
+								 (gpio_input_data_bit_read(DATA_D2_PORT,DATA_D2_PIN)<<2) |	\
+								 (gpio_input_data_bit_read(DATA_D3_PORT,DATA_D3_PIN)<<3) |	\
+								 (gpio_input_data_bit_read(DATA_D4_PORT,DATA_D4_PIN)<<4) |	\
+								 (gpio_input_data_bit_read(DATA_D5_PORT,DATA_D5_PIN)<<5) |	\
+								 (gpio_input_data_bit_read(DATA_D6_PORT,DATA_D6_PIN)<<6) |	\
+								 (gpio_input_data_bit_read(DATA_D7_PORT,DATA_D7_PIN)<<7) 	
+								 
 
 #if defined(__cplusplus)
 }

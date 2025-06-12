@@ -20,7 +20,6 @@
 static SensorReg_t FpgaReg;					
 static SensorData_t OutputData;
 
-static uint32_t ReadVersion_Tick = 0;
 static float FpgaVrmsFactor = 0;
 static float FpgaIrmsFactor = 0;
 static float FpgaPhaseFactor = 0;
@@ -33,9 +32,7 @@ static uint8_t GetSensorRegisterValue(void);
 static void GetInputSensorValue(void);
 static void SetOutputSensorValue(void);
 static float GetVSWRReflectance(float vswr_r,float vswr_x);
-static uint32_t Sensor_2G_GetMcuRegister(uint8_t RegAddress);
-
-static void Sensor_2G_GetSoftVersion(uint8_t RegAddress);
+static uint32_t Sensor_2G_GetMcuRegister(uint16_t RegAddress);
 
 static void Fpga_SetDDSStateSwitch(UINT32_VAL WriteReg);
 static void Fpga_SetDDSChannelNumber(UINT32_VAL WriteReg);
@@ -88,11 +85,9 @@ void IF_FpgaSensor_ParamInit(void)
 void Sensor_Fpga_Sample(void)
 {
    if( 1== GetSensorRegisterValue())
-   { 
-	    taskENTER_CRITICAL();
+   {  
 	    GetInputSensorValue();
 	    SetOutputSensorValue(); 
-	    taskEXIT_CRITICAL();
    }		
 }
 
@@ -104,16 +99,23 @@ void Sensor_Fpga_Sample(void)
  * END ***************************************************************************************/
 static uint8_t  GetSensorRegisterValue(void)
 {
-	
-    uint8_t ret =OFF;
+	uint8_t j=0, regData[8] = {0};
+    uint8_t ret = OFF;
     /*************************读取FPGA寄存器数据到寄存器缓冲区*******************************/
     if(0 == IF_HAL_FpgaReg_ReadStart())
-	{
-		ReadVersion_Tick++;
-		if(ReadVersion_Tick %1000 == 0)
+	{	
+		for(uint8_t i = 0; i < 8; i++)
 		{
-			Sensor_2G_GetSoftVersion(0);
+			regData[i] = IF_HAL_FpgaReg_Read(i);
 		}
+		FpgaReg.Version[j++] = regData[3];
+		FpgaReg.Version[j++] = regData[2];
+		FpgaReg.Version[j++] = regData[1];
+		FpgaReg.Version[j++] = regData[0];
+		FpgaReg.Version[j++] = regData[7];	
+		FpgaReg.Version[j++] = regData[6];	
+		FpgaReg.Version[j++] = regData[5];	
+		FpgaReg.Version[j++] = regData[4];
 		/***********************Read Register******************************/
 		FpgaReg.temperture    = Sensor_2G_GetMcuRegister(8);
 		FpgaReg.RFDrainVolt   = Sensor_2G_GetMcuRegister(12);
@@ -387,33 +389,10 @@ uint8_t IF_Sensor_GetVersion(uint8_t *pBuf)
 	for(uint8_t i = 0;i < 8;i++)
 	{
 		pBuf[j++] = FpgaReg.Version[i];
+		if(FpgaReg.Version[i] == 0)break;
 	}
     return j;
 }
-/* FUNCTION *********************************************************************************
- * Function Name : Sensor_2G_GetSoftVersion
- * Description   : 读取Fpga软件版本
- * Parameter     : 
- *                                 
- * END ***************************************************************************************/
-static void Sensor_2G_GetSoftVersion(uint8_t RegAddress)
-{
-	uint8_t j=0, regData[8] = {0};
-	for(uint16_t i = 0; i < 8; i++)
-	{
-		regData[i] = IF_HAL_FpgaReg_Read(RegAddress+i);
-	}
-	FpgaReg.Version[j++] = regData[3];
-	FpgaReg.Version[j++] = regData[2];
-	FpgaReg.Version[j++] = regData[1];
-	FpgaReg.Version[j++] = regData[0];
-	FpgaReg.Version[j++] = regData[7];	
-	FpgaReg.Version[j++] = regData[6];	
-	FpgaReg.Version[j++] = regData[5];	
-	FpgaReg.Version[j++] = regData[4];
-}	
-
-
 /* FUNCTION *********************************************************************************
  * Function Name : Fpga_SetDDSStateSwitch
  * Description   : 设置DDS信号开关
@@ -798,7 +777,7 @@ static float GetVSWRReflectance(float vswr_r,float vswr_x)
  * Parameter     : 
  *                                 
  * END ***************************************************************************************/
-static uint32_t Sensor_2G_GetMcuRegister(uint8_t RegAddress)
+static uint32_t Sensor_2G_GetMcuRegister(uint16_t RegAddress)
 {
 	UINT32_VAL RegData;
 	for(uint8_t i = 0; i <  + 4;i++)
