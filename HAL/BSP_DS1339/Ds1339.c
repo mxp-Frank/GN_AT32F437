@@ -139,11 +139,11 @@ static void IIC3_Start(void)
     IIC3_SDA_OUT();
     IIC3_SDA_HIGH();
     IIC3_SCL_HIGH();
-    delay_us(5);
+    delay_us(4);
     IIC3_SDA_LOW();
-    delay_us(5);
+    delay_us(4);
     IIC3_SCL_LOW();
-    delay_us(5);
+    delay_us(4);
 }
 
 /* FUNCTION **********************************************************************
@@ -158,7 +158,7 @@ static void IIC3_Stop(void)
     IIC3_SDA_OUT();
     IIC3_SDA_LOW();
     IIC3_SCL_HIGH();
-    delay_us(5);
+    delay_us(4);
     IIC3_SDA_HIGH();
 }
 
@@ -172,11 +172,11 @@ static void IIC3_Ack(void)
 {
     IIC3_SDA_OUT();   //设置SDA为输出
     IIC3_SDA_LOW();   /* CPU驱动SDA = 0 */
-    delay_us(5);
+    delay_us(4);
     IIC3_SCL_HIGH();  /* CPU驱动SCL = 0 */
-    delay_us(5);
+    delay_us(4);
     IIC3_SCL_LOW();	 /* CPU产生1个时钟 */
-    delay_us(5);
+    delay_us(4);
     IIC3_SDA_HIGH();  //CPU释放SDA总线
 }
 
@@ -190,11 +190,11 @@ static void IIC3_NAck(void)
 {
     IIC3_SDA_OUT();    //设置SDA为输出
     IIC3_SDA_HIGH();   /* CPU驱动SDA = 1 */
-    delay_us(5);
+    delay_us(4);
     IIC3_SCL_HIGH();	  /* CPU产生1个时钟 */
-    delay_us(5);
+    delay_us(4);
     IIC3_SCL_LOW();
-    delay_us(5);
+    delay_us(4);
 }
 
 /* FUNCTION **********************************************************************
@@ -208,14 +208,14 @@ static uint8_t IIC3_WaitAck(void)
     uint8_t re=0;
 
     IIC3_SDA_OUT();     	/*SDA设置成输出*/
-    IIC3_SDA_HIGH();  			/*CPU释放SDA总线 */
-    delay_us(5);    		/*延时函数*/
+    IIC3_SDA_HIGH();  		/*CPU释放SDA总线 */
+    delay_us(4);    		/*延时函数*/
     IIC3_SDA_IN();       	/*SDA设置成输入*/
-    IIC3_SCL_HIGH();	    		/* CPU驱动SCL = 1, 此时器件会返回ACK应答 */
-    delay_us(5);
+    IIC3_SCL_HIGH();	    /* CPU驱动SCL = 1, 此时器件会返回ACK应答 */
+    delay_us(4);
     re = ((IIC3_SDA_READ() == 1) ? 1:0);  /* CPU读取SDA口线状态 */
     IIC3_SCL_LOW();
-    delay_us(5);
+    delay_us(4);
 
     return re;
 }
@@ -239,16 +239,16 @@ static void IIC3_SendByte(uint8_t byte)
         {
             IIC3_SDA_LOW();
         }
-        delay_us(5);
+        delay_us(4);
         IIC3_SCL_HIGH();
-        delay_us(5);
+        delay_us(4);
         IIC3_SCL_LOW();
         if (i == 7)
         {
             IIC3_SDA_HIGH(); // 释放总线
         }
         byte <<= 1;	      /* 左移一个bit */
-        delay_us(5);
+        delay_us(4);
     }
 }
 
@@ -270,13 +270,13 @@ static uint8_t IIC3_ReadByte(void)
     {
         value <<= 1;
         IIC3_SCL_HIGH();
-        delay_us(5);
+        delay_us(4);
         if (IIC3_SDA_READ())
         {
 			value++;
         }
         IIC3_SCL_LOW();
-        delay_us(5);
+        delay_us(4);
     }
 
     return value;

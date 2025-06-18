@@ -15,7 +15,7 @@
 
 /* CONST & MACROS */
 #define MAIN_TASK_PERIOD        2    
-#define QUEUE_LENGTH         	8        //队列长度
+#define QUEUE_LENGTH         	10        //队列长度
 /* DATA STRUCTURES */
 
 /* LOCAL VARIABLES */
@@ -59,7 +59,6 @@ int main(void)
     #endif 
     IF_SL_CfgInit();
 	
-	delay_ms(100);
     /* disable global interrupt */
     __disable_irq(); 
 	
@@ -83,53 +82,53 @@ int main(void)
 	
 	
     /*****Create task function******/
-	xReturn = xTaskCreate(Pt_Sensor_task_function,"Sensor_task",512,NULL,5,&SensorTask_Handler);
+	xReturn = xTaskCreate(Pt_Sensor_task_function,"Sensor_task",768,NULL,5,&SensorTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Sensor_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}	
-	xReturn = xTaskCreate(Pt_Main_task_function,  "main_task",512,NULL,5,&MainTask_Handler);
+	xReturn = xTaskCreate(Pt_Main_task_function,  "main_task",768,NULL,5,&MainTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Main_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-    xReturn = xTaskCreate(Pt_Interface_task_function,"Interface_task",256,NULL,3,&InterfaceTask_Handler);
+    xReturn = xTaskCreate(Pt_Interface_task_function,"Interface_task",512,NULL,3,&InterfaceTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Interface_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(PT_Port_task_function,"Port_task",512,NULL,2,&PortTask_Handler);
+	xReturn = xTaskCreate(PT_Port_task_function,"Port_task",768,NULL,2,&PortTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Port_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(UserHMI_task_function,"UserHMI_task",512,NULL,3,&UserHMITask_Handler);
+	xReturn = xTaskCreate(UserHMI_task_function,"UserHMI_task",768,NULL,3,&UserHMITask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("UserHMI_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(DebugHMI_task_function,"DebugHMI_task",512,NULL,2,&DebugHMITask_Handler);
+	xReturn = xTaskCreate(DebugHMI_task_function,"DebugHMI_task",768,NULL,2,&DebugHMITask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("DebugHMI_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(FpgaHMI_task_function,"fpga_task",512,NULL,2,&FpgaUpdateTask_Handler);
+	xReturn = xTaskCreate(FpgaHMI_task_function,"fpga_task",768,NULL,2,&FpgaUpdateTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Fpga_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
 	
-	xReturn = xTaskCreate(ModbusRecv_task_function,"modbus_task",512,NULL,3,&ModbusRecvTask_Handler);
+	xReturn = xTaskCreate(ModbusRecv_task_function,"modbus_task",768,NULL,3,&ModbusRecvTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Modbus_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(ModbusSend_task_function,"modbus_task",512,NULL,3,&ModbusSendTask_Handler);
+	xReturn = xTaskCreate(ModbusSend_task_function,"modbus_task",768,NULL,3,&ModbusSendTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Modbus_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(HwTest_task_function,"HwTest_task",512,NULL,1,&HwTestTask_Handler);
+	xReturn = xTaskCreate(HwTest_task_function,"HwTest_task",256,NULL,1,&HwTestTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("HwTest_task could not be created as there was insufficient heap memory remaining.\r\n");

@@ -129,7 +129,6 @@ typedef struct _UserParam_t
 	uint16_t PrefLimit;						//Reflect Power Limit
 	uint16_t PvdcLimit;						//vdc Power Limit
 	
-	uint8_t  PrefMode;						//Reflect Power Protect Mode;
 	uint16_t PrefThr;						//Reflect Power Threshold;
 	uint8_t  PrefDelayOff;					//Delay time after reaching Reflect Power Threshould until RF is turn off.
 	
@@ -140,32 +139,32 @@ typedef struct _UserParam_t
 	int32_t  VDCFactor;		             	//the VDC Sense Probe attenaction Factor 
 	int32_t  VDCOffset;						//output power Offset attenaction Factor
 }UserParam_t;
-
-
-
+	
 typedef struct _CmdCtrlParam_t
 {
  uint8_t 	FactoryMode;         //工厂模式	
+
 	
  uint8_t 	RFPowerState;		 //射频电源工作状态    	  0：RF_OFF        1：RF_ON
- uint8_t 	DDSSignState;	     //射频电源驱动DDS工作状态   0：RF_OFF        1：RF_ON
- uint8_t    SetACDCState;        //设置射频电源AC-DC工作状态   0：RF_OFF        1：RF_ON
- uint8_t 	PowerWorkMode;	     //设置电源功率工作模式   1：正常模式         0：调试模式(开环模式)
- uint16_t   SetPointValue;       //设置射频电源功率  0~18000
- uint32_t 	SetACDCVolt;	    //设置射频电源AC-DC电压值  0~160000
- uint32_t   SetScanFreq;        //设置射频电源输出频率值，0-2000
- uint32_t   DDSWorkPhase;       //设置射频电源输出相位值，0-165000
+ uint16_t   SetPointValue;       //设置射频电源功率  0~18000	
 	
- uint8_t  PulseMode;						//Pulse Mode 0:pulse off 1:internal pulsing 
- uint32_t PulseFreq;						//pulsing Frequency
- uint8_t  PulseDuty;						//pulsing Duty circle
+ uint8_t    PulseMode;			//Pulse Mode 0:pulse off 1:internal pulsing 
+ uint32_t   PulseFreq;			//pulsing Frequency
+ uint8_t    PulseDuty;			//pulsing Duty circle
 
- uint8_t  SyncSource;						//Sync Source 0:sync  off 1:extenal sync 
- uint32_t SyncOutDelay;						//Sync out  delay
- uint8_t  SyncOutEnable;					//Sync Out  0:sysnc out off 1:sysnc out on
+ uint8_t    SyncSource;			//Sync Source 0:sync  off 1:extenal sync 
+ uint32_t   SyncOutDelay;		//Sync out  delay
+ uint8_t    SyncOutEnable;		//Sync Out  0:sysnc out off 1:sysnc out on
 	
  uint16_t 	TargetPos[CAP_NUM];
  uint16_t   CurrentPos[CAP_NUM];	
+ //调试模式下设置参数	
+ uint8_t 	PowerWorkMode;	     //设置电源功率工作模式   1：正常模式         0：调试模式(开环模式)	
+ uint8_t 	DDSSignState;	     //射频电源驱动DDS工作状态   0：RF_OFF        1：RF_ON
+ uint32_t   DDSPhase;       	 //设置射频电源输出相位值，0-165000	
+	
+ uint8_t    SetACDCState;        //设置射频电源AC-DC工作状态   0：RF_OFF        1：RF_ON
+ uint32_t 	SetACDCVolt;	    //设置射频电源AC-DC电压值  0~160000
 }CmdCtrlParam_t;
 
 
@@ -270,6 +269,7 @@ typedef struct _ProcessData_t
 #define COMMUN_PARAM_LEN                   		  sizeof(CommonParam_t)
 #define INTERNAL_PARAM_LEN                        sizeof(InternalParam_t)
 #define USER_PARAM_LEN                            sizeof(UserParam_t)
+	
 #define VOLTMAP_PARAM_LEN						  sizeof(VoltMapParam_t)
 #define PHASEMAP_PARAM_LEN						  sizeof(PhaseMapParam_t)
 #define RUNNING_STATUS_LEN						  sizeof(RunningStatus_t)

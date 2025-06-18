@@ -139,7 +139,7 @@ extern void IF_SL_UserParam_SetSlowStopDelay(uint16_t value);
 
 extern uint16_t IF_SL_Sensor_GetDCBias(void);
 
-extern float IF_SL_Fpga_GetSensor(uint8_t ChnNo);
+extern float IF_SL_Fpga_GetSensor(uint8_t ChnNo,uint8_t Pwr_Chn);
 
 extern int16_t IF_SL_Get_Sensor_DCBias(void);
 /***************Timer SL****************/
@@ -169,7 +169,7 @@ extern uint8_t IF_SL_CmdParam_GetRFPowerState(void);
 extern void IF_SL_CmdParam_SetRFPowerState(uint8_t ONorOFF);
 extern void IF_SL_CmdParam_SetACDCDriverState(uint8_t ONorOFF);
 extern void IF_SL_CmdParam_SetDDSDriverState(uint8_t ONorOFF);
-extern void IF_SL_CmdParam_SetDDSWorkPhase(uint32_t value);
+extern void IF_SL_CmdParam_SetDDSPhase(uint32_t value);
 extern void IF_SL_CmdParam_SetACDCVoltage(uint32_t value);
 extern uint16_t IF_SL_CmdParam_GetPwrPoint(void);
 extern void  IF_SL_CmdParam_SetPwrPoint(uint16_t value);

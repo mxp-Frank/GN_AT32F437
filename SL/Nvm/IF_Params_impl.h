@@ -217,9 +217,6 @@ extern uint16_t IF_UserParam_GetReflectPowerLimit(void);
 extern void IF_UserParam_SetDCBiasPowerLimit(uint16_t value);
 extern uint16_t IF_UserParam_GetDCBiasPowerLimit(void);
 //---------------------------------------------------------------
-extern void IF_UserParam_SetReflectPowerSwitchOff(uint8_t value);
-extern uint8_t IF_UserParam_GetReflectPowerSwitchOff(void);
-//---------------------------------------------------------------
 extern void IF_UserParam_SetReflectPowerThreshold(uint16_t value);
 extern uint16_t IF_UserParam_GetReflectPowerThreshold(void);
 //---------------------------------------------------------------
@@ -254,14 +251,14 @@ extern void IF_NvmParam_SetPhaseMapMap(int32_t value,uint16_t index);
 extern int32_t IF_NvmParam_GetPhaseMapTable(int32_t powermw);
 
 /***************PT Control and Other Parameters********************/
-extern void IF_CmdParam_SetPwrPoint(uint16_t value);
-extern uint16_t IF_CmdParam_GetPwrPoint(void);
+extern void IF_CmdParam_SetRFPwrPoint(uint16_t value);
+extern uint16_t IF_CmdParam_GetRFPwrPoint(void);
 //---------------------------------------------------------------
-extern uint8_t IF_CmdParam_GetDDSDriverSwitch(void);
-extern void IF_CmdParam_SetDDSDriverSwitch(uint8_t value);
+extern uint8_t IF_CmdParam_GetDDSSignSwitch(void);
+extern void IF_CmdParam_SetDDSSignSwitch(uint8_t value);
 //---------------------------------------------------------------
-extern uint32_t IF_CmdParam_GetACDCDriverSwitch(void);
-extern void IF_CmdParam_SetACDCDriverSwitch(uint32_t value);
+extern uint32_t IF_CmdParam_GetACDCStateSwitch(void);
+extern void IF_CmdParam_SetACDCStateSwitch(uint32_t value);
 //---------------------------------------------------------------
 extern void IF_CmdParam_SetPowerWorkMode(uint8_t value);
 extern uint8_t IF_CmdParam_GetPowerWorkMode(void);
@@ -269,8 +266,8 @@ extern uint8_t IF_CmdParam_GetPowerWorkMode(void);
 extern uint32_t IF_CmdParam_GetACDCVoltage(void);
 extern void IF_CmdParam_SetACDCVoltage(uint32_t value);
 //---------------------------------------------------------------
-extern uint32_t IF_CmdParam_GetDDSWorkPhase(void);
-extern void IF_CmdParam_SetDDSWorkPhase(uint32_t value);
+extern uint32_t IF_CmdParam_GetDDSPhase(void);
+extern void IF_CmdParam_SetDDSPhase(uint32_t value);
 
 extern void IF_CmdParam_SetResetDevice(void);
 extern void IF_CmdParam_ResumeFactorySettings(void);

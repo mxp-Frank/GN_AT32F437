@@ -137,7 +137,7 @@ typedef enum _ParamterIndex_t
 	ID_PvdcLimit				   = 0x400C,  
 	ID_FpgaPulsePowerThr		   = 0x400D,
 	ID_FpgaPulseSyncDelay		   = 0x400E,
-	ID_PrefThrMode				   = 0x400F,
+
 	
 	//Readonly Monitor Parameter
 	ID_SensorFreq                  = 0x4600,
@@ -179,8 +179,8 @@ typedef enum _ParamterIndex_t
 	ID_ACDCTemperature1			   = 0x4628,
 	ID_ACDCTemperature2			   = 0x4629,
 	
-	ID_SyncInFreq		   = 0x4630,
-	ID_SyncInDuty		   = 0x463A,
+	ID_SyncInFreq		   		   = 0x4630,
+	ID_SyncInDuty		           = 0x463A,
 	ID_SyncOutFreqMeasure		   = 0x463B,
 	ID_SyncOutDutyMeasure		   = 0x463C,
 	

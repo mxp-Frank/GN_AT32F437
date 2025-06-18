@@ -183,35 +183,7 @@ typedef struct _Modbus_Frame_t
 	
 }Modbus_Frame_t;	
 
-#pragma pack(push)
-#pragma pack(1)
 
-typedef struct _ModbusParam_t
-{
-	uint32_t Factor_Ac380_AV;		//Factor_Ac380_AV;
-	uint32_t Factor_Ac380_AI;		//Factor_Ac380_AI;
-	uint32_t Factor_Ac380_BV;       //Factor_Ac380_BV;
-	uint32_t Factor_Ac380_BI;		//Factor_Ac380_BI;
-	uint32_t Factor_Ac380_CV;		//Factor_Ac380_CV;
-	uint32_t Factor_Ac380_CI;		//Factor_Ac380_CI;
-	uint32_t Factor_DcDc1_I;		//Factor_DcDc1_I;
-	uint32_t Factor_DcDc1_V;		//Factor_DcDc1_V;
-	uint32_t Factor_DcDc2_I;		//Factor_DcDc2_I;
-	uint32_t Factor_DcDc2_V;		//Factor_DcDc2_V;
-	uint32_t Factor_Way3_I;			//Factor_Way3_I;
-	uint32_t Factor_Way4_I;			//Factor_Way4_I; 	
-}ModbusParam_t;
-
-typedef struct _ModbusSetup_t
-{
-	uint32_t V_Set;					//V-Set
-	uint32_t I_Set;					//I-Set
-}ModbusSetup_t;	
-
-#define MODBUS_PARAM_LEN                      sizeof(ModbusParam_t)
-#define MODBUS_SETTING_LEN                    sizeof(ModbusSetup_t)  
- 	
-#pragma pack(pop)
 /****************CRC余式表*******************************************************/
 static const unsigned int ModbusCRC_Table[256] =
 {

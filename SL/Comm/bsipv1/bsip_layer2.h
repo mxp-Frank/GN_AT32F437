@@ -14,9 +14,6 @@
 #include "IF_HAL_Cfg.h"
 #include "IF_SL_Cfg.h"
 
-#define MIN_FRAME_LEN          6
-#define MAX_INFO_LEN           255
-
 typedef union _SubIndex_t
 {
     uint8_t byte;

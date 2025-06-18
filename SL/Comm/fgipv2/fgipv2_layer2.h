@@ -14,7 +14,7 @@ extern "C" {
 
 
 #define MIN_FRAME_LEN          	6
-#define MAX_INFO_LEN           	255
+#define MAX_INFO_LEN           	280
 
 #define DEFAULT_ADDRESS        	0x00
 

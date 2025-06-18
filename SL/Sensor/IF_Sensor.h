@@ -35,8 +35,11 @@ extern uint16_t IF_Sensor_GetPowerSupply(void);
 extern int16_t IF_Sensor_GetRFTemperature(uint8_t Channel);
 
 
-extern float IF_Fpga_GetMcuAlgSensor(uint8_t ChnNo);
-extern float IF_Fpga_GetRegAlgSensor(uint8_t ChnNo);
+extern float IF_Fpga_GetMcuAlgSensor(uint8_t ChnNo,uint8_t Pwr_Chn);
+extern float IF_Fpga_GetRegAlgSensor(uint8_t ChnNo,uint8_t Pwr_Chn);
+
+extern uint32_t IF_Fpga_GetTemperture(void);
+extern uint32_t IF_Fpga_GetDrainVoltage(void);
 
 extern uint8_t IF_Fpga_GetSyncInDutyCircle(void);
 extern uint32_t IF_Fpga_GetSyncInFrequency(void);

@@ -68,7 +68,7 @@ void IF_Module_Main_Task(void)
 	{
 		IF_SL_CmdParam_SetPwrPoint(0);              //设置功率设置值为零
 		IF_SL_CmdParam_SetACDCVoltage(0);			//设置AC-DC电压为零	
-		IF_SL_CmdParam_SetDDSWorkPhase(0);          //关闭功放驱动相位	
+		IF_SL_CmdParam_SetDDSPhase(0);          //关闭功放驱动相位	
 		IF_SL_CmdParam_SetDDSDriverState(OFF); 		//关闭功放驱动电源使能	
 		IF_SL_CmdParam_SetACDCDriverState(OFF);     //关闭AC-DC电源使能			
 	}
@@ -160,7 +160,7 @@ static void Module_PowerPIDAdjust(uint32_t SetPower)
 		{
 			if(GN_Device.Volt_PID_Cnt == 0)
 			{	
-				IF_SL_CmdParam_SetDDSWorkPhase(INIT_ACDC_PHASE);	
+				IF_SL_CmdParam_SetDDSPhase(INIT_ACDC_PHASE);	
 				GN_Device.SetPIDVolt = Volt_PID_LookupTable(SetPower);
 				
 			}else if(GN_Device.Volt_PID_Cnt > PID_TIMER)
@@ -183,7 +183,7 @@ static void Module_PowerPIDAdjust(uint32_t SetPower)
 		GN_Device.PowerThrDown = 0;
 		GN_Device.PDO_End = 0;
 		IF_SL_ClearRFPwrPIDProcessData();
-		IF_SL_CmdParam_SetDDSWorkPhase(0);              //设置射频驱动相位为0
+		IF_SL_CmdParam_SetDDSPhase(0);              //设置射频驱动相位为0
 		IF_SL_CmdParam_SetACDCVoltage(INIT_ACDC_VOLTAGE);//设置AC-DC初始化电压	
 		IF_SL_CmdParam_SetACDCDriverState(ON); 		    //开启AC-DC电源使能			
 	}
@@ -206,7 +206,7 @@ static void Module_ACDCOutputPhase(float SetPIDPhase)
 	{
 		g_StatusWord.bits.PowerAtLimit = 0;
 	}	
-	IF_CmdParam_SetDDSWorkPhase(SetPIDPhase);	
+	IF_CmdParam_SetDDSPhase(SetPIDPhase);	
 }	
 /* FUNCTION *********************************************************************************
  * Function  : ACDCModule_OutputVoltage

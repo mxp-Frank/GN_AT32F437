@@ -10,10 +10,10 @@
 #ifndef _CONFIGDEVICE_H_
 #define _CONFIGDEVICE_H_
 
-#define BOOTLOADER_VERSION                       "CB_0.1.0"
+#define BOOTLOADER_VERSION                       "CB_0.1.1"
 #define BOOTLOADER_VERSION_LEN                   16
 
-#define SOFTWARE_VERSION                         "CA_0.1.0"
+#define SOFTWARE_VERSION                         "CA_0.1.1"
 #define SOFTWARE_VERSION_LEN                     16
 
 #define MODBUS_FILE_SIGN                        "acdc_017"
@@ -56,7 +56,6 @@
 #define INIT_ACDC_VOLTAGE						100000	  	//AC-DC电源初始化输出电压值(mv)
 #define INIT_ACDC_PHASE							164000	 	//AC-DC电源初始化输出相位值(1/1000)
 
-
 /******************匹配器电容设置参数***************************/
 typedef enum
 {
@@ -64,6 +63,8 @@ typedef enum
     TUNE = 1,						//自动匹配器C2电容Nvm参数
     CAP_NUM = 2
 } CAPACITOR_INDEX;
+
+
 
 #endif
 //*****************************************************************************

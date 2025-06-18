@@ -40,12 +40,9 @@ void IF_FpgaUnitInit(void)
 {
     FpgaAddr_PortInit();
     FpgaCtrl_PortInit();
-    FpgaData_PortInit(DATA_OUTPUT);
- 
+    FpgaData_PortInit(DATA_OUTPUT); 
 	FpgaUnit_Reset();
-	delay_ms(100);
 }
-
 
 /************************************************************************/
 /* Local Functions Definitions                                          */
@@ -312,14 +309,15 @@ uint8_t IF_FpgaReg_ReadStart(void)
 	uint8_t timeOutCnt = 0;
 	FpgaData_PortInit(DATA_INPUT); //Setup Data port Input
 	DATA_START_HIGH; 
-	while(DATA_FPGA_READ == 0)//normal operation time is less 10us	
+	while(DATA_FPGA_READ == 0)//normal operation time is less 100us	
 	{
 		timeOutCnt++;
-		if(timeOutCnt > 10)
+		if(timeOutCnt > 100)
 		{
 			error_flag = 1;
 			break;  
 		} 
+		delay_us(1);
 	}
 	return error_flag;
 }
@@ -340,11 +338,17 @@ uint8_t IF_FpgaReg_Read(uint16_t regAddr)
 
      //step2: set addr and latch the addr
      FpgaAddr_Write(regAddr);
-    
      DATA_CLK_LOW;
      DATA_CLK_HIGH;
      DATA_CLK_LOW;
-
+	
+     DATA_CLK_LOW;
+     DATA_CLK_HIGH;
+     DATA_CLK_LOW;
+	
+	 DATA_CLK_LOW;
+     DATA_CLK_HIGH;
+     DATA_CLK_LOW;
      //step5: get data
 //     if(SET == DATA_D0_READ)
 //     {
@@ -385,7 +389,6 @@ uint8_t IF_FpgaReg_Read(uint16_t regAddr)
 //     {
 //         result |= 0x80;
 //     }
-
 	 result = READ_DATA_D0D7_PORT;
      //step6: set ctrl singal
      DATA_RE_LOW; //Reg Disable

@@ -53,7 +53,7 @@ void IF_HAL_CfgInit(void)
 	 IF_DS1339Init();	
 	 IF_SpiflashInit(); 
 	 IF_WdogInit();
-	
+	 delay_ms(50);
 }
 
 //*********************************

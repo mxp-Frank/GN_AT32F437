@@ -129,10 +129,10 @@ void IF_SL_Sensor_Device_Task(void)
 	 IF_Sensor_Device_Task();
 }
 /**********************Fpga Sensor Layer****************************************/
-float IF_SL_Fpga_GetSensor(uint8_t ChnNo)
+float IF_SL_Fpga_GetSensor(uint8_t ChnNo,uint8_t Pwr_Chn)
 {
 	float value;
-	value = IF_Fpga_GetMcuAlgSensor(ChnNo);
+	value = IF_Fpga_GetRegAlgSensor(ChnNo,Pwr_Chn);
 	return value;
 }
 
@@ -380,21 +380,21 @@ void IF_SL_ResetDevice(void)
 //**************************************
 uint16_t  IF_SL_CmdParam_GetPwrPoint(void)
 {
-	return  IF_CmdParam_GetPwrPoint();   
+	return  IF_CmdParam_GetRFPwrPoint();   
 }
 void  IF_SL_CmdParam_SetPwrPoint(uint16_t value)
 {
-	IF_CmdParam_SetPwrPoint(value);   
+	IF_CmdParam_SetRFPwrPoint(value);   
 }
 //**************************************
 void IF_SL_CmdParam_SetDDSDriverState(uint8_t ONorOFF)
 {
-	IF_CmdParam_SetDDSDriverSwitch(ONorOFF);
+	IF_CmdParam_SetDDSSignSwitch(ONorOFF);
 }
 //**************************************
 void IF_SL_CmdParam_SetACDCDriverState(uint8_t ONorOFF)
 {
-	 IF_CmdParam_SetACDCDriverSwitch(ONorOFF);
+	 IF_CmdParam_SetACDCStateSwitch(ONorOFF);
 }
 //**************************************
 uint8_t IF_SL_CmdParam_GetRFPowerState(void)
@@ -410,9 +410,9 @@ uint8_t IF_SL_CmdParam_GetLoopMode(void)
 {
 	return IF_CmdParam_GetPowerWorkMode();
 }
-void IF_SL_CmdParam_SetDDSWorkPhase(uint32_t value)
+void IF_SL_CmdParam_SetDDSPhase(uint32_t value)
 {
-	 IF_CmdParam_SetDDSWorkPhase(value);
+	 IF_CmdParam_SetDDSPhase(value);
 }
 void IF_SL_CmdParam_SetACDCVoltage(uint32_t value)
 {

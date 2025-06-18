@@ -189,20 +189,20 @@ typedef union
 
 typedef union 
 {
-		uint32_t Val;
-		uint16_t w[2] __attribute__((packed));
-		uint8_t  v[4];
+		int32_t Val;
+		int16_t w[2] __attribute__((packed));
+		int8_t  v[4];
 		struct __attribute__((packed)) 
 		{
-			uint16_t LW;
-			uint16_t HW;
+			int16_t LW;
+			int16_t HW;
 		} word;
 		struct __attribute__((packed)) 
 		{
-			uint8_t LB;
-			uint8_t HB;
-			uint8_t UB;
-			uint8_t MB;
+			int8_t LB;
+			int8_t HB;
+			int8_t UB;
+			int8_t MB;
 		} byte;
 		struct __attribute__((packed))
 		{

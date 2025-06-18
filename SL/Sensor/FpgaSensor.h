@@ -18,11 +18,12 @@
 #ifndef _FPGASENSOR_H_
 #define _FPGASENSOR_H_
 #include "stdint.h"
+#include "configDevice.h"
 
 #if defined(__cplusplus)
 extern "C" {
 #endif /* __cplusplus */
-
+#define  PWR_CHN_NUM 				     2
 #define FPGAWARE_VERSION_LEN        	 10
 #define M_PI							(double)(3.1415926F)
 #define ARC								(double)(57.29578F)			  //57.29578=(180.0F/M_PI)
@@ -70,21 +71,22 @@ typedef struct _SensorReg_t
 	uint8_t Version[FPGAWARE_VERSION_LEN];
 	int32_t temperture;
     int32_t RFDrainVolt;
-    int32_t FeedbackFreq;
-    int32_t FeedbackVrms;
-	int32_t FeedbackIrms;
-	int32_t FeedbackPhase;
 	
-	int32_t AlgFreq;  
-	int32_t AlgVrms;
-	int32_t AlgIrms;
-	int32_t AlgPhase;  //unit: angle degree, not radiums
-	int32_t AlgPdlv;
-	int32_t AlgPfwd;
-	int32_t AlgPref;
-	int32_t AlgR;
-	int32_t AlgX;
-	int32_t AlgVSWR;
+    int32_t FeedbackFreq[PWR_CHN_NUM];
+    int32_t FeedbackVrms[PWR_CHN_NUM];
+	int32_t FeedbackIrms[PWR_CHN_NUM];
+	int32_t FeedbackPhase[PWR_CHN_NUM];
+	
+	int32_t Freq[PWR_CHN_NUM];  
+	int32_t Vrms[PWR_CHN_NUM];
+	int32_t Irms[PWR_CHN_NUM];
+	int32_t Phase[PWR_CHN_NUM];  
+	int32_t Pdlv[PWR_CHN_NUM];
+	int32_t Pfwd[PWR_CHN_NUM];
+	int32_t Pref[PWR_CHN_NUM];
+	int32_t R[PWR_CHN_NUM];
+	int32_t X[PWR_CHN_NUM];
+	int32_t VSWR[PWR_CHN_NUM];
 	
 	int32_t SyncInDuty;
 	int32_t SyncInFreq;
@@ -94,10 +96,11 @@ typedef struct _SensorReg_t
 	
 	int32_t DDSStateSwitch;
 	int32_t DDSChannelNo;
-	int32_t DDSFreqSet;
-	int32_t DDSPhaseSet;
-	int32_t ACDCVoltageSet;
-	int32_t ACDCCurrentSet;
+	int32_t DDSFrequency;
+	int32_t DDSPhase;
+	
+	int32_t ACDCVoltage;
+	int32_t ACDCCurrent;
 	int32_t ACDCStateSwitch;
 	
 	int32_t VrmsFactor;
@@ -106,7 +109,7 @@ typedef struct _SensorReg_t
 	
 	int32_t PulseMode;
 	int32_t PulseDuty;
-	int32_t PulseFreq;
+	int32_t PulsePeriod;
 	
 	int32_t SyncSource;
 	int32_t SyncOutEnable;
@@ -121,10 +124,17 @@ typedef struct _SensorReg_t
 	int32_t PhaseStepTimer;
 }SensorReg_t;
 
-typedef struct _SensorData_t
+/******************射频电源输出sensor通道(LevelToLevel)设置参数***************************/
+
+typedef enum
 {
-	float Temp;  
-	float DrainVolt;  
+    HP_CHN = 0,						//射频电源输出sensor通道				
+    LP_CHN = 1,						//射频电源输出sensor通道
+   
+} PWR_CHN;
+
+typedef struct _SensorData_t
+{ 
 	float Freq;  
 	float V_rms;
 	float I_rms;
@@ -135,8 +145,7 @@ typedef struct _SensorData_t
 	float Z;
 	float R;
 	float X;
-	float VSWR;
-	float Vpp; 	 //Vpp	
+	float VSWR;	
 }SensorData_t, *PSensorData_t;
 
 typedef enum Sensor_ChnN_t
@@ -152,8 +161,7 @@ typedef enum Sensor_ChnN_t
 	 ChnN_R      	= 0x09,
 	 ChnN_X      	= 0x0A,
 	 ChnN_VSWR   	= 0x0B,
-	 ChnN_Temp    	= 0x0C,
-	 ChnN_Drain    	= 0x0D,
+
 }Sensor_ChnN_t;
 
 extern void IF_FpgaSensor_ParamInit(void);

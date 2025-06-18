@@ -111,10 +111,10 @@ static void Module_Cmd_Execute(void)
 
 static void Module_Sensor_Input(void)
 {
-	GN_Device.Sensor.Freq   =  IF_SL_Fpga_GetSensor(ChnN_Freq);
-	GN_Device.Sensor.Pfwd   =  IF_SL_Fpga_GetSensor(ChnN_Pfwd);
-	GN_Device.Sensor.Pref   =  IF_SL_Fpga_GetSensor(ChnN_Pref);
-	GN_Device.Sensor.VSWR   =  IF_SL_Fpga_GetSensor(ChnN_VSWR);
+	GN_Device.Sensor.Freq   =  IF_SL_Fpga_GetSensor(ChnN_Freq,HP_CHN);
+	GN_Device.Sensor.Pfwd   =  IF_SL_Fpga_GetSensor(ChnN_Pfwd,HP_CHN);
+	GN_Device.Sensor.Pref   =  IF_SL_Fpga_GetSensor(ChnN_Pref,HP_CHN);
+	GN_Device.Sensor.VSWR   =  IF_SL_Fpga_GetSensor(ChnN_VSWR,HP_CHN);
 }
 /* FUNCTION *********************************************************************************
  * Function 	 : Module_Port_Input

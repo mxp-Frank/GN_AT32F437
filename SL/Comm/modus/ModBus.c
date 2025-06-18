@@ -10,10 +10,9 @@
 #include "IF_SL_Cfg.h"
 
 static uint32_t ModbusTimer = 0; 		 				//modBus 接收帧计时
-static ModbusParam_t   ModbusParam;
-static ModbusSetup_t   ModbusSetting;
-static ModBusTypeEnum ModBusSendType = DEVICE_READ_VERSIONREG;    //Modbus发送、接收数据类型
-
+static ModBusTypeEnum ModBusSendType = READ_MB_VERSIONREG;    //Modbus发送、接收数据类型
+static  ModbusParam_t  	ModbusParam;
+static  ModbusSetup_t   ModbusSetting;
 static uint16_t Modbus_InputCoils = 0;					//Modbus的输入线圈值
 static uint16_t Modbus_OutputCoils = 0;					//Modbus的输出线圈值
 static uint16_t Modbus_InputReg[INPUT_REG_PROCESS_NUM] = {0};  	//Modbus输入寄存器指针
@@ -37,44 +36,44 @@ static uint16_t getModbusCRC16(uint8_t *ptr, uint16_t len);
  * END ***************************************************************************************/
 void Modbus_TxBufManagment(uint8_t port)
 { 	
-	if(ModBusSendType == DEVICE_WRITE_SOFTWAREREG) //软件版本保持寄存器
+	if(ModBusSendType == WRITE_MB_SOFTWAREREG) //软件版本保持寄存器
 	{
 		BSIP_ModbusFirmwareUpdate(port);
 	}
 	else
 	{
-		if(ModBusSendType == DEVICE_READ_VERSIONREG)    //读版本输入寄存器		
+		if(ModBusSendType == READ_MB_VERSIONREG)    //读版本输入寄存器		
 		{		
 			MB_ReadInputReg_04H(MODBUS_ADDR, INPUT_REG_A33,INPUT_REG_VERSION_NUM);	
 		}
-		else if(ModBusSendType == DEVICE_READ_HOLDREG) 
+		else if(ModBusSendType == READ_MB_HOLDREG) 
 		{
 			MB_ReadHoldingReg_03H(MODBUS_ADDR, HOLD_REG_P01,HOLD_REG_P_NUM);
 		}
-		else if(ModBusSendType ==DEVICE_READ_PROCSSREG)    //读过程输入寄存器
+		else if(ModBusSendType ==READ_MB_PROCSSREG)    //读过程输入寄存器
 		{
 			MB_ReadInputReg_04H(MODBUS_ADDR, INPUT_REG_A01,INPUT_REG_PROCESS_NUM);			
 		}
-		else if(ModBusSendType ==	DEVICE_READ_COILS)	//读线圈状态
+		else if(ModBusSendType ==	READ_MB_COILS)	//读线圈状态
 		{				
 			MB_ReadCoil_01H(MODBUS_ADDR, INPUT_IO_T01,INPUT_IO_NUM);					
 		}
-		else if(ModBusSendType == DEVICE_WRITE_MULTCOILS)  //写线圈状态
+		else if(ModBusSendType == WRITE_MB_MULTCOILS)  //写线圈状态
 		{			
 			MB_WriteNumCoil_0FH(MODBUS_ADDR, OUTPUT_IO_D01, 1,(uint16_t*)&Modbus_OutputCoils);		
 		}
-		else if(ModBusSendType ==  DEVICE_WRITE_SETTINGEREG)//写设置保持寄存器
+		else if(ModBusSendType ==  WRITE_MB_SETTINGEREG)//写设置保持寄存器
 		{			
 			Update_ACDCSettingToPHoldRegister();
 			uint8_t AddressOffset = HOLD_REG_P01 - HOLD_REG_P01;				
 			MB_WriteNumHoldingReg_10H(MODBUS_ADDR, HOLD_REG_P01,SETTING_REG_NUM,(uint16_t*)&Modbus_PHoldReg[AddressOffset]);
 		}
-		else if(ModBusSendType == DEVICE_WRITE_HARDWAREREG)//写版本保持寄存器
+		else if(ModBusSendType == WRITE_MB_HARDWAREREG)//写版本保持寄存器
 		{	
 			uint8_t AddressOffset = HOLD_REG_P29 - HOLD_REG_P01;			
 			MB_WriteNumHoldingReg_10H(MODBUS_ADDR, HOLD_REG_P29,HARDVER_REG_NUM,(uint16_t*)&Modbus_PHoldReg[AddressOffset]);	
 		}
-		else if(ModBusSendType ==DEVICE_WRITE_PARAMREG)//写参数保持寄存器		
+		else if(ModBusSendType ==WRITE_MB_PARAMREG)//写参数保持寄存器		
 		{	
 			Update_ACDCParamToPHoldRegister();	
 			uint8_t AddressOffset = HOLD_REG_P05 - HOLD_REG_P01;	
@@ -110,7 +109,7 @@ void Dealwith_Modbus_Service(pCommMsg_t pRxMsg)
 				{
 					Modbus_InputCoils = pRxMsg->data[3];
 					//跳转到readprocessregdata
-					IF_ACDC_SetParamsRWType(DEVICE_READ_PROCSSREG); 					
+					IF_ACDC_SetParamsRWType(READ_MB_PROCSSREG); 					
 				}					
 				break;
 				
@@ -129,7 +128,7 @@ void Dealwith_Modbus_Service(pCommMsg_t pRxMsg)
 					//更新ACDC的状态和错误字
 					Update_RegisterToStatusAndFualtWord(); 
 					//跳转到readprocessregdata
-					IF_ACDC_SetParamsRWType(DEVICE_READ_PROCSSREG); 					
+					IF_ACDC_SetParamsRWType(READ_MB_PROCSSREG); 					
 				}
 				else if(ModRxFrame.RegLen == INPUT_REG_VERSION_NUM)  
 				{		
@@ -139,7 +138,7 @@ void Dealwith_Modbus_Service(pCommMsg_t pRxMsg)
 						Modbus_VersionReg[i] = MAKE_UINT16(pRxMsg->data[3+2*i],pRxMsg->data[4+2*i]);
 					}
 					//跳转到readholdregdata
-					IF_ACDC_SetParamsRWType(DEVICE_READ_HOLDREG); 			
+					IF_ACDC_SetParamsRWType(READ_MB_HOLDREG); 			
 				}						
 			break;
 				
@@ -158,7 +157,7 @@ void Dealwith_Modbus_Service(pCommMsg_t pRxMsg)
 					//更新ACDC参数数据
 					Update_PHoldRegisterToACDCParam(); 
 					//跳转到readprocessregdata
-					IF_ACDC_SetParamsRWType(DEVICE_READ_PROCSSREG); 			
+					IF_ACDC_SetParamsRWType(READ_MB_PROCSSREG); 			
 				}
 			break;		
 			case WRITE_MULTCOILS_FUNC:	
@@ -168,7 +167,7 @@ void Dealwith_Modbus_Service(pCommMsg_t pRxMsg)
 				   (ModRxFrame.RegAddress == OUTPUT_IO_D02))
 				{
 					//跳转到readprocessregdata
-					IF_ACDC_SetParamsRWType(DEVICE_READ_PROCSSREG); 			
+					IF_ACDC_SetParamsRWType(READ_MB_PROCSSREG); 			
 				}	
 			break;
 				
@@ -182,7 +181,7 @@ void Dealwith_Modbus_Service(pCommMsg_t pRxMsg)
 					Update_PHoldRegisterToACDCSetting();
 					Update_PHoldRegisterToACDCParam();
 					//跳转到readprocessregdata
-					IF_ACDC_SetParamsRWType(DEVICE_READ_PROCSSREG); 			
+					IF_ACDC_SetParamsRWType(READ_MB_PROCSSREG); 			
 				}
 			break;
 				
@@ -193,20 +192,20 @@ void Dealwith_Modbus_Service(pCommMsg_t pRxMsg)
 				   (ModRxFrame.RegAddress == HOLD_REG_P29)) //设置寄存器	
 				{ 
 					//跳转到readprocessregdata
-					IF_ACDC_SetParamsRWType(DEVICE_READ_PROCSSREG); 								
+					IF_ACDC_SetParamsRWType(READ_MB_PROCSSREG); 								
 				}
 				else if(ModRxFrame.RegAddress == HOLD_REG_SW_START)  //软件寄存器	
 				{
 					xSemaphoreGive(ModbusNfSemaphore);
 					xSemaphoreGive(ModbusReSemaphore);
-					IF_ACDC_SetParamsRWType(DEVICE_WRITE_SOFTWAREREG); 
+					IF_ACDC_SetParamsRWType(WRITE_MB_SOFTWAREREG); 
 				}
 				
 			break;
 				
 			default:
 				//跳转到readprocessregdata
-				IF_ACDC_SetParamsRWType(DEVICE_READ_PROCSSREG); 				
+				IF_ACDC_SetParamsRWType(READ_MB_PROCSSREG); 				
 			break;
 		}	
 	}		
@@ -496,11 +495,11 @@ void MB_WriteNumHoldingReg_10H(uint8_t addr, uint16_t reg, uint16_t num,uint16_t
 	uint16_t crc =0;
 	ModBuffer_t ModBuffer;
 	memset(&ModBuffer,0,sizeof(ModBuffer_t));
-	ModBuffer.buf[ModBuffer.len++]= addr;         /*从站地址*/
+	ModBuffer.buf[ModBuffer.len++]= addr;         	/*从站地址*/
 	ModBuffer.buf[ModBuffer.len++]= 0x10;			/*功能码*/
 	ModBuffer.buf[ModBuffer.len++]= reg >>8;		/*寄存器地址，高字节*/		
 	ModBuffer.buf[ModBuffer.len++]= reg;			/*寄存器地址，低字节*/	
-	ModBuffer.buf[ModBuffer.len++]= num>>8;		/*寄存器个数，高字节*/	
+	ModBuffer.buf[ModBuffer.len++]= num>>8;			/*寄存器个数，高字节*/	
 	ModBuffer.buf[ModBuffer.len++]= num;			/*寄存器个数，低字节*/			
 	ModBuffer.buf[ModBuffer.len++]= num <<1;		/*数据个数，低字节*/	
 	for(uint16_t i=0;i< num;i++)
@@ -665,7 +664,7 @@ uint32_t IF_Sensor_GetACDCAppChecksum(void)
 void IF_ModbusSetting_SetV_Set(int32_t value)
 {
 	ModbusSetting.V_Set = value;
-	ModBusSendType = DEVICE_WRITE_PARAMREG;
+	ModBusSendType = WRITE_MB_PARAMREG;
 }
 
 int32_t IF_ModbusSetting_GetV_Set(void)
@@ -676,7 +675,7 @@ int32_t IF_ModbusSetting_GetV_Set(void)
 void IF_ModbusSetting_SetI_Set(int32_t value)
 {
 	ModbusSetting.I_Set = value;
-	ModBusSendType = DEVICE_WRITE_SETTINGEREG;
+	ModBusSendType = WRITE_MB_SETTINGEREG;
 }
 
 int32_t IF_ModbusSetting_GetI_Set(void)
@@ -687,7 +686,7 @@ int32_t IF_ModbusSetting_GetI_Set(void)
 void IF_ModbusParam_SetFactor_Ac380_AV(int32_t value)
 {
 	ModbusParam.Factor_Ac380_AV = value;
-	ModBusSendType = DEVICE_WRITE_PARAMREG;
+	ModBusSendType = WRITE_MB_PARAMREG;
 }
 
 int32_t IF_ModbusParam_GetFactor_Ac380_AV(void)
@@ -698,7 +697,7 @@ int32_t IF_ModbusParam_GetFactor_Ac380_AV(void)
 void IF_ModbusParam_SetFactor_Ac380_BV(int32_t value)
 {
 	ModbusParam.Factor_Ac380_BV = value;
-	ModBusSendType = DEVICE_WRITE_PARAMREG;
+	ModBusSendType = WRITE_MB_PARAMREG;
 }
 
 int32_t IF_ModbusParam_GetFactor_Ac380_BV(void)
@@ -709,7 +708,7 @@ int32_t IF_ModbusParam_GetFactor_Ac380_BV(void)
 void IF_ModbusParam_SetFactor_Ac380_CV(int32_t value)
 {
 	ModbusParam.Factor_Ac380_CV = value;
-	ModBusSendType = DEVICE_WRITE_PARAMREG;
+	ModBusSendType = WRITE_MB_PARAMREG;
 }
 int32_t IF_ModbusParam_GetFactor_Ac380_CV(void)
 {
@@ -719,7 +718,7 @@ int32_t IF_ModbusParam_GetFactor_Ac380_CV(void)
 void IF_ModbusParam_SetFactor_Ac380_AI(int32_t value)
 {
 	ModbusParam.Factor_Ac380_AI = value;
-	ModBusSendType = DEVICE_WRITE_PARAMREG;
+	ModBusSendType = WRITE_MB_PARAMREG;
 }
 int32_t IF_ModbusParam_GetFactor_Ac380_AI(void)
 {
@@ -729,7 +728,7 @@ int32_t IF_ModbusParam_GetFactor_Ac380_AI(void)
 void IF_ModbusParam_SetFactor_Ac380_BI(int32_t value)
 {
 	ModbusParam.Factor_Ac380_BI = value;
-	ModBusSendType = DEVICE_WRITE_PARAMREG;	
+	ModBusSendType = WRITE_MB_PARAMREG;	
 }
 int32_t IF_ModbusParam_GetFactor_Ac380_BI(void)
 {
@@ -739,7 +738,7 @@ int32_t IF_ModbusParam_GetFactor_Ac380_BI(void)
 void IF_ModbusParam_SetFactor_Ac380_CI(int32_t value)
 {
 	ModbusParam.Factor_Ac380_CI = value;
-	ModBusSendType = DEVICE_WRITE_PARAMREG;
+	ModBusSendType = WRITE_MB_PARAMREG;
 }
 int32_t IF_ModbusParam_GetFactor_Ac380_CI(void)
 {
@@ -749,7 +748,7 @@ int32_t IF_ModbusParam_GetFactor_Ac380_CI(void)
 void IF_ModbusParam_SetFactor_Way3_I(int32_t value)
 {
 	ModbusParam.Factor_Way3_I = value;
-	ModBusSendType = DEVICE_WRITE_PARAMREG;
+	ModBusSendType = WRITE_MB_PARAMREG;
 }
 int32_t IF_ModbusParam_GetFactor_Way3_I(void)
 {
@@ -759,7 +758,7 @@ int32_t IF_ModbusParam_GetFactor_Way3_I(void)
 void IF_ModbusParam_SetFactor_Way4_I(int32_t value)
 {
 	ModbusParam.Factor_Way4_I = value;
-	ModBusSendType = DEVICE_WRITE_PARAMREG;
+	ModBusSendType = WRITE_MB_PARAMREG;
 }
 int32_t IF_ModbusParam_GetFactor_Way4_I(void)
 {
@@ -769,7 +768,7 @@ int32_t IF_ModbusParam_GetFactor_Way4_I(void)
 void IF_ModbusParam_SetFactor_DcDc1_I(int32_t value)
 {
 	ModbusParam.Factor_DcDc1_I = value;
-	ModBusSendType = DEVICE_WRITE_PARAMREG;
+	ModBusSendType = WRITE_MB_PARAMREG;
 }
 int32_t IF_ModbusParam_GetFactor_DcDc1_I(void)
 {
@@ -779,7 +778,7 @@ int32_t IF_ModbusParam_GetFactor_DcDc1_I(void)
 void IF_ModbusParam_SetFactor_DcDc1_V(int32_t value)
 {
 	ModbusParam.Factor_DcDc1_V = value;
-	ModBusSendType = DEVICE_WRITE_PARAMREG;
+	ModBusSendType = WRITE_MB_PARAMREG;
 }
 int32_t IF_ModbusParam_GetFactor_DcDc1_V(void)
 {
@@ -789,7 +788,7 @@ int32_t IF_ModbusParam_GetFactor_DcDc1_V(void)
 void IF_ModbusParam_SetFactor_DcDc2_I(int32_t value)
 {
 	ModbusParam.Factor_DcDc2_I = value;
-	ModBusSendType = DEVICE_WRITE_PARAMREG;
+	ModBusSendType = WRITE_MB_PARAMREG;
 }
 int32_t IF_ModbusParam_GetFactor_DcDc2_I(void)
 {
@@ -799,7 +798,7 @@ int32_t IF_ModbusParam_GetFactor_DcDc2_I(void)
 void IF_ModbusParam_SetFactor_DcDc2_V(int32_t value)
 {
 	ModbusParam.Factor_DcDc2_V = value;
-	ModBusSendType = DEVICE_WRITE_PARAMREG;
+	ModBusSendType = WRITE_MB_PARAMREG;
 }
 
 int32_t IF_ModbusParam_GetFactor_DcDc2_V(void)
@@ -827,7 +826,7 @@ void IF_Sensor_SetACDCHardWareVersion(uint8_t *pBuf,uint8_t len)
 	{
 		Modbus_PHoldReg[regAddress+i]= pBuf[i];
 	}
-	ModBusSendType = DEVICE_WRITE_HARDWAREREG;
+	ModBusSendType = WRITE_MB_HARDWAREREG;
 }
 ////////////////////////////////////////////////////////////////////////////////
 //      parameters 
@@ -836,7 +835,7 @@ void IF_NvmParam_SetModbusSettings(uint8_t *pBuf, uint16_t len)
 {
 	if(len>= MODBUS_SETTING_LEN)len = MODBUS_SETTING_LEN;
 	memcpy((uint8_t*)&ModbusSetting,pBuf,len); 	
-	ModBusSendType = DEVICE_WRITE_SETTINGEREG;	
+	ModBusSendType = WRITE_MB_SETTINGEREG;	
 }
 void IF_NvmParam_GetModbusSettings(uint8_t *pBuf, uint16_t len)
 {	
@@ -847,7 +846,7 @@ void IF_NvmParam_SetModbusParams(uint8_t *pBuf, uint16_t len)
 {
 	if(len>= MODBUS_PARAM_LEN)len = MODBUS_PARAM_LEN;
 	memcpy((uint8_t*)&ModbusParam,pBuf,len); 	
-	ModBusSendType = DEVICE_WRITE_PARAMREG;	
+	ModBusSendType = WRITE_MB_PARAMREG;	
 }
 void IF_NvmParam_GetModbusParams(uint8_t *pBuf, uint16_t len)
 {	
@@ -861,7 +860,7 @@ void IF_NvmParam_SetModbusVersons(uint8_t *pBuf, uint16_t len)
 	{
 		Modbus_PHoldReg[HOLD_REG_P29-HOLD_REG_P01+i]= pBuf[i];
 	}
-	ModBusSendType = DEVICE_WRITE_HARDWAREREG;
+	ModBusSendType = WRITE_MB_HARDWAREREG;
 }
 //-------------------------------------------------------------------------------------------------
 void IF_NvmParam_GetModbusVersons(uint8_t *pBuf, uint16_t len)
@@ -897,7 +896,10 @@ void IF_ACDC_SetParamsRWType(ModBusTypeEnum ModbusType)
 		ModBusSendType = ModbusType;   //改变数据发送类型.
 	}
 }
-
+ModBusTypeEnum IF_ACDC_GetParamsRWType(void)
+{
+	return  ModBusSendType;
+}
 /************************************************************************/
 /* Local Functions Definitions                                          */
 /************************************************************************/

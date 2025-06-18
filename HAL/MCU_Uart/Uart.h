@@ -51,14 +51,14 @@
 
 //COM3  PORT DEFINE
 #define   COM3_TX_PORT					GPIOB
-#define   COM3_TX_PIN					UART5_RX_Pin135_PB5	
-#define   COM3_TX_PINS_SOURCE			GPIO_PINS_SOURCE5
-#define   COM3_TX_MUX					GPIO_MUX_0
+#define   COM3_TX_PIN					UART5_TX_Pin136_PB6	
+#define   COM3_TX_PINS_SOURCE			GPIO_PINS_SOURCE6
+#define   COM3_TX_MUX					GPIO_MUX_8
 
 #define   COM3_RX_PORT					GPIOB
-#define   COM3_RX_PIN					UART5_TX_Pin136_PB6	
-#define   COM3_RX_PINS_SOURCE			GPIO_PINS_SOURCE6
-#define   COM3_RX_MUX					GPIO_MUX_0
+#define   COM3_RX_PIN					UART5_RX_Pin135_PB5 
+#define   COM3_RX_PINS_SOURCE			GPIO_PINS_SOURCE5
+#define   COM3_RX_MUX					GPIO_MUX_8
 
 /*UART instance and clock*/
 #define   COM3_UART                     UART5 //@attention: ! not USART6

@@ -40,20 +40,37 @@ static uint8_t NeedSend_RunningStatus = 0;
 static uint8_t NeedSend_DebugData = 0;
 
 /* FUNCTION PROTOTYPES */
-static void Dealwith_Param_SetPartsParams(uint8_t chnNo, uint8_t* pBuf, uint16_t paramsLen);
-static void Dealwith_Param_SetUserParams(uint8_t chnNo, uint8_t* pBuf, uint16_t paramsLen);
-static void Dealwith_Param_SetInternalParams(uint8_t chnNo, uint8_t* pBuf, uint16_t paramsLen);
-static void Dealwith_Cmd_Reset(uint8_t chnNo, uint8_t* pBuf);
-static void Dealwith_Cmd_Mute(uint8_t chnNo, uint8_t* pBuf);
-static void Dealwith_Cmd_Sync(uint8_t chnNo, uint8_t* pBuf);
-static void Dealwith_Cmd_SetFactorMode(uint8_t chnNo, uint8_t* pBuf);
-static void Dealwith_Cmd_ResumeDefaultParam(uint8_t chnNo, uint8_t* pBuf);
-static void Dealwith_Debug_GetProcessData(uint8_t chnNo, uint8_t* pBuf);
-static void Dealwith_Debug_FirmwareUpdate(uint8_t chnNo, uint8_t* pBuf);
+static void Dealwith_Param_SetPartsParams( uint8_t* pBuf, uint16_t paramsLen);
+static void Dealwith_Param_SetUserParams( uint8_t* pBuf, uint16_t paramsLen);
+static void Dealwith_Param_SetInternalParams( uint8_t* pBuf, uint16_t paramsLen);
+static void Dealwith_Param_SetModbusParams( uint8_t* pBuf, uint16_t paramsLen);
+static void Dealwith_Cmd_RFPowerState( uint8_t* pBuf);
+static void Dealwith_Cmd_RFPowerPoint(uint8_t* pBuf);
+static void Dealwith_Cmd_PulseDutyCircle( uint8_t* pBuf);
+static void Dealwith_Cmd_PulseFrequency(uint8_t* pBuf);
+static void Dealwith_Cmd_SyncSource( uint8_t* pBuf);
+static void Dealwith_Cmd_SyncOutDelay(uint8_t* pBuf);
+static void Dealwith_Cmd_SyncOutEnable( uint8_t* pBuf);
+static void Dealwith_Cmd_MoveTargetPos(uint8_t capIndex,uint8_t* pBuf);
+
+static void Dealwith_Cmd_Reset( uint8_t* pBuf);
+static void Dealwith_Cmd_Mute( uint8_t* pBuf);
+static void Dealwith_Cmd_Sync( uint8_t* pBuf);
+static void Dealwith_Cmd_SetFactorMode( uint8_t* pBuf);
+
+static void Dealwith_Cmd_PowerWorkMode(uint8_t* pBuf);
+static void Dealwith_Cmd_DDSSignState(uint8_t* pBuf);
+static void Dealwith_Cmd_DDSPhase(uint8_t* pBuf);
+static void Dealwith_Cmd_SetACDCState(uint8_t* pBuf);
+static void Dealwith_Cmd_SetACDCVolt(uint8_t* pBuf);
+
+static void Dealwith_Cmd_ResumeDefaultParam( uint8_t* pBuf);
+static void Dealwith_Debug_GetProcessData( uint8_t* pBuf);
+static void Dealwith_Debug_FirmwareUpdate( uint8_t* pBuf);
 static void SendDatalinkLayerACK(uint8_t port);
 static uint8_t SendInitParams(void);
 static void SendRunningStatus(uint8_t port);
-static uint8_t SendDebugData(uint8_t port,uint8_t chnNo, uint16_t frameNo);
+static uint8_t SendDebugData(uint8_t port, uint16_t frameNo);
 
 /************************************************************************/
 /* Global Functions Definitions                                          */
@@ -66,45 +83,89 @@ static uint8_t SendDebugData(uint8_t port,uint8_t chnNo, uint16_t frameNo);
  */
 void Dealwith_BSIP_Layer7(void)
 {
-    uint8_t chnNo = g_rxBsipFrame.bsip.subindex.bits.chn;
-	uint8_t paramslen = g_rxBsipFrame.infoLen-3;
     NeedSend_ACK = 1;//if there is any process error, the Dealwithxxx code will set NeedSend_ACK = 0.
     xQueueReset(BsipTxQueue);
 
     switch(g_rxBsipFrame.bsip.msgid)
 	{
     case ID_Param_SetPartsParams:
-        Dealwith_Param_SetPartsParams(chnNo, g_rxBsipFrame.bsip.info, paramslen);
+        Dealwith_Param_SetPartsParams(g_rxBsipFrame.bsip.info, g_rxBsipFrame.infoLen-3);
         break;
     
     case ID_Param_SetUserParams:
-        Dealwith_Param_SetUserParams(chnNo, g_rxBsipFrame.bsip.info, paramslen);
+        Dealwith_Param_SetUserParams(g_rxBsipFrame.bsip.info, g_rxBsipFrame.infoLen-3);
         break;
 
     case ID_Param_SetInternalParams:
-        Dealwith_Param_SetInternalParams(chnNo, g_rxBsipFrame.bsip.info, paramslen);
+        Dealwith_Param_SetInternalParams(g_rxBsipFrame.bsip.info, g_rxBsipFrame.infoLen-3);
         break;
-
+	case ID_Param_SetModbusParams:
+		Dealwith_Param_SetModbusParams(g_rxBsipFrame.bsip.info, g_rxBsipFrame.infoLen-3);
+        break;
     case ID_Cmd_Reset:
-        Dealwith_Cmd_Reset(chnNo, g_rxBsipFrame.bsip.info);
+        Dealwith_Cmd_Reset(g_rxBsipFrame.bsip.info);
         break;
+	case ID_Cmd_RFPowerState:
+		Dealwith_Cmd_RFPowerState(g_rxBsipFrame.bsip.info);
+		break;
+	case ID_Cmd_RFPowerPoint:
+		Dealwith_Cmd_RFPowerPoint(g_rxBsipFrame.bsip.info);
+		break;
+	case ID_Cmd_PulseDuty:
+		Dealwith_Cmd_PulseDutyCircle(g_rxBsipFrame.bsip.info);
+		break;
+	case ID_Cmd_PulseFreq:
+		Dealwith_Cmd_PulseFrequency(g_rxBsipFrame.bsip.info);
+		break;
+	case ID_Cmd_SyncSource:
+		Dealwith_Cmd_SyncSource(g_rxBsipFrame.bsip.info);
+		break;
+	case ID_Cmd_SyncOutDelay:
+		Dealwith_Cmd_SyncOutDelay(g_rxBsipFrame.bsip.info);
+		break;
+	case ID_Cmd_SyncOutEnable:
+		Dealwith_Cmd_SyncOutEnable(g_rxBsipFrame.bsip.info);
+		break;
+	case ID_Cmd_LoadTarget:
+		Dealwith_Cmd_MoveTargetPos(LOAD,g_rxBsipFrame.bsip.info);
+		break;
+	case ID_Cmd_TuneTarget:
+		Dealwith_Cmd_MoveTargetPos(TUNE,g_rxBsipFrame.bsip.info);
+		break;
+	
+	case ID_Cmd_PowerWorkMode:
+		Dealwith_Cmd_PowerWorkMode(g_rxBsipFrame.bsip.info);
+		break;	
+	case ID_Cmd_DDSSignState:
+		Dealwith_Cmd_DDSSignState(g_rxBsipFrame.bsip.info);
+		break;
+	case ID_Cmd_DDSPhase:
+		Dealwith_Cmd_DDSPhase(g_rxBsipFrame.bsip.info);
+		break;
+	case ID_Cmd_SetACDCState:
+		Dealwith_Cmd_SetACDCState(g_rxBsipFrame.bsip.info);
+		break;
+	case ID_Cmd_SetACDCVolt:
+		Dealwith_Cmd_SetACDCVolt(g_rxBsipFrame.bsip.info);
+		break;
+	
     case ID_Cmd_Mute:
-        Dealwith_Cmd_Mute(chnNo, g_rxBsipFrame.bsip.info);
+        Dealwith_Cmd_Mute(g_rxBsipFrame.bsip.info);
         break;
     case ID_Cmd_Sync:
-        Dealwith_Cmd_Sync(chnNo, g_rxBsipFrame.bsip.info);
+        Dealwith_Cmd_Sync(g_rxBsipFrame.bsip.info);
         break;
 	case ID_Cmd_FactorMode:
-        Dealwith_Cmd_SetFactorMode(chnNo, g_rxBsipFrame.bsip.info);
+        Dealwith_Cmd_SetFactorMode(g_rxBsipFrame.bsip.info);
         break;
 	case ID_Cmd_ResumeDefaultParam:
-        Dealwith_Cmd_ResumeDefaultParam(chnNo, g_rxBsipFrame.bsip.info);
+        Dealwith_Cmd_ResumeDefaultParam(g_rxBsipFrame.bsip.info);
         break;
     case ID_Debug_GetProcessData:
-        Dealwith_Debug_GetProcessData(chnNo, g_rxBsipFrame.bsip.info);
+        Dealwith_Debug_GetProcessData(g_rxBsipFrame.bsip.info);
         break;
     case ID_Debug_FirmwareUpdate:
-        Dealwith_Debug_FirmwareUpdate(chnNo, g_rxBsipFrame.bsip.info);
+        Dealwith_Debug_FirmwareUpdate(g_rxBsipFrame.bsip.info);
         break;
 	default:
 		break;
@@ -119,8 +180,8 @@ void Dealwith_BSIP_Layer7(void)
 void BSIP_TxTimeManagment(uint8_t port)
 {      
     CommMsg_t txMsg;
-	uint8_t  txLayer2DataBuf[MAX_INFO_LEN + 2];
-	uint16_t txLayer2DataLen; 
+	uint8_t  txLayer2DataBuf[BUFFER_SIZE];
+	uint16_t txLayer2DataLen;
     static uint8_t sendCnt = 0;
     static uint8_t sendTimeOut = 0;
     static uint16_t fromAckToSend = 0;  //for test only!!!
@@ -130,7 +191,7 @@ void BSIP_TxTimeManagment(uint8_t port)
         if(pdTRUE == xQueueReceive(BsipTxQueue, &txMsg, (TickType_t)0))
         {
 			sendCnt = 0;
-            txLayer2DataLen=txMsg.len;
+            txLayer2DataLen = txMsg.len;
 			memcpy(&txLayer2DataBuf,&txMsg.data,txMsg.len);
 			SendLayer2Frame(port, txLayer2DataBuf,txLayer2DataLen);
             
@@ -182,32 +243,25 @@ void BSIP_TxBufManagment(uint8_t port)
     else if (NeedSend_InitParams == 1||NeedSend_FactoryParams == 1)
     {
 		NeedSend_FactoryParams = 0;
-		//multi-frames: send 6 class parmas...
-        result = SendInitParams();
-        
-        if (E_OK == result)
-        {//all frames has been sended...
-            NeedSend_InitParams = 0;
-            NeedSend_RunningStatus = 1;
-        }
+		//如果Modbus初始化完成
+		if(READ_MB_PROCSSREG == IF_ACDC_GetParamsRWType()) 
+		{
+			//multi-frames: send 6 class parmas...
+			result = SendInitParams();
+			if (E_OK == result)
+			{//all frames has been sended...
+				NeedSend_InitParams = 0;
+				NeedSend_RunningStatus = 1;
+			}
+		}
     }
     else if (NeedSend_DebugData == 1)
     {//multi-frames: send debug data...
-        result = SendDebugData(port,0, DebugData.FrameNo);
+        result = SendDebugData(port, DebugData.FrameNo);
         NeedSend_DebugData = 0;
 
         if ((DEBUGDATA_FINISH == result) || (DEBUGDATA_ERROR == result))
         {//all debug_frames has been sended...
-            NeedSend_RunningStatus = 1;
-        }
-    }
-    else if (NeedSend_DebugData == 2)
-    {
-        result = SendDebugData(port,0, DebugData.FrameNo);
-        NeedSend_DebugData = 0;
-
-        if ((DEBUGDATA_FINISH == result) || (DEBUGDATA_ERROR == result))
-        {
             NeedSend_RunningStatus = 1;
         }
     }
@@ -226,26 +280,26 @@ void BSIP_FpgaFirmwareUpdate(uint8_t port)
 {
 	BSIPInfo_t BsipFrame;
 	uint8_t  txLayer2DataBuf[MAX_INFO_LEN];
-	uint16_t txLayer2DataLen; 
+	uint16_t txLayer2DataLen = 0;
 	if(pdTRUE == xQueueReceive(FpgaFWQueue, &BsipFrame, portMAX_DELAY)) //接受到FPGA升级包队列
 	{	
 		memset(txLayer2DataBuf,0,MAX_INFO_LEN);
 		txLayer2DataBuf[txLayer2DataLen++]=BsipFrame.bsip.msgclass;  
 		txLayer2DataBuf[txLayer2DataLen++]=BsipFrame.bsip.msgid;
 		txLayer2DataBuf[txLayer2DataLen++]=BsipFrame.bsip.subindex.byte;
-		for(uint16_t i= 0;i<BsipFrame.infoLen-3;i++)
+		for(uint16_t i= 0;i< BsipFrame.infoLen-3;i++)
 		{	
-			txLayer2DataBuf[txLayer2DataLen++]=BsipFrame.bsip.info[i];
+			txLayer2DataBuf[txLayer2DataLen++] = BsipFrame.bsip.info[i];
 		}
-		SendLayer2Frame(port,txLayer2DataBuf,txLayer2DataLen);
-		if(pdTRUE == xSemaphoreTake(FpgaReSemaphore, 300))
+		SendLayer2Frame(port, txLayer2DataBuf,txLayer2DataLen);
+		if(pdTRUE == xSemaphoreTake(FpgaReSemaphore, 500))
 		{	
 			NeedSend_ACK = 1;
 			xSemaphoreGive(FpgaNfSemaphore);
 		}else
 		{
-			SendLayer2Frame(port,txLayer2DataBuf,txLayer2DataLen);
-			if(pdTRUE == xSemaphoreTake(FpgaReSemaphore, 300))
+			SendLayer2Frame(port, txLayer2DataBuf,txLayer2DataLen);
+			if(pdTRUE == xSemaphoreTake(FpgaReSemaphore, 500))
 			{	
 				NeedSend_ACK = 1;
 				xSemaphoreGive(FpgaNfSemaphore);
@@ -268,11 +322,12 @@ void BSIP_ModbusFirmwareUpdate(uint8_t port)
 {
 	BSIPInfo_t BsipFrame;
 	uint8_t  txLayer2DataBuf[MAX_INFO_LEN];
-	uint8_t   ModbusUpdateFrameLen; 
+	uint16_t txLayer2DataBufLen = 0;
+	uint16_t   ModbusUpdateFrameLen; 
 	if(pdTRUE == xQueueReceive(ModbusFWQueue, &BsipFrame,5000)) //5s接收不到队列，跳转到读写其他参数
 	{		
 		memset(txLayer2DataBuf,0,MAX_INFO_LEN);
-		uint16_t txLayer2DataBufLen = BsipFrame.infoLen - 3;		
+		txLayer2DataBufLen = BsipFrame.infoLen - 3;		
 		ModbusUpdateFrameLen = ((txLayer2DataBufLen)%2==0)? (txLayer2DataBufLen/2): ((txLayer2DataBufLen+1)/2);
 		for(uint16_t i= 0;i<txLayer2DataBufLen;i++)
 		{	
@@ -295,14 +350,14 @@ void BSIP_ModbusFirmwareUpdate(uint8_t port)
 			else				
 			{
 				xSemaphoreGive(FpgaNfSemaphore);
-				IF_ACDC_SetParamsRWType(DEVICE_READ_VERSIONREG);	 
+				IF_ACDC_SetParamsRWType(READ_MB_VERSIONREG);	 
 				FirmwareData.TargetDevice = DEVICE_COREBOARD;
 			}
 		}
 	}else
 	{
 		xSemaphoreGive(FpgaNfSemaphore);
-		IF_ACDC_SetParamsRWType(DEVICE_READ_VERSIONREG);	 
+		IF_ACDC_SetParamsRWType(READ_MB_VERSIONREG);	 
 		FirmwareData.TargetDevice = DEVICE_COREBOARD;
 	}
 }
@@ -317,29 +372,97 @@ void BSIP_ModbusFirmwareUpdate(uint8_t port)
  * @param  pBuf             
  * ************************************************************************
  */
-static void Dealwith_Param_SetPartsParams(uint8_t chnNo, uint8_t* pBuf, uint16_t paramsLen)
+static void Dealwith_Param_SetPartsParams( uint8_t* pBuf, uint16_t paramsLen)
 {
     IF_NvmParam_SetPartsParams(pBuf, paramsLen);
 }
 
-
-
-static void Dealwith_Param_SetUserParams(uint8_t chnNo, uint8_t* pBuf, uint16_t paramsLen)
+static void Dealwith_Param_SetUserParams( uint8_t* pBuf, uint16_t paramsLen)
 {
     IF_NvmParam_SetUserParams(pBuf, paramsLen);
 }
 
-
-static void Dealwith_Param_SetInternalParams(uint8_t chnNo, uint8_t* pBuf, uint16_t paramsLen)
+static void Dealwith_Param_SetInternalParams( uint8_t* pBuf, uint16_t paramsLen)
 {
     IF_NvmParam_SetInternalParams(pBuf, paramsLen);
 }
-static void Dealwith_Cmd_Reset(uint8_t chnNo, uint8_t* pBuf)
+static void Dealwith_Param_SetModbusParams( uint8_t* pBuf, uint16_t paramsLen)
+{
+    IF_NvmParam_SetModbusParams(pBuf, paramsLen);
+}
+
+static void Dealwith_Cmd_RFPowerState( uint8_t* pBuf)
+{
+	uint8_t value = pBuf[0];
+	IF_CmdParam_SetRFPowerSwitch(value);
+}
+static void Dealwith_Cmd_RFPowerPoint(uint8_t* pBuf)
+{
+	uint16_t value = MAKE_UINT16(pBuf[1],pBuf[0]);
+	IF_CmdParam_SetRFPwrPoint(value);
+}
+static void Dealwith_Cmd_PulseDutyCircle( uint8_t* pBuf)
+{
+	uint8_t value = pBuf[0];
+	IF_CmdParam_SetPulseDutyCircle(value);
+}
+static void Dealwith_Cmd_PulseFrequency(uint8_t* pBuf)
+{
+	uint16_t value = MAKE_UINT16(pBuf[1],pBuf[0]);
+	IF_CmdParam_SetPulseFrequency(value);
+}	
+static void Dealwith_Cmd_SyncSource( uint8_t* pBuf)
+{
+	uint8_t value = pBuf[0];
+	IF_CmdParam_SetSyncSource(value);
+}
+static void Dealwith_Cmd_SyncOutDelay(uint8_t* pBuf)
+{
+	uint16_t value = MAKE_UINT16(pBuf[1],pBuf[0]);
+	IF_CmdParam_SetSyncOutDelay(value);
+}
+static void Dealwith_Cmd_SyncOutEnable(uint8_t* pBuf)
+{
+	uint8_t value = pBuf[0];
+	IF_CmdParam_SetSyncOutEnable(value);
+}
+static void Dealwith_Cmd_MoveTargetPos(uint8_t capIndex,uint8_t* pBuf)
+{
+	uint16_t value = MAKE_UINT16(pBuf[1],pBuf[0]);
+	IF_CmdParam_SetMatchMoveToPos(capIndex,value);
+}
+static void Dealwith_Cmd_PowerWorkMode(uint8_t* pBuf)
+{
+	uint8_t value = pBuf[0];
+	IF_CmdParam_SetDDSSignSwitch(value);
+}
+
+static void Dealwith_Cmd_DDSPhase(uint8_t* pBuf)
+{
+	uint16_t value = MAKE_UINT16(pBuf[1],pBuf[0]);
+	IF_CmdParam_SetDDSPhase(value);
+}
+static void Dealwith_Cmd_SetACDCState(uint8_t* pBuf)
+{
+	uint8_t value = pBuf[0];
+	IF_CmdParam_SetACDCStateSwitch(value);
+}
+static void Dealwith_Cmd_SetACDCVolt(uint8_t* pBuf)
+{
+	uint16_t value = MAKE_UINT16(pBuf[1],pBuf[0]);
+	IF_CmdParam_SetACDCVoltage(value);
+}
+static void Dealwith_Cmd_DDSSignState(uint8_t* pBuf)
+{
+	uint8_t value = pBuf[0];
+	IF_CmdParam_SetDDSSignSwitch(value);
+}	
+static void Dealwith_Cmd_Reset( uint8_t* pBuf)
 {
 	IF_CmdParam_SetResetDevice();
 }
 
-static void Dealwith_Cmd_Mute(uint8_t chnNo, uint8_t* pBuf)
+static void Dealwith_Cmd_Mute( uint8_t* pBuf)
 {
     if (pBuf[0] == 1)
     {
@@ -351,12 +474,12 @@ static void Dealwith_Cmd_Mute(uint8_t chnNo, uint8_t* pBuf)
     }
 }
 
-static void Dealwith_Cmd_Sync(uint8_t chnNo, uint8_t* pBuf)
+static void Dealwith_Cmd_Sync( uint8_t* pBuf)
 {
     NeedSend_InitParams = 1;  
     NeedSend_RunningStatus = 0;
 }
-static void Dealwith_Cmd_SetFactorMode(uint8_t chnNo, uint8_t* pBuf)
+static void Dealwith_Cmd_SetFactorMode( uint8_t* pBuf)
 {	
 	uint8_t value = pBuf[0];
 	 if(value <= 1&& IF_CmdParam_GetFactoryMode()!= value)
@@ -368,7 +491,7 @@ static void Dealwith_Cmd_SetFactorMode(uint8_t chnNo, uint8_t* pBuf)
 	 }  
 }
 
-static void Dealwith_Cmd_ResumeDefaultParam(uint8_t chnNo, uint8_t* pBuf)
+static void Dealwith_Cmd_ResumeDefaultParam( uint8_t* pBuf)
 {
    IF_CmdParam_ResumeFactorySettings();
 }
@@ -383,7 +506,7 @@ static void Dealwith_Cmd_ResumeDefaultParam(uint8_t chnNo, uint8_t* pBuf)
  * @param  pBuf             
  * ************************************************************************
  */
-static void Dealwith_Debug_GetProcessData(uint8_t chnNo, uint8_t* pBuf)
+static void Dealwith_Debug_GetProcessData( uint8_t* pBuf)
 {//TBD...
 
     NeedSend_ACK = 0;
@@ -402,7 +525,7 @@ static void Dealwith_Debug_GetProcessData(uint8_t chnNo, uint8_t* pBuf)
  * @param  pBuf             
  * ************************************************************************
  */
-static void Dealwith_Debug_FirmwareUpdate(uint8_t chnNo, uint8_t* pBuf)
+static void Dealwith_Debug_FirmwareUpdate( uint8_t* pBuf)
 {//logic check pass!
     uint16_t i = 0;
 
@@ -487,7 +610,7 @@ static void Dealwith_Debug_FirmwareUpdate(uint8_t chnNo, uint8_t* pBuf)
 					{
 						NeedSend_ACK = 0;
 						FirmwareData.TargetDevice = DEVICE_MODBUS;
-						IF_ACDC_SetParamsRWType(DEVICE_WRITE_SOFTWAREREG);
+						IF_ACDC_SetParamsRWType(WRITE_MB_SOFTWAREREG);
 						xQueueSend(ModbusFWQueue, &g_rxBsipFrame, (TickType_t)0);
 						return;
 					}
@@ -579,7 +702,7 @@ static void Dealwith_Debug_FirmwareUpdate(uint8_t chnNo, uint8_t* pBuf)
                 FirmwareData.TargetDevice = DEVICE_COREBOARD;
             }
             NeedSend_ACK = 0;
-			IF_ACDC_SetParamsRWType(DEVICE_WRITE_SOFTWAREREG);
+			IF_ACDC_SetParamsRWType(WRITE_MB_SOFTWAREREG);
 			xQueueSend(ModbusFWQueue, &g_rxBsipFrame, (TickType_t)0);
         }
         else
@@ -628,12 +751,8 @@ static uint8_t SendInitParams(void)
     static uint8_t sendCnt = 0;
     static uint8_t sendStep = 0;  //step0: send parts params; step1: send factory params...etc...
 
-#if((config_CHN0 == 1) && (config_HF_CHN == 1))
-    sendInterval = TIME_INTERVAL_INIT_MSG*CHN_NUM/BSIP_TASK_PERIOD;
-#else
     sendInterval = TIME_INTERVAL_INIT_MSG/BSIP_TASK_PERIOD;
-#endif
-
+	
     switch (sendStep)
     {
     case 0:
@@ -654,7 +773,7 @@ static uint8_t SendInitParams(void)
 
     case 1:
         if (sendCnt == sendInterval)
-        {//Period of pushing to the queue is 50ms
+        {	//Period of pushing to the queue is 50ms
 
 			memset(&txInfo, 0, sizeof(CommMsg_t));
 
@@ -700,11 +819,26 @@ static uint8_t SendInitParams(void)
         break;
 
     case 3:
-        sendStep = 0;
-        sendCnt = 0;
-        
-        ret = E_OK;
+        if (sendCnt == sendInterval)
+        {//Period of pushing to the queue is 50ms
+			memset(&txInfo, 0, sizeof(CommMsg_t));
+			
+			txInfo.data[txInfo.len++] = INIT_MSG;
+			txInfo.data[txInfo.len++] = ID_Param_InitMobusParams;
+			txInfo.data[txInfo.len++] = 0;
 
+			IF_NvmParam_GetModbusParams(&txInfo.data[3],MODBUS_PARAM_LEN);
+			txInfo.len += MODBUS_PARAM_LEN;
+
+			xQueueSend(BsipTxQueue, &txInfo, (TickType_t)0);
+  
+            sendStep++;
+            sendCnt = 0;
+        }
+        else
+        {
+            sendCnt++;
+        }
         break;
 
     default:
@@ -758,7 +892,7 @@ static void SendRunningStatus(uint8_t port)
  * @return uint8_t          
  * ************************************************************************
  */
-static uint8_t SendDebugData(uint8_t port,uint8_t chnNo, uint16_t frameNo)
+static uint8_t SendDebugData(uint8_t port, uint16_t frameNo)
 {
     uint8_t ret = DEBUGDATA_NOT_FINISH;
     CommMsg_t txInfo;
@@ -798,7 +932,7 @@ static uint8_t SendDebugData(uint8_t port,uint8_t chnNo, uint16_t frameNo)
 
         txInfo.data[txInfo.len++] = DEBUG_MSG;
         txInfo.data[txInfo.len++] = ID_Debug_ProcessData;
-        txInfo.data[txInfo.len++] = ((uint8_t)chnNo<<6) & 0xC0;
+        txInfo.data[txInfo.len++] = 0x00;
 
         if (frameNo == 0)
         {
@@ -825,7 +959,7 @@ static uint8_t SendDebugData(uint8_t port,uint8_t chnNo, uint16_t frameNo)
 
         txInfo.data[txInfo.len++] = DEBUG_MSG;
         txInfo.data[txInfo.len++] = ID_Debug_ProcessData;
-        txInfo.data[txInfo.len++] = ((uint8_t)chnNo<<6) & 0xC0;
+        txInfo.data[txInfo.len++] = 0x00;
 
         txInfo.data[txInfo.len++] = FIRMWARE_EOF;
         txInfo.data[txInfo.len++] = DebugData.CurrentBufLen;

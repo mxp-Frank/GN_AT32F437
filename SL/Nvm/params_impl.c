@@ -32,6 +32,7 @@ static PartsParam_t 			PartsParam;
 static CommonParam_t			CommonParam;
 static InternalParam_t 			InternalParam;
 static UserParam_t 				UserParam;
+
 static VoltMapParam_t           VoltMapParam;
 static PhaseMapParam_t          PhaseMapParam;	
 
@@ -310,12 +311,12 @@ static void Check_InternalParam(void)
 
 static void ConvertUnit_InternalParam(InternalParam_t *pInternalParam)
 {
-	g_FactorData.VrmsFactor  = pInternalParam->VrmsFactor/(1000.0F);
-	g_FactorData.IrmsFactor  = pInternalParam->IrmsFactor/(1000.0F);
+	g_FactorData.VrmsFactor  = pInternalParam->VrmsFactor/1000.0F;
+	g_FactorData.IrmsFactor  = pInternalParam->IrmsFactor/1000.0F;
 	g_FactorData.PhaseFactor = pInternalParam->PhaseFactor/1000.0F;
 	
-	g_FactorData.VrmsOffset  = pInternalParam->VrmsOffset/(1000.0F);
-	g_FactorData.IrmsOffset  = pInternalParam->IrmsOffset/(1000.0F);
+	g_FactorData.VrmsOffset  = pInternalParam->VrmsOffset/1000.0F;
+	g_FactorData.IrmsOffset  = pInternalParam->IrmsOffset/1000.0F;
 	g_FactorData.PhaseOffset = pInternalParam->PhaseOffset/1000.0F;
 	
 	g_FactorData.DrainGain   = (0.9877F *pInternalParam->DrainVoltGain)/(1000.0F*2000.0F);
@@ -379,11 +380,7 @@ static void Check_Fs_UserParam(void)
 	if(Fs_UserParam.MatchMode > 1)
 	{
 		Fs_UserParam.MatchMode = 0;
-	}
-	if(Fs_UserParam.PrefMode > 1) 
-	{
-		Fs_UserParam.PrefMode = 0;
-	}		
+	}	
 	if(Fs_UserParam.PrefDelayOff > MAX_REFLECTDELAY) 
 	{
 		Fs_UserParam.PrefDelayOff = 15;
@@ -450,11 +447,6 @@ static void Check_UserParam(void)
 	if(UserParam.MatchMode > 1)
 	{
 		UserParam.MatchMode = 0;
-	}
-
-	if(UserParam.PrefMode > 1) 
-	{
-		UserParam.PrefMode = 0;
 	}		
 	if(UserParam.PrefDelayOff > MAX_REFLECTDELAY) 
 	{
@@ -1891,31 +1883,6 @@ uint16_t IF_UserParam_GetReflectPowerLimit(void)
 	}
 	return value;
 }
-//ReflectPowerSwitchOff
-/**********************************************************/
-void IF_UserParam_SetReflectPowerSwitchOff(uint8_t value)
-{
-	if(ON==IF_CmdParam_GetFactoryMode())
-	{	
-		Fs_UserParam.PrefMode = value;
-		ActionsRSP[ID_SAVE_FS_USER_PARAM]= ON;	
-	}
-	UserParam.PrefMode = value;
-	ActionsRSP[ID_SAVE_USER_PARAM] = ON;	
-}
-
-uint8_t IF_UserParam_GetReflectPowerSwitchOff(void)
-{
-	uint8_t value = 0;
-	if(ON==IF_CmdParam_GetFactoryMode())
-	{
-		value = Fs_UserParam.PrefMode;
-	}else
-	{
-		value = UserParam.PrefMode;
-	}
-	return value;
-}
 //ReflectPowerThreshold
 /**********************************************************/
 void IF_UserParam_SetReflectPowerThreshold(uint16_t value)
@@ -2172,21 +2139,13 @@ void IF_CmdParam_SetRFPowerSwitch(uint8_t value)
 {
 	DevCmdParam.RFPowerState = value;
 }
+
 //---------------------------------------------------------------
-uint8_t IF_CmdParam_GetDDSDriverSwitch(void)
-{
-	return DevCmdParam.DDSSignState;		
-}	
-void IF_CmdParam_SetDDSDriverSwitch(uint8_t value)
-{
-	DevCmdParam.DDSSignState = value;
-}
-//---------------------------------------------------------------
-uint32_t IF_CmdParam_GetACDCDriverSwitch(void)
+uint32_t IF_CmdParam_GetACDCStateSwitch(void)
 {
 	return DevCmdParam.SetACDCState;  
 }
-void IF_CmdParam_SetACDCDriverSwitch(uint32_t value)
+void IF_CmdParam_SetACDCStateSwitch(uint32_t value)
 {
 	DevCmdParam.SetACDCState = value;
 }
@@ -2209,13 +2168,22 @@ void IF_CmdParam_SetACDCVoltage(uint32_t value)
 	DevCmdParam.SetACDCVolt  = value;
 }
 //---------------------------------------------------------------
-uint32_t IF_CmdParam_GetDDSWorkPhase(void)
+uint8_t IF_CmdParam_GetDDSSignSwitch(void)
 {
-	return DevCmdParam.DDSWorkPhase;  
+	return DevCmdParam.DDSSignState;		
+}	
+void IF_CmdParam_SetDDSSignSwitch(uint8_t value)
+{
+	DevCmdParam.DDSSignState = value;
 }
-void IF_CmdParam_SetDDSWorkPhase(uint32_t value)
+//---------------------------------------------------------------
+uint32_t IF_CmdParam_GetDDSPhase(void)
 {
-	DevCmdParam.DDSWorkPhase  = value;	
+	return DevCmdParam.DDSPhase;  
+}
+void IF_CmdParam_SetDDSPhase(uint32_t value)
+{
+	DevCmdParam.DDSPhase  = value;	
 }
 //PulseMode
 /**********************************************************/
@@ -2276,11 +2244,11 @@ uint8_t IF_CmdParam_GetSyncOutEnable(void)
 	return DevCmdParam.SyncOutEnable;
 }
 //---------------------------------------------------------------
-void IF_CmdParam_SetPwrPoint(uint16_t value)
+void IF_CmdParam_SetRFPwrPoint(uint16_t value)
 {
 	DevCmdParam.SetPointValue = value;
 }
-uint16_t IF_CmdParam_GetPwrPoint(void)
+uint16_t IF_CmdParam_GetRFPwrPoint(void)
 {
 	return DevCmdParam.SetPointValue;
 }
@@ -2296,7 +2264,7 @@ uint16_t IF_CmdParam_GetMatchMoveToPos(uint8_t capIndex)
 }
 void IF_CmdParam_SetMatchMoveToPos(uint8_t capIndex, uint16_t value)
 {
-	DevCmdParam.TargetPos[capIndex] =value;
+	DevCmdParam.TargetPos[capIndex] = value;
 	switch(capIndex)
 	{
 		case LOAD:ActionsRSP[ID_MOVE_LOADTOPOS]= ON;break;
@@ -2352,16 +2320,16 @@ void IF_UpdateRFPwrPIDProcessData(void)
 {	 
 	 if (g_ProcessData.RecordNum < MAX_PD_RECORD_NUM)
 	 {	
-		if(IF_CmdParam_GetPwrPoint() < IF_InternalParam_GetPhasePoint())
+		if(IF_CmdParam_GetRFPwrPoint() < IF_InternalParam_GetPhasePoint())
 		{
-			g_ProcessData.Records[g_ProcessData.RecordNum].ACDCVolt = IF_CmdParam_GetDDSWorkPhase();	
+			g_ProcessData.Records[g_ProcessData.RecordNum].ACDCVolt = IF_CmdParam_GetDDSPhase();	
 		}else
 		{
 			g_ProcessData.Records[g_ProcessData.RecordNum].ACDCVolt = IF_CmdParam_GetACDCVoltage();
 		}
-		g_ProcessData.Records[g_ProcessData.RecordNum].Pfwd = 1000*IF_Fpga_GetMcuAlgSensor(ChnN_Pfwd);
-		g_ProcessData.Records[g_ProcessData.RecordNum].Pref = 1000*IF_Fpga_GetMcuAlgSensor(ChnN_Pref);
-		g_ProcessData.Records[g_ProcessData.RecordNum].vswr = 1000*IF_Fpga_GetMcuAlgSensor(ChnN_VSWR);
+		g_ProcessData.Records[g_ProcessData.RecordNum].Pfwd = 1000*IF_Fpga_GetMcuAlgSensor(ChnN_Pfwd,HP_CHN);
+		g_ProcessData.Records[g_ProcessData.RecordNum].Pref = 1000*IF_Fpga_GetMcuAlgSensor(ChnN_Pref,HP_CHN);
+		g_ProcessData.Records[g_ProcessData.RecordNum].vswr = 1000*IF_Fpga_GetMcuAlgSensor(ChnN_VSWR,HP_CHN);
 		g_ProcessData.RecordNum++;
 	 }
 }
@@ -2497,7 +2465,6 @@ void IF_NvmParam_GetUserParams(uint8_t  *pBuf, uint16_t len)
 		memcpy(pBuf,&UserParam,len);
 	}
 }
-
 /* FUNCTION *******************************************************************
  *
  * Function Name : IF_Param_ExecuteActionsAfterRsp

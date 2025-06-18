@@ -16,10 +16,6 @@ static InfoFiled_t txInfo;
 
 static uint8_t txDOBsDataBuf[DOB_MAX_LEN];
 static uint16_t txDOBsDataLen;
-
-static uint8_t  txLayer2DataBuf[MAX_INFO_LEN + 2];
-static uint16_t txLayer2DataLen;
-
 static uint32_t txDataBlockRemainLen = 0;
 
 //软件升级相关变量
@@ -1022,47 +1018,6 @@ static void Dealwith_DOB_VdcPowerLimit(DataObject_t* pRxDOB, DataObject_t* pTxDO
 	}
 }
 
-static void Dealwith_DOB_ReflectPowerSwitchOff(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
-{
-	if ((pTxDOB->SubIndex) != 0x01)
-	{
-		pTxDOB->Status = UnknownSubIndex;
-		return;
-	}
-	if (rxInfo.Cmd == ParameterRead)
-	{
-		
-		pTxDOB->Status   = NoErrorHaveData;
-		pTxDOB->DataType = DataType_UINT8;
-		pTxDOB->DataLen  = 1;
-		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		
-		uint8_t value = IF_UserParam_GetReflectPowerSwitchOff();
-		txDOBsDataBuf[txDOBsDataLen++] = value;
-	}
-	else if (rxInfo.Cmd == ParameterWrite)
-	{
-		if (pRxDOB->DataType == DataType_UINT8)
-		{
-			//数据类型正确才设置参数
-			uint8_t value =  pRxDOB->pData[0];
-			if (value ==0||value == 1)
-			{
-				IF_UserParam_SetReflectPowerSwitchOff(value);
-				pTxDOB->Status = NoErrorNoData;	
-			}
-			else
-			{
-				pTxDOB->Status = CheckFailedParam;
-			}
-		}
-		else
-		{
-			pTxDOB->Status = CheckFailedParam;
-		}
-	}
-}
-
 static void Dealwith_DOB_ReflectPowerThreshold(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	if ((pTxDOB->SubIndex) != 0x01)
@@ -1292,8 +1247,7 @@ static void Dealwith_DOB_FpgaPulsePowerThr(DataObject_t* pRxDOB, DataObject_t* p
 			//数据类型正确才设置参数
 			uint32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);	
 			IF_InternaleParam_SetFpgaPulsePowerThr(value);
-			pTxDOB->Status = NoErrorNoData;
-			
+			pTxDOB->Status = NoErrorNoData;			
 		}
 		else
 		{
@@ -1308,8 +1262,7 @@ static void Dealwith_DOB_FpgaPulseSyncDelay(DataObject_t* pRxDOB, DataObject_t* 
 	{
 		pTxDOB->Status = UnknownSubIndex;
 		return;
-	}
-	
+	}	
 	if (rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
@@ -1327,7 +1280,15 @@ static void Dealwith_DOB_FpgaPulseSyncDelay(DataObject_t* pRxDOB, DataObject_t* 
 		{
 			//数据类型正确才设置参数
 			uint16_t value = MAKE_UINT16(pRxDOB->pData[1], pRxDOB->pData[0]);
-			IF_InternalParam_SetFpgaPulseSyncDelay(value);	
+			if (value > 0 && value <= MAX_ENCODER)
+			{
+				IF_InternalParam_SetFpgaPulseSyncDelay(value);	
+				pTxDOB->Status = NoErrorNoData;
+			}
+			else
+			{
+				pTxDOB->Status = CheckFailedParam;
+			}
 		}
 		else
 		{
@@ -1479,7 +1440,7 @@ static void Dealwith_DOB_CmdSetPoint(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		pTxDOB->DataLen  = 2;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 
-		uint16_t value = IF_CmdParam_GetPwrPoint();
+		uint16_t value = IF_CmdParam_GetRFPwrPoint();
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT16(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT16(value);
 	}
@@ -1491,7 +1452,7 @@ static void Dealwith_DOB_CmdSetPoint(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 			uint16_t value = MAKE_UINT16( pRxDOB->pData[1],pRxDOB->pData[0]);
 			if (value <= MAX_POWER)
 			{
-				IF_CmdParam_SetPwrPoint(value);
+				IF_CmdParam_SetRFPwrPoint(value);
 				pTxDOB->Status = NoErrorNoData;
 			}
 			else
@@ -3200,7 +3161,7 @@ static void Dealwith_DOB_SensorTemperature(DataObject_t* pRxDOB, DataObject_t* p
 		pTxDOB->DataLen  = 2;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		int16_t value = IF_Fpga_GetMcuAlgSensor(ChnN_Temp)*10;
+		int16_t value = IF_Fpga_GetTemperture();
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT16(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT16(value);
@@ -3311,19 +3272,26 @@ static void Dealwith_DOB_SyncOutDutyMeasure(DataObject_t* pRxDOB, DataObject_t* 
 static void Dealwith_DOB_SensorFreq(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	int32_t value = 0;
-	
+	uint8_t ChnNo = pTxDOB->SubIndex;
 	if(rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-        if((pTxDOB->SubIndex) == 0x01)
+        if(ChnNo == 0x01)
 		{
-			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Freq)+0.0005F)*1000;
-		}else
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Freq,HP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x02)
 		{
-			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Freq)+0.0005F)*1000;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Freq,HP_CHN)+0.0005F)*1000;
+		}
+		else if(ChnNo == 0x03)
+		{
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Freq,LP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x04)
+		{
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Freq,LP_CHN)+0.0005F)*1000;
 		}
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -3337,19 +3305,26 @@ static void Dealwith_DOB_SensorFreq(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 static void Dealwith_DOB_SensorVrms(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	int32_t value = 0;
-	
+	uint8_t ChnNo = pTxDOB->SubIndex;
 	if(rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-        if((pTxDOB->SubIndex) == 0x01)
+		if(ChnNo == 0x01)
 		{
-			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Vrms)+0.0005F)*1000;;
-		}else
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Vrms,HP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x02)
 		{
-			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Vrms)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Vrms,HP_CHN)+0.0005F)*1000;
+		}
+		else if(ChnNo == 0x03)
+		{
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Vrms,LP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x04)
+		{
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Vrms,LP_CHN)+0.0005F)*1000;
 		}
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
@@ -3363,19 +3338,27 @@ static void Dealwith_DOB_SensorVrms(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 static void Dealwith_DOB_SensorIrms(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	int32_t value = 0;
+	uint8_t ChnNo = pTxDOB->SubIndex;
 	if(rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		if((pTxDOB->SubIndex) == 0x01)
+	   if(ChnNo == 0x01)
 		{
-			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Irms)+0.0005F)*1000;;
-		}else
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Irms,HP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x02)
 		{
-			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Irms)+0.0005F)*1000;;
-		}	
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Irms,HP_CHN)+0.0005F)*1000;
+		}
+		else if(ChnNo == 0x03)
+		{
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Irms,LP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x04)
+		{
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Irms,LP_CHN)+0.0005F)*1000;
+		}		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -3388,19 +3371,27 @@ static void Dealwith_DOB_SensorIrms(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 static void Dealwith_DOB_SensorPhase(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	int32_t value = 0;
+	uint8_t ChnNo = pTxDOB->SubIndex;
 	if(rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		if((pTxDOB->SubIndex) == 0x01)
+	    if(ChnNo == 0x01)
 		{
-			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Phase)+0.0005F)*1000;;
-		}else
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Phase,HP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x02)
 		{
-			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Phase)+0.0005F)*1000;;
-		}	
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Phase,HP_CHN)+0.0005F)*1000;
+		}
+		else if(ChnNo == 0x03)
+		{
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Phase,LP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x04)
+		{
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Phase,LP_CHN)+0.0005F)*1000;
+		}			
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -3414,20 +3405,27 @@ static void Dealwith_DOB_SensorPhase(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 static void Dealwith_DOB_SensorPdlv(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	int32_t value = 0;
+	uint8_t ChnNo = pTxDOB->SubIndex;
 	if(rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
-		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		if((pTxDOB->SubIndex) == 0x01)
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];	
+		if(ChnNo == 0x01)
 		{
-			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pdlv)+0.0005F)*1000;;
-		}else
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pdlv,HP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x02)
 		{
-			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pdlv)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pdlv,HP_CHN)+0.0005F)*1000;
+		}
+		else if(ChnNo == 0x03)
+		{
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pdlv,LP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x04)
+		{
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pdlv,LP_CHN)+0.0005F)*1000;
 		}	
-		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -3440,21 +3438,27 @@ static void Dealwith_DOB_SensorPdlv(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 static void Dealwith_DOB_SensorPfwd(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	int32_t value = 0;
-	
+	uint8_t ChnNo = pTxDOB->SubIndex;
 	if(rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		if((pTxDOB->SubIndex) == 0x01)
+		if(ChnNo == 0x01)
 		{
-			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pfwd)+0.0005F)*1000;;
-		}else
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pfwd,HP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x02)
 		{
-			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pfwd)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pfwd,HP_CHN)+0.0005F)*1000;
 		}
-		
+		else if(ChnNo == 0x03)
+		{
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pfwd,LP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x04)
+		{
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pfwd,LP_CHN)+0.0005F)*1000;
+		}	
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -3468,21 +3472,27 @@ static void Dealwith_DOB_SensorPfwd(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 static void Dealwith_DOB_SensorPref(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	int32_t value = 0;
-
+	uint8_t ChnNo = pTxDOB->SubIndex;
 	if(rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		if((pTxDOB->SubIndex) == 0x01)
+		if(ChnNo == 0x01)
 		{
-			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pref)+0.0005F)*1000;;
-		}else
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pref,HP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x02)
 		{
-			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pref)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pref,HP_CHN)+0.0005F)*1000;
 		}
-		
+		else if(ChnNo == 0x03)
+		{
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pref,LP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x04)
+		{
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pref,LP_CHN)+0.0005F)*1000;
+		}	
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -3495,20 +3505,27 @@ static void Dealwith_DOB_SensorPref(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 static void Dealwith_DOB_SensorZ(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	int32_t value = 0;
+	uint8_t ChnNo = pTxDOB->SubIndex;
 	if(rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		if((pTxDOB->SubIndex) == 0x01)
+		if(ChnNo == 0x01)
 		{
-			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Z)+0.0005F)*1000;;
-		}else
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Z,HP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x02)
 		{
-			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Z)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Z,HP_CHN)+0.0005F)*1000;
 		}
-
+		else if(ChnNo == 0x03)
+		{
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Z,LP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x04)
+		{
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Z,LP_CHN)+0.0005F)*1000;
+		}
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -3522,20 +3539,27 @@ static void Dealwith_DOB_SensorZ(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 static void Dealwith_DOB_SensorR(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	int32_t value = 0;
+	uint8_t ChnNo = pTxDOB->SubIndex;
 	if(rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		if((pTxDOB->SubIndex) == 0x01)
+		if(ChnNo == 0x01)
 		{
-			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_R)+0.0005F)*1000;;
-		}else
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_R,HP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x02)
 		{
-			 value = (IF_Fpga_GetRegAlgSensor(ChnN_R)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_R,HP_CHN)+0.0005F)*1000;
 		}
-		
+		else if(ChnNo == 0x03)
+		{
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_R,LP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x04)
+		{
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_R,LP_CHN)+0.0005F)*1000;
+		}
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -3549,20 +3573,28 @@ static void Dealwith_DOB_SensorR(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 static void Dealwith_DOB_SensorX(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	int32_t value = 0;
+	uint8_t ChnNo = pTxDOB->SubIndex;
 	if(rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		if((pTxDOB->SubIndex) == 0x01)
+
+		if(ChnNo == 0x01)
 		{
-			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_X)+0.0005F)*1000;;
-		}else
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_X,HP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x02)
 		{
-			 value = (IF_Fpga_GetRegAlgSensor(ChnN_X)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_X,HP_CHN)+0.0005F)*1000;
 		}
-		
+		else if(ChnNo == 0x03)
+		{
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_X,LP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x04)
+		{
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_X,LP_CHN)+0.0005F)*1000;
+		}
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -3576,20 +3608,27 @@ static void Dealwith_DOB_SensorX(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 static void Dealwith_DOB_SensorVSWR(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	int32_t value = 0;
+	uint8_t ChnNo = pTxDOB->SubIndex;
 	if(rxInfo.Cmd == ParameterRead)
 	{
 		pTxDOB->Status   = NoErrorHaveData;
 		pTxDOB->DataType = DataType_SINT32;
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		if((pTxDOB->SubIndex) == 0x01)
+		if(ChnNo == 0x01)
 		{
-			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_VSWR)+0.0005F)*1000;;
-		}else
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_VSWR,HP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x02)
 		{
-			 value = (IF_Fpga_GetRegAlgSensor(ChnN_VSWR)+0.0005F)*1000;;
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_VSWR,HP_CHN)+0.0005F)*1000;
 		}
-
+		else if(ChnNo == 0x03)
+		{
+			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_VSWR,LP_CHN)+0.0005F)*1000;
+		}else if(ChnNo == 0x04)
+		{
+			 value = (IF_Fpga_GetRegAlgSensor(ChnN_VSWR,LP_CHN)+0.0005F)*1000;
+		}
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -3614,7 +3653,7 @@ static void Dealwith_DOB_SensorDrainVolt(DataObject_t* pRxDOB, DataObject_t* pTx
 		pTxDOB->DataLen  = 2;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		uint16_t value = IF_Fpga_GetMcuAlgSensor(ChnN_Drain);
+		uint16_t value = IF_Fpga_GetDrainVoltage();
 		
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT16(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT16(value);
@@ -4195,7 +4234,7 @@ static void Dealwith_DOB_CmdPowerDrviveState(DataObject_t* pRxDOB, DataObject_t*
 			uint8_t value =  pRxDOB->pData[0];
 			if (value == 1||value == 0)
 			{
-				IF_CmdParam_SetDDSDriverSwitch(value);
+				IF_CmdParam_SetDDSSignSwitch(value);
 				pTxDOB->Status = NoErrorNoData;
 			}
 			else
@@ -4407,7 +4446,7 @@ static void Dealwith_DOB_CmdDDSDrviveState(DataObject_t* pRxDOB, DataObject_t* p
 		pTxDOB->DataType = DataType_UINT8;
 		pTxDOB->DataLen  = 1;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		uint8_t value = IF_CmdParam_GetDDSDriverSwitch();
+		uint8_t value = IF_CmdParam_GetDDSSignSwitch();
 		txDOBsDataBuf[txDOBsDataLen++] = value;
 	}
 	else if (rxInfo.Cmd == ParameterWrite)
@@ -4418,7 +4457,7 @@ static void Dealwith_DOB_CmdDDSDrviveState(DataObject_t* pRxDOB, DataObject_t* p
 			uint8_t value =  pRxDOB->pData[0];
 			if (value == 1||value == 0)
 			{
-				IF_CmdParam_SetDDSDriverSwitch(value);
+				IF_CmdParam_SetDDSSignSwitch(value);
 				pTxDOB->Status = NoErrorNoData;				
 			}
 			else
@@ -4447,7 +4486,7 @@ static void Dealwith_DOB_CmdACDCDrviveState(DataObject_t* pRxDOB, DataObject_t* 
 		pTxDOB->DataType = DataType_UINT8;
 		pTxDOB->DataLen  = 1;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		value = IF_CmdParam_GetACDCDriverSwitch();
+		value = IF_CmdParam_GetACDCStateSwitch();
 		txDOBsDataBuf[txDOBsDataLen++] = value;
 	}
 	else if (rxInfo.Cmd == ParameterWrite)
@@ -4458,7 +4497,7 @@ static void Dealwith_DOB_CmdACDCDrviveState(DataObject_t* pRxDOB, DataObject_t* 
 			uint8_t value =  pRxDOB->pData[0];
 			if (value == 1||value == 0)
 			{	
-				IF_CmdParam_SetACDCDriverSwitch(value);
+				IF_CmdParam_SetACDCStateSwitch(value);
 				pTxDOB->Status = NoErrorNoData;				
 			}
 			else
@@ -4553,7 +4592,7 @@ static void Dealwith_DOB_CmdWorkPhase(DataObject_t* pRxDOB, DataObject_t* pTxDOB
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 
-		uint32_t value = IF_CmdParam_GetDDSWorkPhase();
+		uint32_t value = IF_CmdParam_GetDDSPhase();
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -4565,7 +4604,7 @@ static void Dealwith_DOB_CmdWorkPhase(DataObject_t* pRxDOB, DataObject_t* pTxDOB
 		{
 			//数据类型正确才设置参数
 			uint32_t value =  MAKE_UINT32(pRxDOB->pData[3],pRxDOB->pData[2],pRxDOB->pData[1],pRxDOB->pData[0]);	
-			IF_CmdParam_SetDDSWorkPhase(value);
+			IF_CmdParam_SetDDSPhase(value);
 			pTxDOB->Status = NoErrorNoData;
 		}
 		else
@@ -4990,15 +5029,12 @@ static void Dealwith_Datablock_Firmware(DataObject_t* pRxDOB, DataObject_t* pTxD
 			}			
 			else if(FirmwareFlag == FPGA_FIRMUPDATE) // Upgrade FPGA  software
 			{					
-				memset(&NvmFlash,0,sizeof(NvmBuffer_t));
-				BSIPInfo_t txBsipFrame;	
-				txBsipFrame.bsip.msgclass=(MsgClassEnum)0x20;  		   //msg_class_command 
-				txBsipFrame.bsip.msgid = 0xF1;	   		   			   //msg_id     
-				txBsipFrame.bsip.subindex.byte=0x00;	   			   //msg_subindex 				
+				memset(&NvmFlash,0,sizeof(NvmBuffer_t));			
 				if(frameNo == 0)
-				{						
+				{	
+					xSemaphoreGive(FpgaNfSemaphore);					
 					NvmFlash.Buf[NvmFlash.Index++] = FIRMWARE_SOF;
-					
+	
 				}else if(DataBlockFlag == LastBlock)
 				{
 					NvmFlash.Buf[NvmFlash.Index++] = FIRMWARE_EOF;
@@ -5015,8 +5051,12 @@ static void Dealwith_Datablock_Firmware(DataObject_t* pRxDOB, DataObject_t* pTxD
 					NvmFlash.Buf[NvmFlash.Index++]= pRxDOB->pData[i];
 				}		
 				if(pdTRUE==xSemaphoreTake(FpgaNfSemaphore,800))  
-				{		
-					txBsipFrame.infoLen = NvmFlash.Index + 3; //msg_class_command+msg_id+msg_subindex 	             
+				{	
+					BSIPInfo_t txBsipFrame;	
+					txBsipFrame.bsip.msgclass=(MsgClassEnum)0x20;  		   //msg_class_command 
+					txBsipFrame.bsip.msgid = 0xF1;	   		   			   //msg_id     
+					txBsipFrame.bsip.subindex.byte=0x00;	   			   //msg_subindex 						
+					txBsipFrame.infoLen = NvmFlash.Index + 3; 			   //msg_class_command+msg_id+msg_subindex 	             
 					txBsipFrame.bsip.info = NvmFlash.Buf;												
 					xQueueSend(FpgaFWQueue,&txBsipFrame,(TickType_t)0);	
 				}else
@@ -5027,7 +5067,7 @@ static void Dealwith_Datablock_Firmware(DataObject_t* pRxDOB, DataObject_t* pTxD
 				}							
 			}else if(FirmwareFlag == MODBUS_FIRMUPDATE) // Upgrade Modbus  software
 			{	
-				IF_ACDC_SetParamsRWType(DEVICE_WRITE_SOFTWAREREG);				
+				IF_ACDC_SetParamsRWType(WRITE_MB_SOFTWAREREG);				
 				memset(&NvmFlash,0,sizeof(NvmBuffer_t));
 				BSIPInfo_t txBsipFrame;	
 				txBsipFrame.bsip.msgclass=(MsgClassEnum)0x20;  		   //msg_class_command 
@@ -5194,9 +5234,7 @@ static void ParseOneParamDOB(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 	case ID_PvdcLimit:
 		Dealwith_DOB_VdcPowerLimit(pRxDOB, pTxDOB);
 		break;
-	case ID_PrefThrMode:
-		Dealwith_DOB_ReflectPowerSwitchOff(pRxDOB, pTxDOB);
-		break;
+	
 	case ID_PrefThreshold:
 		Dealwith_DOB_ReflectPowerThreshold(pRxDOB, pTxDOB);
 		break;
@@ -5695,10 +5733,11 @@ static uint8_t ParseRxDataObjects(FGIPv2Frame_t *pRxFrame)
 static void SendLayer7Frame(PInfoFiled_t pInfoField)
 {
 	uint8_t i, j;
+	uint8_t  txLayer2DataBuf[MAX_INFO_LEN];
+	uint16_t txLayer2DataLen = 0;
 	uint8_t port = pInfoField->port;
-	memset(txLayer2DataBuf, 0, MAX_INFO_LEN + 2);
-	txLayer2DataLen = 0;
-
+	
+	memset(txLayer2DataBuf, 0, MAX_INFO_LEN);
 	txLayer2DataBuf[txLayer2DataLen++] = IF_CommParam_GetDeviceAddress();    // Addr
 	txLayer2DataBuf[txLayer2DataLen++] = 0x01;                   // Control
 
@@ -5722,7 +5761,6 @@ static void SendLayer7Frame(PInfoFiled_t pInfoField)
 			}
 		}
 	}
-
 	SendLayer2Frame(port,txLayer2DataBuf, txLayer2DataLen);
 }
 

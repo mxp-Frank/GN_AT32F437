@@ -16,7 +16,6 @@
 CommMsg_t g_RxBuf[PORT_NUM]={0};
 CommMsg_t g_TxBuf[PORT_NUM]={0};
 uint32_t last_rx_time[PORT_NUM] = {0};
-uint32_t current_rx_time[PORT_NUM] = {0};
 
 //用于帧处理使用的变量，一次只能处理一条数据帧
 GlobeStatus_t g_GS[PORT_NUM];    //设备状态  
@@ -30,13 +29,12 @@ GlobeStatus_t g_GS[PORT_NUM];    //设备状态
  * END ***************************************************************************************/
 void ReceiveChar(uint8_t port, uint8_t ch)
 {
-	current_rx_time[port] = GetSysTickCnt();
 
-	if ((current_rx_time[port] - last_rx_time[port]) > 10)  //Frame timeout
+	if ((GetSysTickCnt() - last_rx_time[port]) > 10)  //Frame timeout
 	{
 		g_RxBuf[port].flag_status = 0;                     // 置标志
 	}
-	last_rx_time[port] = current_rx_time[port];
+	last_rx_time[port] = GetSysTickCnt();
 
 	switch(g_RxBuf[port].flag_status)
 	{

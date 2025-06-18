@@ -94,7 +94,7 @@ void Sensor_Device_Sample(void)
     {						
         g_FaultWord.bits.OverPCBTempAlarm = 0;
     }
-	if(IF_Fpga_GetMcuAlgSensor(ChnN_Temp)> TEMP_MAX)
+	if(IF_Fpga_GetTemperture()> TEMP_MAX)
 	{
 		 g_FaultWord.bits.OverFpgaTempAlarm = 1;     
 	}else
