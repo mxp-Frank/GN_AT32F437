@@ -3318,8 +3318,7 @@ static void Dealwith_DOB_SensorVrms(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		}else if(ChnNo == 0x02)
 		{
 			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Vrms,HP_CHN)+0.0005F)*1000;
-		}
-		else if(ChnNo == 0x03)
+		}else if(ChnNo == 0x03)
 		{
 			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Vrms,LP_CHN)+0.0005F)*1000;
 		}else if(ChnNo == 0x04)
@@ -3351,8 +3350,7 @@ static void Dealwith_DOB_SensorIrms(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		}else if(ChnNo == 0x02)
 		{
 			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Irms,HP_CHN)+0.0005F)*1000;
-		}
-		else if(ChnNo == 0x03)
+		}else if(ChnNo == 0x03)
 		{
 			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Irms,LP_CHN)+0.0005F)*1000;
 		}else if(ChnNo == 0x04)
@@ -3384,8 +3382,7 @@ static void Dealwith_DOB_SensorPhase(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		}else if(ChnNo == 0x02)
 		{
 			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Phase,HP_CHN)+0.0005F)*1000;
-		}
-		else if(ChnNo == 0x03)
+		}else if(ChnNo == 0x03)
 		{
 			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Phase,LP_CHN)+0.0005F)*1000;
 		}else if(ChnNo == 0x04)
@@ -3418,8 +3415,7 @@ static void Dealwith_DOB_SensorPdlv(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		}else if(ChnNo == 0x02)
 		{
 			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pdlv,HP_CHN)+0.0005F)*1000;
-		}
-		else if(ChnNo == 0x03)
+		}else if(ChnNo == 0x03)
 		{
 			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pdlv,LP_CHN)+0.0005F)*1000;
 		}else if(ChnNo == 0x04)
@@ -3451,8 +3447,7 @@ static void Dealwith_DOB_SensorPfwd(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		}else if(ChnNo == 0x02)
 		{
 			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pfwd,HP_CHN)+0.0005F)*1000;
-		}
-		else if(ChnNo == 0x03)
+		}else if(ChnNo == 0x03)
 		{
 			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pfwd,LP_CHN)+0.0005F)*1000;
 		}else if(ChnNo == 0x04)
@@ -3485,8 +3480,7 @@ static void Dealwith_DOB_SensorPref(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		}else if(ChnNo == 0x02)
 		{
 			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Pref,HP_CHN)+0.0005F)*1000;
-		}
-		else if(ChnNo == 0x03)
+		}else if(ChnNo == 0x03)
 		{
 			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Pref,LP_CHN)+0.0005F)*1000;
 		}else if(ChnNo == 0x04)
@@ -3518,8 +3512,7 @@ static void Dealwith_DOB_SensorZ(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		}else if(ChnNo == 0x02)
 		{
 			 value = (IF_Fpga_GetRegAlgSensor(ChnN_Z,HP_CHN)+0.0005F)*1000;
-		}
-		else if(ChnNo == 0x03)
+		}else if(ChnNo == 0x03)
 		{
 			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_Z,LP_CHN)+0.0005F)*1000;
 		}else if(ChnNo == 0x04)
@@ -3552,8 +3545,7 @@ static void Dealwith_DOB_SensorR(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		}else if(ChnNo == 0x02)
 		{
 			 value = (IF_Fpga_GetRegAlgSensor(ChnN_R,HP_CHN)+0.0005F)*1000;
-		}
-		else if(ChnNo == 0x03)
+		}else if(ChnNo == 0x03)
 		{
 			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_R,LP_CHN)+0.0005F)*1000;
 		}else if(ChnNo == 0x04)
@@ -3587,8 +3579,7 @@ static void Dealwith_DOB_SensorX(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		}else if(ChnNo == 0x02)
 		{
 			 value = (IF_Fpga_GetRegAlgSensor(ChnN_X,HP_CHN)+0.0005F)*1000;
-		}
-		else if(ChnNo == 0x03)
+		}else if(ChnNo == 0x03)
 		{
 			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_X,LP_CHN)+0.0005F)*1000;
 		}else if(ChnNo == 0x04)
@@ -3621,8 +3612,7 @@ static void Dealwith_DOB_SensorVSWR(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		}else if(ChnNo == 0x02)
 		{
 			 value = (IF_Fpga_GetRegAlgSensor(ChnN_VSWR,HP_CHN)+0.0005F)*1000;
-		}
-		else if(ChnNo == 0x03)
+		}else if(ChnNo == 0x03)
 		{
 			 value = (IF_Fpga_GetMcuAlgSensor(ChnN_VSWR,LP_CHN)+0.0005F)*1000;
 		}else if(ChnNo == 0x04)
