@@ -2058,7 +2058,7 @@ static void Dealwith_DOB_PIDVSWRLimit(DataObject_t* pRxDOB, DataObject_t* pTxDOB
 		}
 	}
 }
-static void Dealwith_DOB_PIDStartPower(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+static void Dealwith_DOB_InitPower(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	if ((pTxDOB->SubIndex) != 0x01)
 	{
@@ -2072,7 +2072,7 @@ static void Dealwith_DOB_PIDStartPower(DataObject_t* pRxDOB, DataObject_t* pTxDO
 		pTxDOB->DataLen  = 4;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 
-		int32_t value = IF_InternalParam_GetPhasePoint();
+		int32_t value = IF_InternalParam_GetInitPoint();
 		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
 		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
@@ -4252,7 +4252,7 @@ static void Dealwith_DOB_CmdSyncSource(DataObject_t* pRxDOB, DataObject_t* pTxDO
 		pTxDOB->DataLen  = 1;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 		
-		uint8_t value = IF_CmdParam_GetSyncSource();;	
+		uint8_t value = IF_CmdParam_GetSyncOutSource();;	
 		txDOBsDataBuf[txDOBsDataLen++] = value;
 	}
 	else if (rxInfo.Cmd == ParameterWrite)
@@ -4263,7 +4263,7 @@ static void Dealwith_DOB_CmdSyncSource(DataObject_t* pRxDOB, DataObject_t* pTxDO
 			uint8_t value =  pRxDOB->pData[0];
 			if (value == 1||value == 0)
 			{
-				IF_CmdParam_SetSyncSource(value);
+				IF_CmdParam_SetSyncOutSource(value);
 				pTxDOB->Status = NoErrorNoData;
 			}
 			else
@@ -5288,7 +5288,7 @@ static void ParseOneParamDOB(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		Dealwith_DOB_PIDVSWRLimit(pRxDOB, pTxDOB);
 		break;
 	case ID_StartPower:
-		Dealwith_DOB_PIDStartPower(pRxDOB, pTxDOB);
+		Dealwith_DOB_InitPower(pRxDOB, pTxDOB);
 		break;
 	case ID_FeedCollectionMode:
 		Dealwith_DOB_FeedCollectionMode(pRxDOB, pTxDOB);
@@ -5723,35 +5723,34 @@ static uint8_t ParseRxDataObjects(FGIPv2Frame_t *pRxFrame)
 static void SendLayer7Frame(PInfoFiled_t pInfoField)
 {
 	uint8_t i, j;
-	uint8_t  txLayer2DataBuf[MAX_INFO_LEN];
-	uint16_t txLayer2DataLen = 0;
-	uint8_t port = pInfoField->port;
 	
-	memset(txLayer2DataBuf, 0, MAX_INFO_LEN);
-	txLayer2DataBuf[txLayer2DataLen++] = IF_CommParam_GetDeviceAddress();    // Addr
-	txLayer2DataBuf[txLayer2DataLen++] = 0x01;                   // Control
+	uint8_t port = pInfoField->port;
+	Layer2Data_t txLayer2Data;
+	memset(&txLayer2Data, 0, sizeof(Layer2Data_t));
+	txLayer2Data.Buf[txLayer2Data.Len++] = IF_CommParam_GetDeviceAddress();    // Addr
+	txLayer2Data.Buf[txLayer2Data.Len++] = 0x01;                   // Control
 
-	txLayer2DataBuf[txLayer2DataLen++] = pInfoField->GS;
-	txLayer2DataBuf[txLayer2DataLen++] = pInfoField->Cmd;
+	txLayer2Data.Buf[txLayer2Data.Len++] = pInfoField->GS;
+	txLayer2Data.Buf[txLayer2Data.Len++] = pInfoField->Cmd;
 
 	for (i = 0; i < pInfoField->NumOfDOBs; i++)
 	{
-		txLayer2DataBuf[txLayer2DataLen++] = Byte0_UINT16(pInfoField->DOBs[i].Index);
-		txLayer2DataBuf[txLayer2DataLen++] = Byte1_UINT16(pInfoField->DOBs[i].Index);
-		txLayer2DataBuf[txLayer2DataLen++] = pInfoField->DOBs[i].SubIndex;
-		txLayer2DataBuf[txLayer2DataLen++] = pInfoField->DOBs[i].Status;
+		txLayer2Data.Buf[txLayer2Data.Len++] = Byte0_UINT16(pInfoField->DOBs[i].Index);
+		txLayer2Data.Buf[txLayer2Data.Len++] = Byte1_UINT16(pInfoField->DOBs[i].Index);
+		txLayer2Data.Buf[txLayer2Data.Len++] = pInfoField->DOBs[i].SubIndex;
+		txLayer2Data.Buf[txLayer2Data.Len++] = pInfoField->DOBs[i].Status;
 
 		if (pInfoField->DOBs[i].DataLen > 0)
 		{
-			txLayer2DataBuf[txLayer2DataLen++] = pInfoField->DOBs[i].DataType;
+			txLayer2Data.Buf[txLayer2Data.Len++] = pInfoField->DOBs[i].DataType;
 
 			for (j = 0; j < pInfoField->DOBs[i].DataLen; j++)
 			{
-				txLayer2DataBuf[txLayer2DataLen++] = pInfoField->DOBs[i].pData[j];
+				txLayer2Data.Buf[txLayer2Data.Len++] = pInfoField->DOBs[i].pData[j];
 			}
 		}
 	}
-	SendLayer2Frame(port,txLayer2DataBuf, txLayer2DataLen);
+	SendLayer2Frame(port,&txLayer2Data);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

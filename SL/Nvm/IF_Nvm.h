@@ -121,37 +121,37 @@ uint8_t IF_NvmParam_CheckRawDownloadFile(void);
 uint8_t Read_SystemResetTimes(void);
 uint8_t IF_NvmParam_CheckSystemResetTimes(void);
 
-void Load_ConfigParam(uint8_t value);
- uint8_t Write_ConfigParam(uint8_t* pBuf);
+uint8_t Load_ConfigParam(uint8_t value);
+uint8_t Write_ConfigParam(uint8_t* pBuf);
 /********************工程参数*************************/
 
 
-void Read_FS_PartsParam(uint8_t* pBuf);
+uint8_t Read_FS_PartsParam(uint8_t* pBuf);
 uint8_t Write_FS_PartsParam(uint8_t* pBuf);
-void Read_FS_CommonParam(uint8_t* pBuf);
+uint8_t Read_FS_CommonParam(uint8_t* pBuf);
 uint8_t Write_FS_CommonParam(uint8_t* pBuf);
-void Read_FS_InternalParam(uint8_t* pBuf);
+uint8_t Read_FS_InternalParam(uint8_t* pBuf);
 uint8_t Write_FS_InternalParam(uint8_t* pBuf);
-void Read_FS_UserParam(uint8_t* pBuf);
+uint8_t Read_FS_UserParam(uint8_t* pBuf);
 uint8_t Write_FS_UserParam(uint8_t* pBuf);
 /********************普通参数*************************/
-void Read_PartsParam(uint8_t* pBuf);
+uint8_t Read_PartsParam(uint8_t* pBuf);
 uint8_t Write_PartsParam(uint8_t* pBuf);
-void Read_CommonParam(uint8_t* pBuf);
+uint8_t Read_CommonParam(uint8_t* pBuf);
 uint8_t Write_CommonParam(uint8_t* pBuf);
-void Read_InternalParam(uint8_t* pBuf);
+uint8_t Read_InternalParam(uint8_t* pBuf);
 uint8_t Write_InternalParam(uint8_t* pBuf);
 
-void Read_UserParam(uint8_t* pBuf);
+uint8_t Read_UserParam(uint8_t* pBuf);
 uint8_t Write_UserParam(uint8_t* pBuf);
 
-void Read_VoltageMapParam(uint8_t* pBuf);
+uint8_t Read_VoltageMapParam(uint8_t* pBuf);
 uint8_t Write_VoltageMapParam(uint8_t* pBuf);
 
-void Read_PhaseMapParam(uint8_t* pBuf);
+uint8_t Read_PhaseMapParam(uint8_t* pBuf);
 uint8_t Write_PhaseMapParam(uint8_t* pBuf);
 
-void Read_SystemTotalTimesParam(uint8_t *pBuf);
+uint8_t Read_SystemTotalTimesParam(uint8_t *pBuf);
 uint8_t Write_SystemTotalTimesParam(uint8_t *pBuf);
 
 /******************************************************************************

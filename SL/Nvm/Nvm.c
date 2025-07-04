@@ -23,7 +23,7 @@ NvmBuffer_t NvmFlash;
 
 /* FUNCTION PROTOTYPES */
 static uint8_t Write_SystemTotalTimesParam(uint8_t *pBuf);
-static void Read_SystemTotalTimesParam(uint8_t *pBuf);
+static uint8_t Read_SystemTotalTimesParam(uint8_t *pBuf);
 /************************************************************************/
 /* Global Functions Definitions                                          */
 /************************************************************************/
@@ -386,9 +386,9 @@ uint8_t IF_NvmParam_CheckSystemResetTimes(void)
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void Load_ConfigParam(uint8_t value)
+uint8_t Load_ConfigParam(uint8_t value)
 {
-	IF_HAL_EEPROM_ReadBytes(PRESETPARAM_NUM_ADDR, &value, sizeof(uint8_t));
+	return IF_HAL_EEPROM_ReadBytes(PRESETPARAM_NUM_ADDR, &value, sizeof(uint8_t));
 }
 
 uint8_t Write_ConfigParam(uint8_t* pBuf)
@@ -396,44 +396,40 @@ uint8_t Write_ConfigParam(uint8_t* pBuf)
 	return  IF_HAL_EEPROM_WriteBytes(PRESETPARAM_NUM_ADDR, pBuf, sizeof(char));
 }
 
-void Read_FS_PartsParam(uint8_t* pBuf)
+uint8_t Read_FS_PartsParam(uint8_t* pBuf)
 {
-	IF_HAL_EEPROM_ReadBytes(FACTORY_PARAM_FS_ADDR, pBuf, PARTS_PARAM_LEN);	
+	return IF_HAL_EEPROM_ReadBytes(FACTORY_PARAM_FS_ADDR, pBuf, PARTS_PARAM_LEN);	
 }
 
 uint8_t Write_FS_PartsParam(uint8_t* pBuf)
 {
 	return IF_HAL_EEPROM_WriteBytes(FACTORY_PARAM_FS_ADDR, pBuf, PARTS_PARAM_LEN);
 }
-void Read_FS_CommonParam(uint8_t* pBuf)
+uint8_t Read_FS_CommonParam(uint8_t* pBuf)
 {
 	
-	IF_HAL_EEPROM_ReadBytes(COMMON_PARAM_FS_ADDR, pBuf, PARTS_PARAM_LEN);	
+	return IF_HAL_EEPROM_ReadBytes(COMMON_PARAM_FS_ADDR, pBuf, PARTS_PARAM_LEN);	
 }
 
 uint8_t Write_FS_CommonParam(uint8_t* pBuf)
 {
-	uint8_t value = 0;
-	value = IF_HAL_EEPROM_WriteBytes(COMMON_PARAM_FS_ADDR, pBuf, PARTS_PARAM_LEN);
-	return value;
+	return IF_HAL_EEPROM_WriteBytes(COMMON_PARAM_FS_ADDR, pBuf, PARTS_PARAM_LEN);
 }
 //-----------------------------------------------------------------------------
-void Read_FS_InternalParam(uint8_t* pBuf)
+uint8_t Read_FS_InternalParam(uint8_t* pBuf)
 {
-	IF_HAL_EEPROM_ReadBytes(INTERNAL_PARAM_FS_ADDR, pBuf, INTERNAL_PARAM_LEN);	
+	return IF_HAL_EEPROM_ReadBytes(INTERNAL_PARAM_FS_ADDR, pBuf, INTERNAL_PARAM_LEN);	
 }
 
 uint8_t Write_FS_InternalParam(uint8_t* pBuf)
 {
-	uint8_t value = 0;
-	value = IF_HAL_EEPROM_WriteBytes(INTERNAL_PARAM_FS_ADDR, pBuf, INTERNAL_PARAM_LEN);
-	return  value;
+	return IF_HAL_EEPROM_WriteBytes(INTERNAL_PARAM_FS_ADDR, pBuf, INTERNAL_PARAM_LEN);
 }
 
 //-----------------------------------------------------------------------------
-void Read_PartsParam(uint8_t* pBuf)
+uint8_t Read_PartsParam(uint8_t* pBuf)
 {
-	IF_HAL_EEPROM_ReadBytes(FACTORY_PARAM_ADDR, pBuf, PARTS_PARAM_LEN);	
+	return IF_HAL_EEPROM_ReadBytes(FACTORY_PARAM_ADDR, pBuf, PARTS_PARAM_LEN);	
 }
 
 uint8_t Write_PartsParam(uint8_t* pBuf)
@@ -442,84 +438,70 @@ uint8_t Write_PartsParam(uint8_t* pBuf)
 }
 //--------------------------------------------------------------------------------
 
-void Read_CommonParam(uint8_t* pBuf)
+uint8_t Read_CommonParam(uint8_t* pBuf)
 {	
-	IF_HAL_EEPROM_ReadBytes(COMMON_PARAM_ADDR, pBuf, INTERNAL_PARAM_LEN);	
+	return IF_HAL_EEPROM_ReadBytes(COMMON_PARAM_ADDR, pBuf, INTERNAL_PARAM_LEN);	
 }
 
 uint8_t Write_CommonParam(uint8_t* pBuf)
 {
-	uint8_t value = 0;
-	value = IF_HAL_EEPROM_WriteBytes(COMMON_PARAM_ADDR, pBuf, INTERNAL_PARAM_LEN);
-	return value ;
+	return IF_HAL_EEPROM_WriteBytes(COMMON_PARAM_ADDR, pBuf, INTERNAL_PARAM_LEN);
 }
 //-----------------------------------------------------------------------------
-void Read_InternalParam(uint8_t* pBuf)
+uint8_t Read_InternalParam(uint8_t* pBuf)
 {
 		
-	IF_HAL_EEPROM_ReadBytes(INTERNAL_PARAM_ADDR, pBuf, INTERNAL_PARAM_LEN);	
+	return IF_HAL_EEPROM_ReadBytes(INTERNAL_PARAM_ADDR, pBuf, INTERNAL_PARAM_LEN);	
 }
 
 uint8_t Write_InternalParam(uint8_t* pBuf)
 {
-	uint8_t value = 0;
-	value = IF_HAL_EEPROM_WriteBytes(INTERNAL_PARAM_ADDR, pBuf, INTERNAL_PARAM_LEN);
-	return value ;
+	return IF_HAL_EEPROM_WriteBytes(INTERNAL_PARAM_ADDR, pBuf, INTERNAL_PARAM_LEN);
 }
 //-----------------------------------------------------------------------------
-void Read_FS_UserParam(uint8_t* pBuf)
+uint8_t Read_FS_UserParam(uint8_t* pBuf)
 {
-	IF_HAL_EEPROM_ReadBytes(USER_PARAM_FS_ADDR, pBuf, USER_PARAM_LEN);;
+	return IF_HAL_EEPROM_ReadBytes(USER_PARAM_FS_ADDR, pBuf, USER_PARAM_LEN);;
 }
 
 uint8_t Write_FS_UserParam(uint8_t* pBuf)
 {
-	uint8_t value = 0;
-	value = IF_HAL_EEPROM_WriteBytes(USER_PARAM_FS_ADDR, pBuf, USER_PARAM_LEN);	
-	return value;
+	return IF_HAL_EEPROM_WriteBytes(USER_PARAM_FS_ADDR, pBuf, USER_PARAM_LEN);	
 }
 //-----------------------------------------------------------------------------
-void Read_UserParam(uint8_t* pBuf)
+uint8_t Read_UserParam(uint8_t* pBuf)
 {
-	IF_HAL_EEPROM_ReadBytes(USER_PARAM_ADDR, pBuf, USER_PARAM_LEN);;
+	return IF_HAL_EEPROM_ReadBytes(USER_PARAM_ADDR, pBuf, USER_PARAM_LEN);;
 }
 
 uint8_t Write_UserParam(uint8_t* pBuf)
 {
-	uint8_t value = 0;
-	value = IF_HAL_EEPROM_WriteBytes(USER_PARAM_ADDR, pBuf, USER_PARAM_LEN);	
-	return value;
+	return IF_HAL_EEPROM_WriteBytes(USER_PARAM_ADDR, pBuf, USER_PARAM_LEN);	
 }
-void Read_VoltageMapParam(uint8_t* pBuf)
+uint8_t Read_VoltageMapParam(uint8_t* pBuf)
 {	
-	IF_HAL_EEPROM_ReadBytes(MAPVSPOWER_ADDR, pBuf,  VOLTMAP_PARAM_LEN);	
+	return IF_HAL_EEPROM_ReadBytes(MAPVSPOWER_ADDR, pBuf,  VOLTMAP_PARAM_LEN);	
 }
 uint8_t Write_VoltageMapParam(uint8_t* pBuf)
 {
-	uint8_t value = 0;
-	value = IF_HAL_EEPROM_WriteBytes(MAPVSPOWER_ADDR, pBuf, VOLTMAP_PARAM_LEN);
-	return value ;
+	return IF_HAL_EEPROM_WriteBytes(MAPVSPOWER_ADDR, pBuf, VOLTMAP_PARAM_LEN);
 }
-void Read_PhaseMapParam(uint8_t* pBuf)
+uint8_t Read_PhaseMapParam(uint8_t* pBuf)
 {	
-	IF_HAL_EEPROM_ReadBytes(MAPPHPOWER_ADDR, pBuf,  PHASEMAP_PARAM_LEN);	
+	return IF_HAL_EEPROM_ReadBytes(MAPPHPOWER_ADDR, pBuf,  PHASEMAP_PARAM_LEN);	
 }
 uint8_t Write_PhaseMapParam(uint8_t* pBuf)
 {
-	uint8_t value = 0;
-	value = IF_HAL_EEPROM_WriteBytes(MAPPHPOWER_ADDR, pBuf, PHASEMAP_PARAM_LEN);
-	return value ;
+	return IF_HAL_EEPROM_WriteBytes(MAPPHPOWER_ADDR, pBuf, PHASEMAP_PARAM_LEN);
 }
-static void Read_SystemTotalTimesParam(uint8_t *pBuf)
+static uint8_t Read_SystemTotalTimesParam(uint8_t *pBuf)
 {	
-	IF_HAL_EEPROM_ReadBytes(SYSTEM_TOTALTIMES_ADDR, pBuf, sizeof(uint32_t));	
+	return IF_HAL_EEPROM_ReadBytes(SYSTEM_TOTALTIMES_ADDR, pBuf, sizeof(uint32_t));	
 }
 
 static uint8_t Write_SystemTotalTimesParam(uint8_t *pBuf)
 {	
-	uint8_t value = 0;
-	value = IF_HAL_EEPROM_WriteBytes(SYSTEM_TOTALTIMES_ADDR, pBuf, sizeof(uint32_t));
-	return value;	
+	return IF_HAL_EEPROM_WriteBytes(SYSTEM_TOTALTIMES_ADDR, pBuf, sizeof(uint32_t));	
 }
 //*****************************************************************************
 //* END

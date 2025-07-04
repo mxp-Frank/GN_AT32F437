@@ -68,25 +68,7 @@ uint16_t IF_Sensor_GetPowerSupply(void)
 void Sensor_Device_Sample(void)
 {	
 	EXT_ADC_CtrlChannel_Scan();		
-	/******获取射频电源状态*****************/
-	if(IF_HAL_InterLockDect_SigRead())
-	{
-		g_FaultWord.bits.InterlockOpen = 1;
-	}else
-	{
-		g_FaultWord.bits.InterlockOpen = 0;
-	}
-	uint16_t Power24Volt = IF_Sensor_GetPowerSupply();
-    if ( (Power24Volt > POWER_24V_MAX)||(Power24Volt < POWER_24V_MIN))
-    {        
-         g_FaultWord.bits.Power24VAlarm = 1;   
-    }
-    else 
-    {
-        g_FaultWord.bits.Power24VAlarm = 0;
-    }
-	
-    if ( IF_Sensor_GetPCBTemperature()> TEMP_MAX)
+    if(IF_Sensor_GetPCBTemperature()> TEMP_MAX)
     {      	
         g_FaultWord.bits.OverPCBTempAlarm = 1;        
     }

@@ -46,7 +46,7 @@ extern GlobeStatus_t g_GS[PORT_NUM];
 extern void FGIPv2_Init(void);
 extern void ReceiveChar(uint8_t port, uint8_t ch);
 extern void TransmitChar(uint8_t port);
-extern void SendLayer2Frame(uint8_t port,uint8_t *layer2Buf, uint16_t layer2Len);
+extern void SendLayer2Frame(uint8_t port, pLayer2Data_t pLayer2Data);
 extern void Dealwith_FGIPv2_Layer2(uint8_t port,pCommMsg_t pRxMsg);
 
 #if defined(__cplusplus)

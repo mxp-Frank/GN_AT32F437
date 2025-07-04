@@ -443,7 +443,7 @@ static void COM4_UART_config(void)
     usart_enable(COM4_UART, TRUE);
 	
 	/*控制485芯片进入接受模式*/
-   IF_GpioOutPut(COM4_EN_PORT,COM4_EN_PIN,0,LOGIC_POUT);
+   IF_OutPutGpio_Write(COM4_EN_PORT,COM4_EN_PIN,0,LOGIC_POUT);
 }
 
 __weak void RS485_UART_Callback(void)

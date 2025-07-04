@@ -37,7 +37,7 @@ void IF_GpioInit(void)
 }
 
 
-flag_status IF_GpioInPut(gpio_type *gpio_x, uint16_t pins, uint8_t inLogic)
+flag_status IF_InPutGpio_Read(gpio_type *gpio_x, uint16_t pins, uint8_t inLogic)
 {
     flag_status inValue,result;
     inValue = gpio_input_data_bit_read(gpio_x, pins);
@@ -54,8 +54,24 @@ flag_status IF_GpioInPut(gpio_type *gpio_x, uint16_t pins, uint8_t inLogic)
     return result;
     
 }
+flag_status IF_OutPutGpio_Read(gpio_type *gpio_x, uint16_t pins, uint8_t inLogic)
+{
+    flag_status inValue,result;
+    inValue = gpio_output_data_bit_read(gpio_x, pins);
+    
+    if(RESET == inValue)
+    {
+        result=inLogic?RESET:SET;
+    }
+    else
+    {
+        result=inLogic?SET:RESET;
+    }
 
-void IF_GpioOutPut(gpio_type *gpio_x, uint16_t pins, uint8_t outPutValue, uint8_t outLogic)
+    return result;
+    
+}
+void IF_OutPutGpio_Write(gpio_type *gpio_x, uint16_t pins, uint8_t outPutValue, uint8_t outLogic)
 {
     if(outLogic == LOGIC_NOUT)
     {

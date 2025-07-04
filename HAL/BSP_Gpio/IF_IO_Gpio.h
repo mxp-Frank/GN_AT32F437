@@ -29,6 +29,7 @@ extern void IF_WarningLed_Switch(uint8_t para);
 extern void IF_IntLockLed_Switch(uint8_t para);
 extern void IF_RFOnOffLed_Switch(uint8_t para);
 extern uint8_t IF_InterLockDect_SigRead(void);
+extern uint8_t IF_InterLockEn_SigRead(void);
 
 #endif
 

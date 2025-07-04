@@ -99,86 +99,86 @@ extern "C" {
 #define DATA_D7_PORT 			GPIOE
 #define DATA_D7_PIN				DATA_D7_Pin59_PE8
  //control signal
- #define DATA_RE_LOW          	IF_GpioOutPut(DATA_RE_PORT, DATA_RE_PIN, 0, LOGIC_POUT)
- #define DATA_RE_HIGH         	IF_GpioOutPut(DATA_RE_PORT, DATA_RE_PIN, 1, LOGIC_POUT)
+ #define DATA_RE_LOW          	IF_OutPutGpio_Write(DATA_RE_PORT, DATA_RE_PIN, 0, LOGIC_POUT)
+ #define DATA_RE_HIGH         	IF_OutPutGpio_Write(DATA_RE_PORT, DATA_RE_PIN, 1, LOGIC_POUT)
 
- #define DATA_WE_LOW   	      	IF_GpioOutPut(DATA_WE_PORT, DATA_WE_PIN, 0, LOGIC_POUT)
- #define DATA_WE_HIGH 	      	IF_GpioOutPut(DATA_WE_PORT, DATA_WE_PIN, 1, LOGIC_POUT)
+ #define DATA_WE_LOW   	      	IF_OutPutGpio_Write(DATA_WE_PORT, DATA_WE_PIN, 0, LOGIC_POUT)
+ #define DATA_WE_HIGH 	      	IF_OutPutGpio_Write(DATA_WE_PORT, DATA_WE_PIN, 1, LOGIC_POUT)
 
- #define DATA_CLK_LOW   	  	IF_GpioOutPut(DATA_CLK_PORT, DATA_CLK_PIN, 0, LOGIC_POUT)
- #define DATA_CLK_HIGH 	      	IF_GpioOutPut(DATA_CLK_PORT, DATA_CLK_PIN, 1, LOGIC_POUT)
+ #define DATA_CLK_LOW   	  	IF_OutPutGpio_Write(DATA_CLK_PORT, DATA_CLK_PIN, 0, LOGIC_POUT)
+ #define DATA_CLK_HIGH 	      	IF_OutPutGpio_Write(DATA_CLK_PORT, DATA_CLK_PIN, 1, LOGIC_POUT)
 
- #define DATA_START_LOW       	IF_GpioOutPut(DATA_START_PORT, DATA_START_PIN, 0, LOGIC_POUT)
- #define DATA_START_HIGH      	IF_GpioOutPut(DATA_START_PORT, DATA_START_PIN, 1, LOGIC_POUT)
+ #define DATA_START_LOW       	IF_OutPutGpio_Write(DATA_START_PORT, DATA_START_PIN, 0, LOGIC_POUT)
+ #define DATA_START_HIGH      	IF_OutPutGpio_Write(DATA_START_PORT, DATA_START_PIN, 1, LOGIC_POUT)
 
- #define FPGA_RESET_LOW       	IF_GpioOutPut(DATA_RESET_PORT, DATA_RESET_PIN, 0, LOGIC_POUT)
- #define FPGA_RESET_HIGH      	IF_GpioOutPut(DATA_RESET_PORT, DATA_RESET_PIN, 1, LOGIC_POUT)
+ #define FPGA_RESET_LOW       	IF_OutPutGpio_Write(DATA_RESET_PORT, DATA_RESET_PIN, 0, LOGIC_POUT)
+ #define FPGA_RESET_HIGH      	IF_OutPutGpio_Write(DATA_RESET_PORT, DATA_RESET_PIN, 1, LOGIC_POUT)
 
  //data(input) signal
- #define DATA_FPGA_READ   	 	IF_GpioInPut(DATA_READ_PORT, DATA_READ_PIN, ACTIVE_HIGH)
+ #define DATA_FPGA_READ   	 	IF_InPutGpio_Read(DATA_READ_PORT, DATA_READ_PIN, ACTIVE_HIGH)
 
  //addr signal
- #define DATA_A0_LOW   	      	IF_GpioOutPut(DATA_A0_PORT, DATA_A0_PIN, 0, LOGIC_POUT)
- #define DATA_A0_HIGH 	      	IF_GpioOutPut(DATA_A0_PORT, DATA_A0_PIN, 1, LOGIC_POUT)
+ #define DATA_A0_LOW   	      	IF_OutPutGpio_Write(DATA_A0_PORT, DATA_A0_PIN, 0, LOGIC_POUT)
+ #define DATA_A0_HIGH 	      	IF_OutPutGpio_Write(DATA_A0_PORT, DATA_A0_PIN, 1, LOGIC_POUT)
 
- #define DATA_A1_LOW   	      	IF_GpioOutPut(DATA_A1_PORT, DATA_A1_PIN, 0, LOGIC_POUT)
- #define DATA_A1_HIGH 	      	IF_GpioOutPut(DATA_A1_PORT, DATA_A1_PIN, 1, LOGIC_POUT)
+ #define DATA_A1_LOW   	      	IF_OutPutGpio_Write(DATA_A1_PORT, DATA_A1_PIN, 0, LOGIC_POUT)
+ #define DATA_A1_HIGH 	      	IF_OutPutGpio_Write(DATA_A1_PORT, DATA_A1_PIN, 1, LOGIC_POUT)
 
- #define DATA_A2_LOW   	      	IF_GpioOutPut(DATA_A2_PORT, DATA_A2_PIN, 0, LOGIC_POUT)
- #define DATA_A2_HIGH 	     	IF_GpioOutPut(DATA_A2_PORT, DATA_A2_PIN, 1, LOGIC_POUT)
+ #define DATA_A2_LOW   	      	IF_OutPutGpio_Write(DATA_A2_PORT, DATA_A2_PIN, 0, LOGIC_POUT)
+ #define DATA_A2_HIGH 	     	IF_OutPutGpio_Write(DATA_A2_PORT, DATA_A2_PIN, 1, LOGIC_POUT)
 
- #define DATA_A3_LOW   	     	IF_GpioOutPut(DATA_A3_PORT, DATA_A3_PIN, 0, LOGIC_POUT)
- #define DATA_A3_HIGH 	     	IF_GpioOutPut(DATA_A3_PORT, DATA_A3_PIN, 1, LOGIC_POUT)
+ #define DATA_A3_LOW   	     	IF_OutPutGpio_Write(DATA_A3_PORT, DATA_A3_PIN, 0, LOGIC_POUT)
+ #define DATA_A3_HIGH 	     	IF_OutPutGpio_Write(DATA_A3_PORT, DATA_A3_PIN, 1, LOGIC_POUT)
 
- #define DATA_A4_LOW   	     	IF_GpioOutPut(DATA_A4_PORT, DATA_A4_PIN, 0, LOGIC_POUT)
- #define DATA_A4_HIGH 	     	IF_GpioOutPut(DATA_A4_PORT, DATA_A4_PIN, 1, LOGIC_POUT)
+ #define DATA_A4_LOW   	     	IF_OutPutGpio_Write(DATA_A4_PORT, DATA_A4_PIN, 0, LOGIC_POUT)
+ #define DATA_A4_HIGH 	     	IF_OutPutGpio_Write(DATA_A4_PORT, DATA_A4_PIN, 1, LOGIC_POUT)
 
- #define DATA_A5_LOW   	     	IF_GpioOutPut(DATA_A5_PORT, DATA_A5_PIN, 0, LOGIC_POUT)
- #define DATA_A5_HIGH 	     	IF_GpioOutPut(DATA_A5_PORT, DATA_A5_PIN, 1, LOGIC_POUT)
+ #define DATA_A5_LOW   	     	IF_OutPutGpio_Write(DATA_A5_PORT, DATA_A5_PIN, 0, LOGIC_POUT)
+ #define DATA_A5_HIGH 	     	IF_OutPutGpio_Write(DATA_A5_PORT, DATA_A5_PIN, 1, LOGIC_POUT)
 
- #define DATA_A6_LOW   	     	IF_GpioOutPut(DATA_A6_PORT, DATA_A6_PIN, 0, LOGIC_POUT)
- #define DATA_A6_HIGH 	     	IF_GpioOutPut(DATA_A6_PORT, DATA_A6_PIN, 1, LOGIC_POUT)
+ #define DATA_A6_LOW   	     	IF_OutPutGpio_Write(DATA_A6_PORT, DATA_A6_PIN, 0, LOGIC_POUT)
+ #define DATA_A6_HIGH 	     	IF_OutPutGpio_Write(DATA_A6_PORT, DATA_A6_PIN, 1, LOGIC_POUT)
 
- #define DATA_A7_LOW   	     	IF_GpioOutPut(DATA_A7_PORT, DATA_A7_PIN, 0, LOGIC_POUT)
- #define DATA_A7_HIGH 	     	IF_GpioOutPut(DATA_A7_PORT, DATA_A7_PIN, 1, LOGIC_POUT)
+ #define DATA_A7_LOW   	     	IF_OutPutGpio_Write(DATA_A7_PORT, DATA_A7_PIN, 0, LOGIC_POUT)
+ #define DATA_A7_HIGH 	     	IF_OutPutGpio_Write(DATA_A7_PORT, DATA_A7_PIN, 1, LOGIC_POUT)
 
- #define DATA_A8_LOW   	     	IF_GpioOutPut(DATA_A8_PORT, DATA_A8_PIN, 0, LOGIC_POUT)
- #define DATA_A8_HIGH 	     	IF_GpioOutPut(DATA_A8_PORT, DATA_A8_PIN, 1, LOGIC_POUT)
+ #define DATA_A8_LOW   	     	IF_OutPutGpio_Write(DATA_A8_PORT, DATA_A8_PIN, 0, LOGIC_POUT)
+ #define DATA_A8_HIGH 	     	IF_OutPutGpio_Write(DATA_A8_PORT, DATA_A8_PIN, 1, LOGIC_POUT)
  
  //data(output) signal
- #define DATA_D0_LOW   	     	IF_GpioOutPut(DATA_D0_PORT, DATA_D0_PIN, 0, LOGIC_POUT)
- #define DATA_D0_HIGH 	     	IF_GpioOutPut(DATA_D0_PORT, DATA_D0_PIN, 1, LOGIC_POUT)
+ #define DATA_D0_LOW   	     	IF_OutPutGpio_Write(DATA_D0_PORT, DATA_D0_PIN, 0, LOGIC_POUT)
+ #define DATA_D0_HIGH 	     	IF_OutPutGpio_Write(DATA_D0_PORT, DATA_D0_PIN, 1, LOGIC_POUT)
 
- #define DATA_D1_LOW   	     	IF_GpioOutPut(DATA_D1_PORT, DATA_D1_PIN, 0, LOGIC_POUT)
- #define DATA_D1_HIGH 	     	IF_GpioOutPut(DATA_D1_PORT, DATA_D1_PIN, 1, LOGIC_POUT)
+ #define DATA_D1_LOW   	     	IF_OutPutGpio_Write(DATA_D1_PORT, DATA_D1_PIN, 0, LOGIC_POUT)
+ #define DATA_D1_HIGH 	     	IF_OutPutGpio_Write(DATA_D1_PORT, DATA_D1_PIN, 1, LOGIC_POUT)
 
- #define DATA_D2_LOW   	     	IF_GpioOutPut(DATA_D2_PORT, DATA_D2_PIN, 0, LOGIC_POUT)
- #define DATA_D2_HIGH 	     	IF_GpioOutPut(DATA_D2_PORT, DATA_D2_PIN, 1, LOGIC_POUT)
+ #define DATA_D2_LOW   	     	IF_OutPutGpio_Write(DATA_D2_PORT, DATA_D2_PIN, 0, LOGIC_POUT)
+ #define DATA_D2_HIGH 	     	IF_OutPutGpio_Write(DATA_D2_PORT, DATA_D2_PIN, 1, LOGIC_POUT)
 
- #define DATA_D3_LOW   	     	IF_GpioOutPut(DATA_D3_PORT, DATA_D3_PIN, 0, LOGIC_POUT)
- #define DATA_D3_HIGH 	     	IF_GpioOutPut(DATA_D3_PORT, DATA_D3_PIN, 1, LOGIC_POUT)
+ #define DATA_D3_LOW   	     	IF_OutPutGpio_Write(DATA_D3_PORT, DATA_D3_PIN, 0, LOGIC_POUT)
+ #define DATA_D3_HIGH 	     	IF_OutPutGpio_Write(DATA_D3_PORT, DATA_D3_PIN, 1, LOGIC_POUT)
 
- #define DATA_D4_LOW   	     	IF_GpioOutPut(DATA_D4_PORT, DATA_D4_PIN, 0, LOGIC_POUT)
- #define DATA_D4_HIGH 	     	IF_GpioOutPut(DATA_D4_PORT, DATA_D4_PIN, 1, LOGIC_POUT)
+ #define DATA_D4_LOW   	     	IF_OutPutGpio_Write(DATA_D4_PORT, DATA_D4_PIN, 0, LOGIC_POUT)
+ #define DATA_D4_HIGH 	     	IF_OutPutGpio_Write(DATA_D4_PORT, DATA_D4_PIN, 1, LOGIC_POUT)
 
- #define DATA_D5_LOW   	     	IF_GpioOutPut(DATA_D5_PORT, DATA_D5_PIN, 0, LOGIC_POUT)
- #define DATA_D5_HIGH 	     	IF_GpioOutPut(DATA_D5_PORT, DATA_D5_PIN, 1, LOGIC_POUT)
+ #define DATA_D5_LOW   	     	IF_OutPutGpio_Write(DATA_D5_PORT, DATA_D5_PIN, 0, LOGIC_POUT)
+ #define DATA_D5_HIGH 	     	IF_OutPutGpio_Write(DATA_D5_PORT, DATA_D5_PIN, 1, LOGIC_POUT)
 
- #define DATA_D6_LOW   	     	IF_GpioOutPut(DATA_D6_PORT, DATA_D6_PIN, 0, LOGIC_POUT)
- #define DATA_D6_HIGH 	     	IF_GpioOutPut(DATA_D6_PORT, DATA_D6_PIN, 1, LOGIC_POUT)
+ #define DATA_D6_LOW   	     	IF_OutPutGpio_Write(DATA_D6_PORT, DATA_D6_PIN, 0, LOGIC_POUT)
+ #define DATA_D6_HIGH 	     	IF_OutPutGpio_Write(DATA_D6_PORT, DATA_D6_PIN, 1, LOGIC_POUT)
 
- #define DATA_D7_LOW   	     	IF_GpioOutPut(DATA_D7_PORT, DATA_D7_PIN, 0, LOGIC_POUT)
- #define DATA_D7_HIGH 	     	IF_GpioOutPut(DATA_D7_PORT, DATA_D7_PIN, 1, LOGIC_POUT)
+ #define DATA_D7_LOW   	     	IF_OutPutGpio_Write(DATA_D7_PORT, DATA_D7_PIN, 0, LOGIC_POUT)
+ #define DATA_D7_HIGH 	     	IF_OutPutGpio_Write(DATA_D7_PORT, DATA_D7_PIN, 1, LOGIC_POUT)
 
 
- #define DATA_D0_READ   	     IF_GpioInPut(DATA_D0_PORT, DATA_D0_PIN, ACTIVE_HIGH)
- #define DATA_D1_READ   	     IF_GpioInPut(DATA_D1_PORT, DATA_D1_PIN, ACTIVE_HIGH)
- #define DATA_D2_READ   	     IF_GpioInPut(DATA_D2_PORT, DATA_D2_PIN, ACTIVE_HIGH)
- #define DATA_D3_READ   	     IF_GpioInPut(DATA_D3_PORT, DATA_D3_PIN, ACTIVE_HIGH)
- #define DATA_D4_READ   	     IF_GpioInPut(DATA_D4_PORT, DATA_D4_PIN, ACTIVE_HIGH)
- #define DATA_D5_READ   	     IF_GpioInPut(DATA_D5_PORT, DATA_D5_PIN, ACTIVE_HIGH)
- #define DATA_D6_READ   	     IF_GpioInPut(DATA_D6_PORT, DATA_D6_PIN, ACTIVE_HIGH)
- #define DATA_D7_READ   	     IF_GpioInPut(DATA_D7_PORT, DATA_D7_PIN, ACTIVE_HIGH)
+ #define DATA_D0_READ   	     IF_InPutGpio_Read(DATA_D0_PORT, DATA_D0_PIN, ACTIVE_HIGH)
+ #define DATA_D1_READ   	     IF_InPutGpio_Read(DATA_D1_PORT, DATA_D1_PIN, ACTIVE_HIGH)
+ #define DATA_D2_READ   	     IF_InPutGpio_Read(DATA_D2_PORT, DATA_D2_PIN, ACTIVE_HIGH)
+ #define DATA_D3_READ   	     IF_InPutGpio_Read(DATA_D3_PORT, DATA_D3_PIN, ACTIVE_HIGH)
+ #define DATA_D4_READ   	     IF_InPutGpio_Read(DATA_D4_PORT, DATA_D4_PIN, ACTIVE_HIGH)
+ #define DATA_D5_READ   	     IF_InPutGpio_Read(DATA_D5_PORT, DATA_D5_PIN, ACTIVE_HIGH)
+ #define DATA_D6_READ   	     IF_InPutGpio_Read(DATA_D6_PORT, DATA_D6_PIN, ACTIVE_HIGH)
+ #define DATA_D7_READ   	     IF_InPutGpio_Read(DATA_D7_PORT, DATA_D7_PIN, ACTIVE_HIGH)
  
  #define READ_DATA_D0D7_PORT	 (gpio_input_data_bit_read(DATA_D0_PORT,DATA_D0_PIN)<<0) |	\
 								 (gpio_input_data_bit_read(DATA_D1_PORT,DATA_D1_PIN)<<1) |	\

@@ -33,10 +33,10 @@ static CommonParam_t			CommonParam;
 static InternalParam_t 			InternalParam;
 static UserParam_t 				UserParam;
 
-static VoltMapParam_t           VoltMapParam;
-static PhaseMapParam_t          PhaseMapParam;	
+static VoltMapParam_t          VoltMapParam;
+static PhaseMapParam_t         PhaseMapParam;	
 
-static CmdCtrlParam_t 			DevCmdParam;
+static CmdCtrlParam_t 		DevCmdParam;
 
 /* GLOBAL VARIABLES */
 FaultWord_t 			g_FaultWord;
@@ -73,39 +73,37 @@ static void ConvertUnit_InternalParam(InternalParam_t *pInternalParam);
  * END ***************************************************************************/
 void Params_Init(void)
 {
+	uint8_t ret = 0;
 	/*清除各个状态字*/
 	memset(&g_FaultWord,0,sizeof(FaultWord_t));
 	memset(&g_StatusWord,0,sizeof(StatusWord_t));
 	memset(&DevCmdParam,0,sizeof(CmdCtrlParam_t));
-	
-	//DevCmdParam.PowerWorkMode = 1;
 	for(uint8_t capIndex = 0;capIndex < CAP_NUM;capIndex++)
 	{
 		DevCmdParam.TargetPos[capIndex] = 5000;
 		DevCmdParam.CurrentPos[capIndex]= 5000;	
 	}
-	Read_FS_PartsParam((uint8_t*)&Fs_PartsParam);
-	Read_FS_CommonParam((uint8_t*)&Fs_CommonParam);
-	Read_FS_InternalParam((uint8_t*)&Fs_InternalParam);
-	Read_FS_UserParam((uint8_t*)&Fs_UserParam);
-	Check_Fs_PartsParam();
-	Check_Fs_CommonParam();
-	Check_Fs_InternalParam();
-	Check_Fs_UserParam(); 
+	ret = Read_FS_PartsParam((uint8_t*)&Fs_PartsParam);
+	if(ret == 1)Check_Fs_PartsParam();
+	ret = Read_FS_CommonParam((uint8_t*)&Fs_CommonParam);
+	if(ret == 1)Check_Fs_CommonParam();
+	ret = Read_FS_InternalParam((uint8_t*)&Fs_InternalParam);
+	if(ret == 1)Check_Fs_InternalParam();
+	ret = Read_FS_UserParam((uint8_t*)&Fs_UserParam);
+	if(ret == 1)Check_Fs_UserParam(); 
 	
-	Read_PartsParam((uint8_t*)&PartsParam);
-	Read_CommonParam((uint8_t*)&CommonParam);
-	Read_InternalParam((uint8_t*)&InternalParam);
-	Read_UserParam((uint8_t*)&UserParam);
-	Read_VoltageMapParam((uint8_t*)&VoltMapParam);
-	Read_PhaseMapParam((uint8_t*)&PhaseMapParam);
-	
-	Check_PartsParam();
-	Check_CommonParam();
-	Check_InternalParam();
-	Check_UserParam(); 
-    Check_VoltMapParam();
-    Check_PhaseMapParam();	
+	ret = Read_PartsParam((uint8_t*)&PartsParam);
+	if(ret == 1)Check_PartsParam();
+	ret = Read_CommonParam((uint8_t*)&CommonParam);
+	if(ret == 1)Check_CommonParam();
+	ret = Read_InternalParam((uint8_t*)&InternalParam);
+	if(ret == 1)Check_InternalParam();
+	ret = Read_UserParam((uint8_t*)&UserParam);
+	if(ret == 1)Check_UserParam(); 
+	ret = Read_VoltageMapParam((uint8_t*)&VoltMapParam);
+	if(ret == 1) Check_VoltMapParam();
+	ret = Read_PhaseMapParam((uint8_t*)&PhaseMapParam);
+    if(ret == 1)Check_PhaseMapParam();	
 }
 
 /* FUNCTION ***********************************************************************
@@ -423,7 +421,7 @@ static void Check_UserParam(void)
 	{
 		if (pCheckParam[i] != 0xFF)break;
 	}
-	if(i>USER_PARAM_LEN/3)
+	if(i > USER_PARAM_LEN/3)
 	{
 		memset(&UserParam, 0, USER_PARAM_LEN);
 		UserParam.PrefDelayOff = 15;	
@@ -489,6 +487,21 @@ static void Check_UserParam(void)
  * END ***************************************************************************/
 static void Check_VoltMapParam(void)
 {	
+	uint16_t i;
+	//内容全部为0xFF则将参数值全部初始化
+	uint8_t *pCheckParam = (uint8_t*)&VoltMapParam;
+	for (i = 0; i < VOLTMAP_PARAM_LEN; i++)
+	{
+		if (pCheckParam[i] != 0xFF)break;
+	}
+	if(i > VOLTMAP_PARAM_LEN/3)
+	{
+		VoltMapParam.len = 0;	
+		for(uint8_t index=0;index < MAX_RFPWRPHS_NUM;index++)
+		{
+			VoltMapParam.Volt[i] = 0;
+		}
+	}
     if(VoltMapParam.len >= MAX_RFPWRVOL_NUM)
     {
 		VoltMapParam.len = MAX_RFPWRVOL_NUM;
@@ -509,6 +522,21 @@ static void Check_VoltMapParam(void)
  * END ***************************************************************************/
 static void Check_PhaseMapParam(void)
 {	
+	uint16_t i;
+	//内容全部为0xFF则将参数值全部初始化
+	uint8_t *pCheckParam = (uint8_t*)&PhaseMapParam;
+	for (i = 0; i < PHASEMAP_PARAM_LEN; i++)
+	{
+		if (pCheckParam[i] != 0xFF)break;
+	}
+	if(i > PHASEMAP_PARAM_LEN/3)
+	{
+		PhaseMapParam.len = 0;	
+		for(uint8_t index=0;index<MAX_RFPWRPHS_NUM;index++)
+		{
+			PhaseMapParam.power[i] = MAX_MAP_POWER;
+		}
+	}
 	if(PhaseMapParam.len >= MAX_RFPWRPHS_NUM)
     {
 		PhaseMapParam.len = MAX_RFPWRPHS_NUM;
@@ -1537,7 +1565,7 @@ void IF_InternalParam_StartPoint(int32_t value)
 	ActionsRSP[ID_SAVE_INTERNAL_PARAM]= ON;		
 }
 
-int32_t IF_InternalParam_GetPhasePoint(void)
+int32_t IF_InternalParam_GetInitPoint(void)
 {
 	int32_t value = 0;
 	if(ON==IF_CmdParam_GetFactoryMode())
@@ -2215,13 +2243,13 @@ uint8_t IF_CmdParam_GetPulseDutyCircle(void)
 	return DevCmdParam.PulseDuty;
 }
 //SyncSource
-void IF_CmdParam_SetSyncSource(uint8_t value)
+void IF_CmdParam_SetSyncOutSource(uint8_t value)
 {
-	DevCmdParam.SyncSource = value;
+	DevCmdParam.SyncOutSource = value;
 }
-uint8_t IF_CmdParam_GetSyncSource(void)
+uint8_t IF_CmdParam_GetSyncOutSource(void)
 {
-	return  DevCmdParam.SyncSource;
+	return  DevCmdParam.SyncOutSource;
 }
 /**********************************************************/
 
@@ -2293,17 +2321,16 @@ void IF_NvmParam_SetPhaseMapMap(int32_t value,uint16_t index)
 	PhaseMapParam.power[index] = value;
 	ActionsRSP[ID_SAVE_PHASEMAP_PARAM]= ON;	
 }
-int32_t IF_NvmParam_GetPhaseMapTable(int32_t power)
+int32_t IF_NvmParam_GetPhaseMapTable(int32_t Power)
 {
 	uint32_t PhaseValue = 0;
 	uint16_t tabIndex = 0;	
-	uint32_t powerMW = power*1000;  //参数功率单位(mw)
 	while(tabIndex <= PhaseMapParam.len)
     {
-		if(powerMW <= PhaseMapParam.power[tabIndex])break;	
+		if(Power <= PhaseMapParam.power[tabIndex]/1000)break;	
 		tabIndex++;
 	}
-	if(tabIndex > 0)PhaseValue  = (tabIndex-1)*1000;//参数相位单位(1/1000)
+	if(tabIndex >= 1)PhaseValue  = (tabIndex-1)*1000;//参数相位单位(1/1000)
 	if(PhaseValue >= MAX_FPGA_PHASE)PhaseValue = MAX_FPGA_PHASE;
 	return PhaseValue;
 }
@@ -2320,7 +2347,7 @@ void IF_UpdateRFPwrPIDProcessData(void)
 {	 
 	 if (g_ProcessData.RecordNum < MAX_PD_RECORD_NUM)
 	 {	
-		if(IF_CmdParam_GetRFPwrPoint() < IF_InternalParam_GetPhasePoint())
+		if(IF_CmdParam_GetRFPwrPoint() < IF_InternalParam_GetInitPoint())
 		{
 			g_ProcessData.Records[g_ProcessData.RecordNum].ACDCVolt = IF_CmdParam_GetDDSPhase();	
 		}else
@@ -2333,7 +2360,14 @@ void IF_UpdateRFPwrPIDProcessData(void)
 		g_ProcessData.RecordNum++;
 	 }
 }
-
+uint8_t IF_GetRFPwrPIDProcessDataFlag(void)
+{
+    return g_ProcessData.flag;
+}
+void IF_SetRFPwrPIDProcessDataFlag(uint8_t value)
+{
+    g_ProcessData.flag = value;
+}
 void IF_ClearRFPwrPIDProcessData(void)
 {
     memset(&g_ProcessData, 0, PROCESS_DATA_LEN);

@@ -165,12 +165,6 @@ typedef enum
 	ErrorDataCRC	 	=	0x08,
 }FUNCODE_ERR;
 
-typedef struct
-{
-	uint16_t len;
-	uint8_t buf[BUFFER_SIZE];
-}ModBuffer_t;
-
 typedef struct _Modbus_Frame_t
 {
 	uint8_t  Address;					 //从机地址
@@ -179,8 +173,7 @@ typedef struct _Modbus_Frame_t
 	uint16_t RegData[MAX_REG_NUM];  	 //寄存器数据
 	uint16_t RegLen;  	 				 //寄存器长度
 	uint16_t DataLen;					 //数据长度
-	uint16_t crc16;
-	
+	uint16_t crc16;	
 }Modbus_Frame_t;	
 
 

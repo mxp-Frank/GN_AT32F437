@@ -180,8 +180,7 @@ void Dealwith_BSIP_Layer7(void)
 void BSIP_TxTimeManagment(uint8_t port)
 {      
     CommMsg_t txMsg;
-	uint8_t  txLayer2DataBuf[BUFFER_SIZE];
-	uint16_t txLayer2DataLen;
+	Layer2Data_t txLayer2Data;
     static uint8_t sendCnt = 0;
     static uint8_t sendTimeOut = 0;
     static uint16_t fromAckToSend = 0;  //for test only!!!
@@ -191,9 +190,10 @@ void BSIP_TxTimeManagment(uint8_t port)
         if(pdTRUE == xQueueReceive(BsipTxQueue, &txMsg, (TickType_t)0))
         {
 			sendCnt = 0;
-            txLayer2DataLen = txMsg.len;
-			memcpy(&txLayer2DataBuf,&txMsg.data,txMsg.len);
-			SendLayer2Frame(port, txLayer2DataBuf,txLayer2DataLen);
+			memset(&txLayer2Data, 0, sizeof(Layer2Data_t));
+            txLayer2Data.Len = txMsg.len;
+			memcpy(&txLayer2Data.Buf,&txMsg.data,txMsg.len);
+			SendLayer2Frame(port, &txLayer2Data);
             
             //set interval timer’s timeout value according to the type of the tx buf;
             switch (txMsg.data[0])
@@ -279,26 +279,25 @@ void BSIP_TxBufManagment(uint8_t port)
 void BSIP_FpgaFirmwareUpdate(uint8_t port)
 {
 	BSIPInfo_t BsipFrame;
-	uint8_t  txLayer2DataBuf[MAX_INFO_LEN];
-	uint16_t txLayer2DataLen = 0;
+	Layer2Data_t txLayer2Data;
 	if(pdTRUE == xQueueReceive(FpgaFWQueue, &BsipFrame, portMAX_DELAY)) //接受到FPGA升级包队列
 	{	
-		memset(txLayer2DataBuf,0,MAX_INFO_LEN);
-		txLayer2DataBuf[txLayer2DataLen++]=BsipFrame.bsip.msgclass;  
-		txLayer2DataBuf[txLayer2DataLen++]=BsipFrame.bsip.msgid;
-		txLayer2DataBuf[txLayer2DataLen++]=BsipFrame.bsip.subindex.byte;
+		memset(&txLayer2Data,0,sizeof(Layer2Data_t));
+		txLayer2Data.Buf[txLayer2Data.Len++]=BsipFrame.bsip.msgclass;  
+		txLayer2Data.Buf[txLayer2Data.Len++]=BsipFrame.bsip.msgid;
+		txLayer2Data.Buf[txLayer2Data.Len++]=BsipFrame.bsip.subindex.byte;
 		for(uint16_t i= 0;i< BsipFrame.infoLen-3;i++)
 		{	
-			txLayer2DataBuf[txLayer2DataLen++] = BsipFrame.bsip.info[i];
+			txLayer2Data.Buf[txLayer2Data.Len++] = BsipFrame.bsip.info[i];
 		}
-		SendLayer2Frame(port, txLayer2DataBuf,txLayer2DataLen);
+		SendLayer2Frame(port, &txLayer2Data);
 		if(pdTRUE == xSemaphoreTake(FpgaReSemaphore, 500))
 		{	
 			NeedSend_ACK = 1;
 			xSemaphoreGive(FpgaNfSemaphore);
 		}else
 		{
-			SendLayer2Frame(port, txLayer2DataBuf,txLayer2DataLen);
+			SendLayer2Frame(port, &txLayer2Data);
 			if(pdTRUE == xSemaphoreTake(FpgaReSemaphore, 500))
 			{	
 				NeedSend_ACK = 1;
@@ -321,27 +320,21 @@ void BSIP_FpgaFirmwareUpdate(uint8_t port)
 void BSIP_ModbusFirmwareUpdate(uint8_t port)
 {
 	BSIPInfo_t BsipFrame;
-	uint8_t  txLayer2DataBuf[MAX_INFO_LEN];
-	uint16_t txLayer2DataBufLen = 0;
-	uint16_t   ModbusUpdateFrameLen; 
+	Layer2Data_t txLayer2Data;
 	if(pdTRUE == xQueueReceive(ModbusFWQueue, &BsipFrame,5000)) //5s接收不到队列，跳转到读写其他参数
 	{		
-		memset(txLayer2DataBuf,0,MAX_INFO_LEN);
-		txLayer2DataBufLen = BsipFrame.infoLen - 3;		
-		ModbusUpdateFrameLen = ((txLayer2DataBufLen)%2==0)? (txLayer2DataBufLen/2): ((txLayer2DataBufLen+1)/2);
-		for(uint16_t i= 0;i<txLayer2DataBufLen;i++)
-		{	
-			txLayer2DataBuf[i]=BsipFrame.bsip.info[i];
-		}
-						
-		MB_WriteNumHoldingReg_10H(MODBUS_ADDR, HOLD_REG_SW_START,ModbusUpdateFrameLen,(uint16_t*)txLayer2DataBuf);
+		memset(&txLayer2Data,0,sizeof(Layer2Data_t));
+		txLayer2Data.Len = BsipFrame.infoLen - 3;		
+		memcpy(&txLayer2Data.Buf,&BsipFrame.bsip.info,txLayer2Data.Len);	
+		uint16_t ModbusUpdateFrameLen = ((txLayer2Data.Len)%2==0)? (txLayer2Data.Len/2): ((txLayer2Data.Len+1)/2);	
+		MB_WriteNumHoldingReg_10H(MODBUS_ADDR, HOLD_REG_SW_START,ModbusUpdateFrameLen,(uint16_t*)txLayer2Data.Buf);
 		if(pdTRUE == xSemaphoreTake(ModbusReSemaphore, 300))
 		{	
 			NeedSend_ACK = 1;
 			xSemaphoreGive(ModbusNfSemaphore); 
 		}else
 		{
-			MB_WriteNumHoldingReg_10H(MODBUS_ADDR, HOLD_REG_SW_START,ModbusUpdateFrameLen,(uint16_t*)txLayer2DataBuf);
+			MB_WriteNumHoldingReg_10H(MODBUS_ADDR, HOLD_REG_SW_START,ModbusUpdateFrameLen,(uint16_t*)txLayer2Data.Buf);
 			if(pdTRUE == xSemaphoreTake(ModbusReSemaphore, 300))
 			{	
 				NeedSend_ACK = 1;
@@ -414,7 +407,7 @@ static void Dealwith_Cmd_PulseFrequency(uint8_t* pBuf)
 static void Dealwith_Cmd_SyncSource( uint8_t* pBuf)
 {
 	uint8_t value = pBuf[0];
-	IF_CmdParam_SetSyncSource(value);
+	IF_CmdParam_SetSyncOutSource(value);
 }
 static void Dealwith_Cmd_SyncOutDelay(uint8_t* pBuf)
 {

@@ -37,8 +37,8 @@ typedef enum
   BAUD115200 = 115200
 }UARTBAUD_TypeDef;
 
-#define RS485_RX_EN()		IF_GpioOutPut(COM4_EN_PORT,COM4_EN_PIN,0,LOGIC_POUT);
-#define RS485_TX_EN()		IF_GpioOutPut(COM4_EN_PORT,COM4_EN_PIN,1,LOGIC_POUT);
+#define RS485_RX_EN()		IF_OutPutGpio_Write(COM4_EN_PORT,COM4_EN_PIN,0,LOGIC_POUT);
+#define RS485_TX_EN()		IF_OutPutGpio_Write(COM4_EN_PORT,COM4_EN_PIN,1,LOGIC_POUT);
 /******************************************************************************
  * Interface functions                                                         *
  ******************************************************************************/

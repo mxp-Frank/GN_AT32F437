@@ -40,8 +40,8 @@ void IF_SL_CfgInit(void)
     IF_NvmInit();
     IF_SensorInit();
     IF_TimerInit();
-	IF_CommInit();
 	IF_InterfaceInit();	
+	IF_CommInit();
 }
 	
 void IF_SL_WDOG_FEED(void)
@@ -128,14 +128,31 @@ void IF_SL_Sensor_Device_Task(void)
 {
 	 IF_Sensor_Device_Task();
 }
+/* FUNCTION *********************************************************************************
+ * Function Name : IF_SL_InterfaceInput_Task
+ * Description   : Interface任务函数接口
+ * Parameter     : 
+ * Parameter     :                               
+ * END ***************************************************************************************/
+void IF_SL_InterfaceInput_Task(void)
+{
+	IF_InterfaceInput();
+}	
 /**********************Fpga Sensor Layer****************************************/
 float IF_SL_Fpga_GetSensor(uint8_t ChnNo,uint8_t Pwr_Chn)
 {
-	float value;
-	value = IF_Fpga_GetRegAlgSensor(ChnNo,Pwr_Chn);
-	return value;
+	float fvalue;
+	fvalue = IF_Fpga_GetRegAlgSensor(ChnNo,Pwr_Chn);
+	return fvalue;
 }
-
+uint32_t IF_SL_Fpga_GetSyncOutMeasureFrequency(void)
+{
+	return IF_Fpga_GetSyncOutMeasureFrequency();
+}
+uint8_t IF_SL_Fpga_GetSyncOutMeasureDutyCircle(void)
+{
+	return IF_Fpga_GetSyncOutMeasureDutyCircle();
+}
 int16_t IF_SL_Get_Sensor_DCBias(void)
 {
 	int16_t value =0;
@@ -164,10 +181,10 @@ void IF_SL_EXDAC_SetACDCVoltageOutput(float value)
 }
 /**********************Internal Parameters*******************************/
 //PhasePoint of parameter
-uint16_t IF_SL_InternalParam_GetPhasePoint(void)
+uint16_t IF_SL_InternalParam_GetInitPoint(void)
 {
 	uint16_t Value = 0;
-	Value = IF_InternalParam_GetPhasePoint();
+	Value = IF_InternalParam_GetInitPoint();
 	return Value;
 }
 //PulseRFPowerThr of parameter 
@@ -333,6 +350,11 @@ void IF_SL_Nvm_ParamsRW(NVMRWMask_Enum NVMRW_Mask)
 }
 
 /**********************Timer Layer*******************************************/
+uint32_t IF_SL_Timer_GetPowerUpTimer(void)
+{
+	return IF_Timer_GetPowerUpTimer();
+}
+
 float IF_SL_Timer_GetRFSlowStartDelayTime(void)
 {
 	return IF_Timer_GetRFSlowStartDelayTime();
@@ -357,15 +379,16 @@ void IF_SL_Timer_SetRFOffDelayFlag(uint8_t OnorOff)
 }
 uint8_t IF_SL_Timer_GetRFOffDelayTimeOutFlag(void)
 {
-	uint8_t value = 0;
-	value = IF_Timer_GetRFOffDelayTimeOutFlag();
-	return value;
+	return IF_Timer_GetRFOffDelayTimeOutFlag();
 }
 void IF_SL_Timer_ClearRFOffDelayTimeOutFlag(void)
 {
 	IF_Timer_ClearRFOffDelayTimeOutFlag();
 }
-
+uint8_t IF_SL_Timer_GetSlowStartFlag(void)
+{
+	return IF_Timer_GetSlowStartFlag();
+}	
 /**********************control and other Layer****************************************/
 void  IF_SL_SetUartBaudRate(uint8_t baudrateKey)
 {
@@ -406,10 +429,15 @@ void IF_SL_CmdParam_SetRFPowerState(uint8_t ONorOFF)
 	IF_CmdParam_SetRFPowerSwitch(ONorOFF);
 }
 //**************************************
-uint8_t IF_SL_CmdParam_GetLoopMode(void)
+uint8_t IF_SL_CmdParam_GetPowerWorkMode(void)
 {
 	return IF_CmdParam_GetPowerWorkMode();
 }
+
+void IF_SL_CmdParam_SetPowerWorkMode(uint8_t value)
+{
+	IF_CmdParam_SetPowerWorkMode(value);
+}	
 void IF_SL_CmdParam_SetDDSPhase(uint32_t value)
 {
 	 IF_CmdParam_SetDDSPhase(value);
@@ -419,14 +447,25 @@ void IF_SL_CmdParam_SetACDCVoltage(uint32_t value)
 	IF_CmdParam_SetACDCVoltage(value);
 }
 
+
 /*****************************************/
 void IF_SL_UpdateRFPwrPIDProcessData(void)
 {
-	IF_UpdateRFPwrPIDProcessData();
+	if( 0 == IF_GetRFPwrPIDProcessDataFlag())
+	{
+		IF_UpdateRFPwrPIDProcessData();
+	}
 }
 void IF_SL_ClearRFPwrPIDProcessData(void)
 {
-	IF_ClearRFPwrPIDProcessData();
+	if(1 == IF_GetRFPwrPIDProcessDataFlag())
+	{
+		IF_ClearRFPwrPIDProcessData();
+	}
+}
+void IF_SL_ClearRFPwrPIDProcessDataFlag(void)
+{
+	IF_SetRFPwrPIDProcessDataFlag(0);
 }
 /*****************************************/
 void IF_SL_ExecuteAction(void)

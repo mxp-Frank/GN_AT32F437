@@ -25,26 +25,25 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define DEVICE_CMD_LEN                  		(4)
-#define ANALOG_VOLT								(10)				//模拟口增益值	
-#define CAP_NUM									2
-
-
-#define STANDBY_STATE						0
-#define IDLE_STATE							1
-#define RUN_STATE							2
-
+#define CAP_NUM									(2)
+#define MAIN_TASK_PERIOD       					(2)  
+#define PID_INIT_TIMER						    (2)
+#define PID_LOOP_TIMER							(10)
+#define THR_RATE								(1.06F)
 typedef enum
 {
-    MODE_OPEN         = 0,			
-    MODE_CLOSE        = 1,					
-}LoopModeEnum;
+    STANDBY_STATE     = 0,
+    INTLK_STATE       = 1,	
+    IDLE_STATE        = 2,
+    OPEN_STATE		  = 3,
+	RUN_STATE		  = 4,
+}RunStateEnum;
 
 typedef struct
 {
-    LoopModeEnum   Now;
-    LoopModeEnum   Last;
-}LoopMode_t;
+    RunStateEnum   Now;
+    RunStateEnum   Last;
+}RunState_t;
 typedef enum
 {
     RF_OFF        = 0,
@@ -56,7 +55,7 @@ typedef struct
     RFEnum   Now;
     RFEnum   Last;
 }RFPower_t;
-		
+
 typedef struct 
 {
 	float			Freq;		    //频率
@@ -66,33 +65,46 @@ typedef struct
 	float 			Tsqure;			//反射系数	
 	uint16_t        VDCBias;        //匹配器VDC电压
 }Sensor_t;	
-typedef struct _FpgaPulse_t
+
+typedef struct 
 {
-	uint8_t  Mode;
-	uint32_t Frequency;
-	uint8_t  DutyCircle; 
-	uint32_t RFPowerThr;
-	uint16_t SyncDelay;
-}FpgaPulse_t;
+	uint32_t         Volt_Cnt;  	//PID过程计数
+	uint32_t         VoltLimit;    //设备PID驱动电压的限制
+	
+	uint32_t         Phase_Cnt;     //PID过程计数
+	uint32_t         PhaseLimit;    //设备PID驱动相位的限制		
+}SetPID_t;
+
+typedef struct
+{
+	uint32_t         Phase;			//设备阈值相位值
+	uint32_t         Volt;			//设备阈值电压值
+	uint32_t         Power;			//设备阈值功率值
+}AjustThr_t;	
+
+typedef struct 
+{
+	uint32_t Point;
+	uint32_t Phase;
+	uint32_t Volt;
+}PwrState_t;
+
 
 typedef struct _GN_Device_t
 { 	
-	uint8_t			 InterlockOpen;    //当前Interlock状态
-	uint8_t          PDO_End;		   //过程数据结束标志位
-	LoopMode_t   	 LoopMode;	       //工作模式状态
-	RFPower_t        RFPwrState;       //射频工作状态
+	RunState_t		 RunState;    		//I监测状态
+	RFPower_t        RFPwrState;        //射频工作状态
+	Sensor_t         Sensor;	        //设备sensor值	
 	
-	Sensor_t         Sensor;	       //设备sensor值	
-	FpgaPulse_t		 FpgaPulse;        //设备输出脉冲值
+	PwrState_t       TargetPower;       //设备目标值
+	PwrState_t 		 LastPower;       	//上次设备输出值
 	
-	uint32_t 		 LastPower;       	   //设备输出功率值	
-	uint32_t         Volt_PID_Cnt;  	//PID过程计数
-	float 	 	 	 SetPIDVolt;	    //设备PID驱动电压值	
+	AjustThr_t		 AjustThr;          //设备阈值调整
+	AjustThr_t		 LastAjustThr;      //上次设备阈值调整
 	
-	uint32_t         Phase_PID_Cnt;    //PID过程计数
-	float 	 	     SetPIDPhase;	   //设备PID驱动相位值	
-			
-	uint16_t         PowerThrDown; 	   //阈值下降斜率
+	SetPID_t	     SetPID;            //设备PID调整
+	uint32_t		 SetPower;          //设备上位机设置功率	
+	
 }GN_Device_t;
 
 typedef struct 
@@ -104,20 +116,22 @@ typedef struct
 	__IO float      ErrorThr;           //偏差阈值
 }PID_Typedef;
 
+
+
+
 extern uint8_t NetIP_Addr[4];
 extern uint8_t SystemTimerClearFlag;
 extern uint8_t ResumeSystemParamFlag;
 extern GN_Device_t GN_Device;
 extern SemaphoreHandle_t maintainSemaphore;
 
+
 extern void IF_Module_SWCInit(void);
 extern void IF_Module_Main_Task(void);
 extern void IF_Module_Output_Task(void);
-extern void IF_Module_PortOutput_Task(void);
-extern void IF_Module_SensorInput_Task(void);
-extern void IF_PT_CmdExecute_Task(void);
-extern void IF_PT_PortInput_Task(void);
 extern void IF_Module_Output_Task(void);
+extern void IF_Module_Input_Task(void);
+extern void IF_Module_CmdExecute_Task(void);
 
 #if defined(__cplusplus)
 extern "C" }

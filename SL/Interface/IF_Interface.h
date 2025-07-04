@@ -24,25 +24,10 @@
 
 typedef enum
 {
-	//
-	IOSWITCH_PANEL1DECT				 = 0,
-	IOSWITCH_PANEL2DECT				 = 1,
-    IOSWITCH_INTLKDECT   			 = 2,  
-    
-	IOSWITCH_RFLOADPOWER             = 3,   
-    IOSWITCH_RFPOWERDCBIAS      	 = 4,   
-    IOSWITCH_RFPOWERONDECT           = 5,   
-	
-    IOSWITCH_TUNEDDECT		         = 6,   
-    IOSWITCH_MOTORING      		 	 = 7,   
-    
-	IOSWITCH_OVERVOLALARM            = 8,   
-    IOSWITCH_OVERCURALARM            = 9,   
-	IOSWITCH_UNDERVOLALARM           = 10,   
-    IOSWITCH_OVERTEMPALARM           = 11,   
-	
+    IOSWITCH_INTLKDECT   			 = 0,  
+    IOSWITCH_INTLKEBABLE             = 1,
     //Record array len
-    IOSWITCH_MAX                	 = 12
+    IOSWITCH_MAX                	 = 2
 
 }IOSwitchEnum;
 
@@ -83,6 +68,7 @@ typedef enum
 ******************************************************************************/
 extern void IF_InterfaceInit(void);
 extern void IF_InterfaceInput(void);
+extern uint8_t IF_Get_NormalInput_SW(IOSwitchEnum sWx);
 extern void IF_SetNormalOutput_SIG(IOSignEnum SIGx,uint8_t OnorOff);
 #endif
 

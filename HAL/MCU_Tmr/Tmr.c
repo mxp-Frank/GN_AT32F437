@@ -65,7 +65,7 @@ __weak void FAN_PWM_ISR_Callback(void)
 
 void IF_FAN_PWM_Switch(uint8_t para)
 {
-	IF_GpioOutPut(FAN_PWM_PORT, FAN_PWM_PIN, para, LOGIC_POUT);	//高电平有效	
+	IF_OutPutGpio_Write(FAN_PWM_PORT, FAN_PWM_PIN, para, LOGIC_POUT);	//高电平有效	
 }	
 
 /* FUNCTION *******************************************************************
@@ -164,7 +164,7 @@ static void TIMER2_PWM_Port_Init(void)
 	
 	gpio_init_struct.gpio_pins = FAN_PWM_PIN;
 	gpio_init(FAN_PWM_PORT, &gpio_init_struct);
-	IF_GpioOutPut(FAN_PWM_PORT, FAN_PWM_PIN, 1, LOGIC_POUT);	//高电平有效
+	IF_OutPutGpio_Write(FAN_PWM_PORT, FAN_PWM_PIN, 1, LOGIC_POUT);	//高电平有效
 	
 }
 /* FUNCTION *******************************************************************
@@ -195,10 +195,10 @@ static void TIMER2_PWM_Init(void)
     tmr_interrupt_enable(TMR1, TMR_OVF_INT, TRUE);
 
     /* tmr1 hall interrupt nvic init */
-    nvic_irq_enable(TMR1_OVF_TMR10_IRQn, 6, 0);
+    nvic_irq_enable(TMR1_OVF_TMR10_IRQn, 8, 0);
 	/* enable tmr1 */
 	#ifdef DEBUG_ON    
-		debug_apb1_periph_mode_set(DEBUG_TMR1_PAUSE, TRUE);
+		debug_apb2_periph_mode_set(DEBUG_TMR1_PAUSE, TRUE);
 	#endif
     tmr_counter_enable(TMR1, TRUE);
 }
@@ -385,7 +385,7 @@ static void TIMER4_HAL_Init(void)
     /* get system clock */
     crm_clocks_freq_get(&crm_clocks_freq_struct);
     tmrCfg.tmrDiv = ((crm_clocks_freq_struct.apb2_freq * 2) / TMRCLK_28M) - 1;
-    tmrCfg.tmrPeriod = TMRPRD_100US;  //100us period
+    tmrCfg.tmrPeriod = TMRPRD_1MS;  //1ms period
 
 	/* enable tmr1 clock */
 	crm_periph_clock_enable(CRM_TMR5_PERIPH_CLOCK, TRUE);

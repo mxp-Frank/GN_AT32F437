@@ -23,8 +23,7 @@ extern "C" {
 #define TMRPRD_1MS          28800       //1ms period with TMRCLK_28M clk
 #define TMRPRD_25US         720         //25us period with TMRCLK_28M clk
 #define TMRCLK_28M          28800000    //28.8MHz clock(288/28.8=10, now use!)
-#define TMRPRD_100US        288000       //1ms period with TMRCLK_28M clk
-#define TMRPRD_5US         144
+#define TMRPRD_5US          144
 
 #define FAN_PWM_PORT			GPIOA			
 #define FAN_PWM_PIN				Fan_PWM_Pin100_PA8

@@ -151,7 +151,7 @@ extern void IF_InternalParam_SetVSWRLimit(int32_t value);
 extern int32_t IF_InternalParam_GetVSWRLimit(void);
 
 extern void IF_InternalParam_StartPoint(int32_t value);
-extern int32_t IF_InternalParam_GetPhasePoint(void);
+extern int32_t IF_InternalParam_GetInitPoint(void);
 
 extern void IF_InternalParam_SetACDCVoltGain(int32_t value);
 extern int32_t IF_InternalParam_GetACDCVoltGain(void);
@@ -287,8 +287,8 @@ extern uint32_t IF_CmdParam_GetPulseFrequency(void);
 extern void IF_CmdParam_SetPulseDutyCircle(uint8_t value);
 extern uint8_t IF_CmdParam_GetPulseDutyCircle(void);
 //---------------------------------------------------------------
-extern void IF_CmdParam_SetSyncSource(uint8_t value);
-extern uint8_t IF_CmdParam_GetSyncSource(void);
+extern void IF_CmdParam_SetSyncOutSource(uint8_t value);
+extern uint8_t IF_CmdParam_GetSyncOutSource(void);
 
 extern void IF_CmdParam_SetSyncOutDelay(uint32_t value);
 extern uint32_t IF_CmdParam_GetSyncOutDelay(void);
@@ -317,7 +317,8 @@ extern uint16_t IF_GetRFPwrPIDProcessData(uint16_t frameNo, uint8_t* pBuf);
 extern void IF_UpdateRFPwrPIDProcessData(void);
 extern void IF_ClearRFPwrPIDProcessData(void);
 extern uint16_t IF_GetRFPwrPIDProcessDataRecordNum(void);
-
+extern uint8_t IF_GetRFPwrPIDProcessDataFlag(void);
+extern void IF_SetRFPwrPIDProcessDataFlag(uint8_t value);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

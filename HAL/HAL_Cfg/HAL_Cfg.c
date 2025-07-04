@@ -51,9 +51,8 @@ void IF_HAL_CfgInit(void)
 	 IF_IOGpioInit();
 	 IF_UartInit();
 	 IF_DS1339Init();	
-	 IF_SpiflashInit(); 
+	 IF_SpiflashInit();	
 	 IF_WdogInit();
-	 delay_ms(50);
 }
 
 //*********************************
@@ -105,6 +104,10 @@ void IF_HAL_IntLock_Enable_Switch(uint8_t para)
 {
 	IF_IntLock_En_Switch(para);
 }
+uint8_t IF_HAL_IntLock_Enable_SigRead(void)
+{
+	return IF_InterLockEn_SigRead();
+}
 void IF_HAL_PwrOnOffLed_Switch(uint8_t para)
 {
 	IF_PowerOnOffLed_Switch(para);
@@ -129,7 +132,10 @@ uint8_t IF_HAL_InterLockDect_SigRead(void)
 {
 	return IF_InterLockDect_SigRead();
 }
-
+uint8_t IF_HAL_InterLockEnable_SigRead(void)
+{
+	return IF_InterLockEn_SigRead();
+}
 void IF_HAL_Fan_PWM_Switch(uint8_t para)
 {
 	IF_FAN_PWM_Switch(para);

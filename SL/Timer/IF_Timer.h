@@ -57,6 +57,7 @@ typedef struct _SystemTimer_t
 	
 	uint32_t FanSlowOnTimer;
 	uint8_t Pwm_duty;
+	uint8_t FanSlowOnFlag;
 } SystemTimer_t;
 
 /******************************************************************************
@@ -83,6 +84,7 @@ extern uint8_t IF_Timer_GetRFOffDelayTimeOutFlag(void);
 extern void IF_Timer_ClearRFOffDelayTimeOutFlag(void);
 
 extern uint32_t  IF_Timer_GetFanSpeedValue(uint8_t FanChnNo);
+extern uint8_t IF_Timer_GetSlowStartFlag(void);
 #if defined(__cplusplus)
 extern "C" }
 #endif /* __cplusplus */

@@ -222,7 +222,10 @@ uint32_t  IF_Timer_GetFanSpeedValue(uint8_t FanChnNo)
 	return SystemTimer.FanSpeedVal[FanChnNo];
 }
 
-
+uint8_t IF_Timer_GetSlowStartFlag(void)
+{
+	return SystemTimer.FanSlowOnFlag;
+}	
 
 /************************************************************************/
 /* Local Functions Definitions                                          */
@@ -386,11 +389,12 @@ static void Check_FanSpeedTimer(void)
 static void Check_FanSlowOnDelay(void)
 {
 	SystemTimer.FanSlowOnTimer++;
-	if (SystemTimer.FanSlowOnTimer >= 50)       // 50ms时间到
+	if (SystemTimer.FanSlowOnTimer >= 100)       // 100ms时间到
 	{
 		SystemTimer.FanSlowOnTimer = 0;
 		if(SystemTimer.Pwm_duty >= 90)
 		{
+			SystemTimer.FanSlowOnFlag = 1;
 			SystemTimer.Pwm_duty = 90;
 		}
 		SystemTimer.Pwm_duty++;

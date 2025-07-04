@@ -42,7 +42,7 @@ extern "C" {
 #define MAX_PD_RECORD_NUM               		1000
 
 #define MAX_RFPWRVOL_NUM						250
-#define MAX_RFPWRPHS_NUM						250
+#define MAX_RFPWRPHS_NUM						180
 
 #pragma pack(push)
 #pragma pack(1)
@@ -142,9 +142,7 @@ typedef struct _UserParam_t
 	
 typedef struct _CmdCtrlParam_t
 {
- uint8_t 	FactoryMode;         //工厂模式	
-
-	
+ uint8_t 	FactoryMode;         //工厂模式		
  uint8_t 	RFPowerState;		 //射频电源工作状态    	  0：RF_OFF        1：RF_ON
  uint16_t   SetPointValue;       //设置射频电源功率  0~18000	
 	
@@ -152,9 +150,9 @@ typedef struct _CmdCtrlParam_t
  uint32_t   PulseFreq;			//pulsing Frequency
  uint8_t    PulseDuty;			//pulsing Duty circle
 
- uint8_t    SyncSource;			//Sync Source 0:sync  off 1:extenal sync 
- uint32_t   SyncOutDelay;		//Sync out  delay
- uint8_t    SyncOutEnable;		//Sync Out  0:sysnc out off 1:sysnc out on
+ uint8_t    SyncOutSource;		//SyncOut Source 0:sync  off 1:extenal sync 
+ uint32_t   SyncOutDelay;		//SyncOut Delay
+ uint8_t    SyncOutEnable;		//SyncOut Enable 0:sysnc out off 1:sysnc out on
 	
  uint16_t 	TargetPos[CAP_NUM];
  uint16_t   CurrentPos[CAP_NUM];	
@@ -260,6 +258,7 @@ typedef struct _ProcessDataRecord_t
 
 typedef struct _ProcessData_t
 {
+	uint8_t  flag;   //过程数据结束标志位
     uint16_t RecordNum;
     PDORecord_t Records[MAX_PD_RECORD_NUM];
 
@@ -275,7 +274,7 @@ typedef struct _ProcessData_t
 #define RUNNING_STATUS_LEN						  sizeof(RunningStatus_t)
 	
 #define PD_ONE_RECORD_LEN                         sizeof(PDORecord_t)
-#define PROCESS_DATA_LEN                          sizeof(ProcessData_t)
+#define PROCESS_DATA_LEN                          (sizeof(ProcessData_t) - 1) //Data -1 (size标志位)
 #define PD_RECORD_NUM_EACH_FRAME                  (240/PD_ONE_RECORD_LEN)  //Data max len 248
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 

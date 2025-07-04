@@ -30,6 +30,15 @@ static IO_Switch_t IO_Switch_Input[IOSWITCH_MAX] =
         .ioSwitchValueNow = 0,
         .ioSwitchValueLast = 0,
     },	
+	{
+        .ioSwitchID = IOSWITCH_INTLKEBABLE,
+        .ioSwitchScan = IF_HAL_InterLockEnable_SigRead,
+        .filterTime = 15,
+        .filterCnt = 15,
+        .ioSwitchValue = 0,
+        .ioSwitchValueNow = 0,
+        .ioSwitchValueLast = 0,
+    },	
 };
 
 /* LOCAL VARIABLES */
@@ -50,9 +59,14 @@ static void IO_Switch_Scan(void);
  * END ***************************************************************************************/
 void IF_InterfaceInit(void)
 {
+	
+	IF_SetNormalOutput_SIG(IOSIGN_PWR5VDRVONOFF,ON);    //5V Enable
+	IF_SetNormalOutput_SIG(IOSIGN_PWR12VDRVONOFF,ON);   //12V Enable
+	IF_SetNormalOutput_SIG(IOSIGN_RFPWRLEDONOFF,ON);	//开启电源输出灯状态
+	
+	IF_SetNormalOutput_SIG(IOSIGN_INTLOCKENABLE,OFF);    
 	IF_SetNormalOutput_SIG(IOSIGN_INTLKLEDONOFF,OFF); 	//关闭InterLock输出灯状态 		
 	IF_SetNormalOutput_SIG(IOSIGN_RFONLEDONOFF,OFF);	//关闭射频输出灯状态
-	IF_SetNormalOutput_SIG(IOSIGN_RFPWRLEDONOFF,OFF);	//关闭电源输出灯状态
 	IF_SetNormalOutput_SIG(IOSIGN_DEBUGLEDONOFF,OFF);	//关闭调试灯输出状态
 	IF_SetNormalOutput_SIG(IOSIGN_WARNLEDONOFF,OFF);	//关闭警告灯输出状态	
 	IF_SetNormalOutput_SIG(IOSIGN_FAULTLEDONOFF,OFF);	//关闭故障灯输出状态
@@ -67,7 +81,33 @@ void IF_InterfaceInput(void)
 {
 	IO_Switch_Scan();
 }
+/* FUNCTION *********************************************************************************
+ * Function Name : IF_Get_InputNormal_SW
+ * Description   : 开关接口电平输出
+ * Parameter     : sWx 开关序号
+* return		 : 输出状态                                
+ * END ***************************************************************************************/
+uint8_t IF_Get_NormalInput_SW(IOSwitchEnum sWx)
+{
+    uint8_t ret = 0;
+    if(sWx > IOSWITCH_MAX)
+    {
+       return ret;  //
+    }
+    switch (sWx)
+    {
+    case IOSWITCH_INTLKDECT:
+        ret = IO_Switch_Input[IOSWITCH_INTLKDECT].ioSwitchValue;
+        break;
+    case IOSWITCH_INTLKEBABLE:
+        ret = IO_Switch_Input[IOSWITCH_INTLKEBABLE].ioSwitchValue;
+        break;
 
+    default:
+        break;
+    }
+    return ret;
+}
 /* FUNCTION *********************************************************************************
  * Function Name : IF_SetNormalOutput_SIG
  * Description   : 开关接口电平输出
@@ -106,7 +146,7 @@ void IF_SetNormalOutput_SIG(IOSignEnum SIGx,uint8_t OnorOff)
  * END ***************************************************************************************/
 static void IO_Switch_Scan(void)
 {
-    for(uint8_t i = IOSWITCH_PANEL1DECT; i < IOSWITCH_MAX; i++)
+    for(uint8_t i = IOSWITCH_INTLKDECT; i < IOSWITCH_MAX; i++)
     {
         IO_Switch_Input[i].ioSwitchValueNow = IO_Switch_Input[i].ioSwitchScan();
 

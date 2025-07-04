@@ -67,7 +67,7 @@ static void Wdog_Init(void)
 	gpio_init_struct.gpio_pins = 0;
     gpio_init_struct.gpio_pins = HD_WDI_PIN;
     gpio_init(HD_WDI_GPIO, &gpio_init_struct);
-	IF_GpioOutPut(HD_WDI_GPIO, HD_WDI_PIN, 1, LOGIC_POUT);
+	IF_OutPutGpio_Write(HD_WDI_GPIO, HD_WDI_PIN, 1, LOGIC_POUT);
 }
 /**
  * ************************************************************************

@@ -350,46 +350,46 @@ uint8_t IF_FpgaReg_Read(uint16_t regAddr)
      DATA_CLK_HIGH;
      DATA_CLK_LOW;
      //step5: get data
-//     if(SET == DATA_D0_READ)
-//     {
-//         result |= 0x01;
-//     }
+     if(SET == DATA_D0_READ)
+     {
+         result |= 0x01;
+     }
 
-//     if(SET == DATA_D1_READ)
-//     {
-//         result |= 0x02;
-//     }
+     if(SET == DATA_D1_READ)
+     {
+         result |= 0x02;
+     }
 
-//     if(SET == DATA_D2_READ)
-//     {
-//         result |= 0x04;
-//     }
+     if(SET == DATA_D2_READ)
+     {
+         result |= 0x04;
+     }
 
-//     if(SET == DATA_D3_READ)
-//     {
-//         result |= 0x08;
-//     }
+     if(SET == DATA_D3_READ)
+     {
+         result |= 0x08;
+     }
 
-//     if(SET == DATA_D4_READ)
-//     {
-//         result |= 0x10;
-//     }
+     if(SET == DATA_D4_READ)
+     {
+         result |= 0x10;
+     }
 
-//     if(SET == DATA_D5_READ)
-//     {
-//         result |= 0x20;
-//     }
+     if(SET == DATA_D5_READ)
+     {
+         result |= 0x20;
+     }
 
-//     if(SET == DATA_D6_READ)
-//     {
-//         result |= 0x40;
-//     }
+     if(SET == DATA_D6_READ)
+     {
+         result |= 0x40;
+     }
 
-//     if(SET == DATA_D7_READ)
-//     {
-//         result |= 0x80;
-//     }
-	 result = READ_DATA_D0D7_PORT;
+     if(SET == DATA_D7_READ)
+     {
+         result |= 0x80;
+     }
+	
      //step6: set ctrl singal
      DATA_RE_LOW; //Reg Disable
 

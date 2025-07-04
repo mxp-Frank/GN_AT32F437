@@ -88,6 +88,7 @@ extern void IF_HAL_RFOnOffLed_Switch(uint8_t para);
 extern void IF_HAL_Fan_PWM_Switch(uint8_t para);
 
 extern uint8_t IF_HAL_InterLockDect_SigRead(void);
+extern uint8_t IF_HAL_InterLockEnable_SigRead(void);
 // UART for COMM_SL
 extern UARTBAUD_TypeDef IF_HAL_GetBaudRateValue(uint8_t DataRate);
 extern uint8_t IF_HAL_GetUartBaudRateKey(UARTBAUD_TypeDef DataRate);

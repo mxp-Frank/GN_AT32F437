@@ -142,6 +142,7 @@ void RS485_UART_Callback(void)
 void IF_CommInit(void)
 {
 	FGIPv2_Init();
+	IF_ACDC_SetParamsRWType(READ_MB_VERSIONREG); 
 //	uint8_t value = IF_CommParam_GetDataRate();
 //	IF_HAL_SetBaudRate(value);	
 }
@@ -207,8 +208,7 @@ void IF_UartReciveTask4(void)
 }
 void IF_UartSendTask4(void)
 {
-	Modbus_TxBufManagment(RS485_UART);
-				
+	Modbus_TxBufManagment(RS485_UART);				
 }
 
 /************************************************************************/
@@ -228,7 +228,10 @@ uint8_t SendToRxQueueFromISR(uint8_t port, pCommMsg_t pRxMsg)
 			if(pdTRUE == xQueueSendFromISR(FGIPv2Queue, pRxMsg, &xHigherPriorityTaskWoken))result = 1;	
 		break;
 		case RS485_UART:
-			if(pdTRUE == xQueueSendFromISR(ModbusRxQueue, pRxMsg, &xHigherPriorityTaskWoken))result = 1;	
+			if(pdTRUE == xQueueSendFromISR(ModbusRxQueue, pRxMsg, &xHigherPriorityTaskWoken))
+			{
+				result = 1;
+			}	
 		break;
 		case FPGA_UART:	
 			if(pRxMsg->data[1]==0xFF && pRxMsg->data[2]==0xFF &&pRxMsg->data[3]==0x00 &&pRxMsg->data[4]==0xFF &&pRxMsg->data[5]==0xFF)

@@ -177,8 +177,9 @@ extern "C" {
  * Interface functions                                                         *
  ******************************************************************************/
 extern void IF_GpioInit(void);
-extern void IF_GpioOutPut(gpio_type *gpio_x, uint16_t pins, uint8_t outPutValue, uint8_t outLogic);
-extern flag_status IF_GpioInPut(gpio_type *gpio_x, uint16_t pins, uint8_t inLogic);
+extern void IF_OutPutGpio_Write(gpio_type *gpio_x, uint16_t pins, uint8_t outPutValue, uint8_t outLogic);
+extern flag_status IF_OutPutGpio_Read(gpio_type *gpio_x, uint16_t pins, uint8_t inLogic);
+extern flag_status IF_InPutGpio_Read(gpio_type *gpio_x, uint16_t pins, uint8_t inLogic);
 extern void IF_GpioToggle(gpio_type *gpio_x, uint16_t gpio_pin);
 
 #if defined(__cplusplus)

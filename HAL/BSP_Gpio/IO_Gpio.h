@@ -40,7 +40,6 @@
 #define 	IntLock_LED_GPIO					GPIOG
 #define 	IntLock_LED_PIN						IntLock_LED_Pin91_PG6
 
-
 #define 	RF_ON_LED_GPIO						GPIOG
 #define 	RF_ON_LED_PIN						RF_ON_LED_Pin92_PG7
 

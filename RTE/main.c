@@ -14,8 +14,8 @@
 #include "IF_PT_SWC.h"
 
 /* CONST & MACROS */
-#define MAIN_TASK_PERIOD        2    
-#define QUEUE_LENGTH         	10        //队列长度
+ 
+#define QUEUE_LENGTH         	5        //队列长度
 /* DATA STRUCTURES */
 
 /* LOCAL VARIABLES */
@@ -58,16 +58,16 @@ int main(void)
 		IF_SL_Bootloader();
     #endif 
     IF_SL_CfgInit();
-	
+
     /* disable global interrupt */
     __disable_irq(); 
 	
 	/* Semaphore initiation */
-	mainSemaphore =xSemaphoreCreateBinary();
+	mainSemaphore = xSemaphoreCreateBinary();
 	FpgaReSemaphore = xSemaphoreCreateBinary();
 	FpgaNfSemaphore = xSemaphoreCreateBinary();
 	ModbusReSemaphore = xSemaphoreCreateBinary();
-	ModbusNfSemaphore =xSemaphoreCreateBinary();
+	ModbusNfSemaphore = xSemaphoreCreateBinary();
 	/* queue initiation */
 	
 	UserQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));   			//User Protocol
@@ -77,53 +77,52 @@ int main(void)
 	
 	ModbusFWQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(BSIPInfo_t));        //Modbus Firmware Protocol	
 	FpgaFWQueue = xQueueCreate(QUEUE_LENGTH, sizeof(BSIPInfo_t));   		//Fpga Firmware Protocol	
-	
 	CmdQueue = xQueueCreate(QUEUE_LENGTH, sizeof(DeviceCmdMsg_t));		    //Cmd Control
 	
 	
     /*****Create task function******/
-	xReturn = xTaskCreate(Pt_Sensor_task_function,"Sensor_task",768,NULL,5,&SensorTask_Handler);
+	xReturn = xTaskCreate(Pt_Sensor_task_function,"Sensor_task",512,NULL,5,&SensorTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Sensor_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}	
-	xReturn = xTaskCreate(Pt_Main_task_function,  "main_task",768,NULL,5,&MainTask_Handler);
+	xReturn = xTaskCreate(Pt_Main_task_function,  "main_task",512,NULL,5,&MainTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Main_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-    xReturn = xTaskCreate(Pt_Interface_task_function,"Interface_task",512,NULL,3,&InterfaceTask_Handler);
+    xReturn = xTaskCreate(Pt_Interface_task_function,"Interface_task",512,NULL,4,&InterfaceTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Interface_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(PT_Port_task_function,"Port_task",768,NULL,2,&PortTask_Handler);
+	xReturn = xTaskCreate(PT_Port_task_function,"Port_task",512,NULL,2,&PortTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Port_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(UserHMI_task_function,"UserHMI_task",768,NULL,3,&UserHMITask_Handler);
+	xReturn = xTaskCreate(UserHMI_task_function,"UserHMI_task",1024,NULL,3,&UserHMITask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("UserHMI_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(DebugHMI_task_function,"DebugHMI_task",768,NULL,2,&DebugHMITask_Handler);
+	xReturn = xTaskCreate(DebugHMI_task_function,"DebugHMI_task",1024,NULL,2,&DebugHMITask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("DebugHMI_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(FpgaHMI_task_function,"fpga_task",768,NULL,2,&FpgaUpdateTask_Handler);
+	xReturn = xTaskCreate(FpgaHMI_task_function,"fpga_task",1024,NULL,2,&FpgaUpdateTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Fpga_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
 	
-	xReturn = xTaskCreate(ModbusRecv_task_function,"modbus_task",768,NULL,3,&ModbusRecvTask_Handler);
+	xReturn = xTaskCreate(ModbusRecv_task_function,"modbus_task",1024,NULL,4,&ModbusRecvTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Modbus_task could not be created as there was insufficient heap memory remaining.\r\n");
 	}
-	xReturn = xTaskCreate(ModbusSend_task_function,"modbus_task",768,NULL,3,&ModbusSendTask_Handler);
+	xReturn = xTaskCreate(ModbusSend_task_function,"modbus_task",1024,NULL,4,&ModbusSendTask_Handler);
 	if(xReturn != pdPASS)
 	{ 
         DEBUG_Print("Modbus_task could not be created as there was insufficient heap memory remaining.\r\n");
@@ -153,11 +152,14 @@ static void PT_Port_task_function(void *pvParameters)
     {
 		vTaskDelayUntil(&lastWakeTime,MAIN_LOOP_DT); //1ms周期延时	
 		if(RATE_DO_EXECUTE(RATE_50_HZ, tick)) /** 50Hz 20ms update **/
-		{	
-			IF_PT_PortInput_Task();			   //端口输入接口			
-			IF_Module_PortOutput_Task();		   //PORT输出接口		
+		{		
+			IF_Module_Output_Task();		//PORT输出接口		
 			IF_SL_ExecuteAction();						
-		}			
+		}
+		if(RATE_DO_EXECUTE(RATE_20_HZ, tick))  /** 20Hz  50ms update **/
+		{
+			IF_Module_CmdExecute_Task();		   //数据执行输入接口
+		}		
 		tick++;
     }
 }
@@ -170,9 +172,9 @@ static void Pt_Interface_task_function(void *pvParameters)
     while(1)
     {
 		vTaskDelayUntil(&lastWakeTime,MAIN_LOOP_DT); //1ms周期延时
-		if(RATE_DO_EXECUTE(RATE_20_HZ, tick))  /** 20Hz  50ms update **/
+		if(RATE_DO_EXECUTE(RATE_50_HZ, tick))  /** 50Hz  20ms update **/
 		{
-			IF_PT_CmdExecute_Task();		   //数据执行输入接口
+			IF_SL_InterfaceInput_Task();
 		}
 		if(RATE_DO_EXECUTE(RATE_10_HZ, tick))  /** 10Hz  100ms update **/
 		{
@@ -199,7 +201,7 @@ static void Pt_Main_task_function(void *pvParameters)
     {
 		if(pdTRUE == xSemaphoreTake(mainSemaphore, portMAX_DELAY))
 		{
-			IF_Module_SensorInput_Task();
+			IF_Module_Input_Task();
 			IF_Module_Main_Task();
 		}				
 	}

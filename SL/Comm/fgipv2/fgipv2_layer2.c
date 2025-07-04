@@ -32,11 +32,11 @@ void ReceiveChar(uint8_t port, uint8_t ch)
 
 	if ((GetSysTickCnt() - last_rx_time[port]) > 10)  //Frame timeout
 	{
-		g_RxBuf[port].flag_status = 0;                     // 置标志
+		g_RxBuf[port].flag = 0;                     // 置标志
 	}
 	last_rx_time[port] = GetSysTickCnt();
 
-	switch(g_RxBuf[port].flag_status)
+	switch(g_RxBuf[port].flag)
 	{
 	case 0:
 		if (ch == 0x7E)                                       // 如果收到的为开始的0x7E
@@ -46,14 +46,14 @@ void ReceiveChar(uint8_t port, uint8_t ch)
 			memset(g_RxBuf[port].data, 0, BUFFER_SIZE);
 			g_RxBuf[port].port = port;
 			g_RxBuf[port].data[g_RxBuf[port].len++] = ch;     // 把数据放入存储区
-			g_RxBuf[port].flag_status = 1;                    // 置标志
+			g_RxBuf[port].flag = 1;                    	// 置标志
 		}
 		break;
 	case 1:
 		if (ch != 0x7E)                              		// 如果接下来的数据不为0x7E，开始接收数据
 		{                                                    // 反正如果接下来的数据仍然为0x7E，那么重新视为开头
 			g_RxBuf[port].data[g_RxBuf[port].len++] = ch;        // 把数据放入存储区，同时长度加1
-			g_RxBuf[port].flag_status = 2;                     // 置标志
+			g_RxBuf[port].flag = 2;                     	// 置标志
 		}
 		break;
 	case 2:
@@ -65,7 +65,7 @@ void ReceiveChar(uint8_t port, uint8_t ch)
 		if (ch == 0x7E)                                      // 收到结尾的0x7E
 		{
 			SendToRxQueueFromISR(port, &g_RxBuf[port]);
-			g_RxBuf[port].flag_status = 0;                     // 置标志
+			g_RxBuf[port].flag = 0;                     // 置标志
 		}
 		break;
 	default:break;
@@ -87,17 +87,17 @@ void TransmitChar(uint8_t port)
 	}
 }
 
-void SendLayer2Frame(uint8_t port,uint8_t *layer2Buf, uint16_t layer2Len)
+void SendLayer2Frame(uint8_t port, pLayer2Data_t pLayer2Data)
 {
 	uint16_t i; 
 	uint16_t crc;
 	uint16_t len;
 
-	len = layer2Len;
-	crc = CalCRC16_X25(layer2Buf, len);
+	len = pLayer2Data->Len;
+	crc = CalCRC16_X25(pLayer2Data->Buf, len);
 
-	layer2Buf[len++] = Byte0_UINT16(crc);
-	layer2Buf[len++] = Byte1_UINT16(crc);
+	pLayer2Data->Buf[len++] = Byte0_UINT16(crc);
+	pLayer2Data->Buf[len++] = Byte1_UINT16(crc);
 
 	memset(&g_TxBuf[port], 0, sizeof(CommMsg_t));
 
@@ -108,14 +108,14 @@ void SendLayer2Frame(uint8_t port,uint8_t *layer2Buf, uint16_t layer2Len)
 
 	for (i = 0; i < len; i++)
 	{
-		if ((layer2Buf[i] == 0x7E) || (layer2Buf[i] == 0x7D))
+		if ((pLayer2Data->Buf[i] == 0x7E) || (pLayer2Data->Buf[i] == 0x7D))
 		{
 			g_TxBuf[port].data[g_TxBuf[port].len++] = 0x7D;
-			g_TxBuf[port].data[g_TxBuf[port].len++] = layer2Buf[i] ^ 0x20;
+			g_TxBuf[port].data[g_TxBuf[port].len++] = pLayer2Data->Buf[i] ^ 0x20;
 		}
 		else
 		{
-			g_TxBuf[port].data[g_TxBuf[port].len++] = layer2Buf[i];
+			g_TxBuf[port].data[g_TxBuf[port].len++] = pLayer2Data->Buf[i];
 		}
 	}
 

@@ -111,7 +111,7 @@ typedef struct _SensorReg_t
 	int32_t PulseDuty;
 	int32_t PulsePeriod;
 	
-	int32_t SyncSource;
+	int32_t SyncOutSource;
 	int32_t SyncOutEnable;
 	int32_t SyncOutDelay;
 	
@@ -161,6 +161,7 @@ typedef enum Sensor_ChnN_t
 	 ChnN_R      	= 0x09,
 	 ChnN_X      	= 0x0A,
 	 ChnN_VSWR   	= 0x0B,
+	 ChnN_Gm         =0x0C,
 
 }Sensor_ChnN_t;
 

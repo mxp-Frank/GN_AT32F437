@@ -34,21 +34,21 @@
 #define DAC_FS_GPIO         GPIOE
 #define DAC_FS_PIN			DAC_FS_Pin142_PE1
 
-#define PD_LOW   	         IF_GpioOutPut(DAC_PD_GPIO, DAC_PD_PIN, 0, LOGIC_POUT)
-#define PD_HIGH 	         IF_GpioOutPut(DAC_PD_GPIO, DAC_PD_PIN, 1, LOGIC_POUT)
+#define PD_LOW   	         IF_OutPutGpio_Write(DAC_PD_GPIO, DAC_PD_PIN, 0, LOGIC_POUT)
+#define PD_HIGH 	         IF_OutPutGpio_Write(DAC_PD_GPIO, DAC_PD_PIN, 1, LOGIC_POUT)
 
-#define LDAC_LOW  	         IF_GpioOutPut(DAC_LDAC_GPIO, DAC_LDAC_PIN, 0, LOGIC_POUT)
-#define LDAC_HIGH 	         IF_GpioOutPut(DAC_LDAC_GPIO, DAC_LDAC_PIN, 1, LOGIC_POUT)
+#define LDAC_LOW  	         IF_OutPutGpio_Write(DAC_LDAC_GPIO, DAC_LDAC_PIN, 0, LOGIC_POUT)
+#define LDAC_HIGH 	         IF_OutPutGpio_Write(DAC_LDAC_GPIO, DAC_LDAC_PIN, 1, LOGIC_POUT)
 
 
-#define DIN_LOW  	         IF_GpioOutPut(DAC_DIN_GPIO, DAC_DIN_PIN, 0, LOGIC_POUT)
-#define DIN_HIGH 	         IF_GpioOutPut(DAC_DIN_GPIO, DAC_DIN_PIN, 1, LOGIC_POUT)
+#define DIN_LOW  	         IF_OutPutGpio_Write(DAC_DIN_GPIO, DAC_DIN_PIN, 0, LOGIC_POUT)
+#define DIN_HIGH 	         IF_OutPutGpio_Write(DAC_DIN_GPIO, DAC_DIN_PIN, 1, LOGIC_POUT)
 
-#define SCLK_LOW  	         IF_GpioOutPut(DAC_SCLK_GPIO, DAC_SCLK_PIN, 0, LOGIC_POUT)
-#define SCLK_HIGH 	         IF_GpioOutPut(DAC_SCLK_GPIO, DAC_SCLK_PIN, 1, LOGIC_POUT)
+#define SCLK_LOW  	         IF_OutPutGpio_Write(DAC_SCLK_GPIO, DAC_SCLK_PIN, 0, LOGIC_POUT)
+#define SCLK_HIGH 	         IF_OutPutGpio_Write(DAC_SCLK_GPIO, DAC_SCLK_PIN, 1, LOGIC_POUT)
 
-#define FS_LOW  	         IF_GpioOutPut(DAC_FS_GPIO, DAC_FS_PIN, 0, LOGIC_POUT)
-#define FS_HIGH 	         IF_GpioOutPut(DAC_FS_GPIO, DAC_FS_PIN, 1, LOGIC_POUT)
+#define FS_LOW  	         IF_OutPutGpio_Write(DAC_FS_GPIO, DAC_FS_PIN, 0, LOGIC_POUT)
+#define FS_HIGH 	         IF_OutPutGpio_Write(DAC_FS_GPIO, DAC_FS_PIN, 1, LOGIC_POUT)
 #endif 
 
 //*****************************************************************************

@@ -121,9 +121,9 @@ static void spiflash_init(void)
   gpio_init(FLASH_WP_PORT, &gpio_initstructure);
   
   //设置默认值 CS =1 RST = 1 WP = 1
-  IF_GpioOutPut(FLASH_CS_PORT, FLASH_CS_PIN,   1, LOGIC_POUT);
-  IF_GpioOutPut(FLASH_RESET_PORT, FLASH_RESET_PIN, 1, LOGIC_POUT);
-  IF_GpioOutPut(FLASH_WP_PORT, FLASH_WP_PIN,   1, LOGIC_POUT);
+  IF_OutPutGpio_Write(FLASH_CS_PORT, FLASH_CS_PIN,   1, LOGIC_POUT);
+  IF_OutPutGpio_Write(FLASH_RESET_PORT, FLASH_RESET_PIN, 1, LOGIC_POUT);
+  IF_OutPutGpio_Write(FLASH_WP_PORT, FLASH_WP_PIN,   1, LOGIC_POUT);
   
   /* sck,miso,mosi */
   gpio_initstructure.gpio_pull  = GPIO_PULL_UP;
