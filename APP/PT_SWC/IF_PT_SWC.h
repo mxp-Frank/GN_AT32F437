@@ -104,7 +104,7 @@ typedef struct _GN_Device_t
 	
 	SetPID_t	     SetPID;            //设备PID调整
 	uint32_t		 SetPower;          //设备上位机设置功率	
-	
+	uint32_t 		 PowerLimit;        //设备设置功率上限
 }GN_Device_t;
 
 typedef struct 

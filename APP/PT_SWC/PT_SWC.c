@@ -213,8 +213,7 @@ static  void Module_PhasePIDAdjust(uint32_t SetPower)
 		{
 			IF_SL_UpdateRFPwrPIDProcessData();
 		}
-	}
-		
+	}	
 }
 
 /* FUNCTION *********************************************************************************
@@ -244,7 +243,7 @@ static  void Module_VoltPIDAdjust(uint32_t SetPower)
 	{
 		GN_Device.SetPID.Volt_Cnt++;
 	}
-	/**************开始设置Phase PID********************/	
+	/**************开始设置Volt PID********************/	
 	if(GN_Device.SetPID.Volt_Cnt == PID_INIT_TIMER)
 	{
 		GN_Device.TargetPower.Point = SetPower;
@@ -257,7 +256,8 @@ static  void Module_VoltPIDAdjust(uint32_t SetPower)
 	if(GN_Device.TargetPower.Volt < GN_Device.SetPID.VoltLimit)
 	{
 		Module_ACDCOutputVoltage(GN_Device.TargetPower.Volt);
-	}	
+	}
+	/************************过程数据采集******************************/	
 	if(GN_Device.SetPID.Volt_Cnt % PID_LOOP_TIMER == 0)
 	{
 		if(GN_Device.Sensor.VSWR < TUNED_VSWR) 
@@ -267,8 +267,7 @@ static  void Module_VoltPIDAdjust(uint32_t SetPower)
 		{
 			IF_SL_UpdateRFPwrPIDProcessData();
 		}
-	}
-	GN_Device.SetPID.Volt_Cnt++;	
+	}	
 }	
 /* FUNCTION *********************************************************************************
  * Function  : Module_OutputPhase
@@ -379,6 +378,7 @@ static void Module_CheckPowerLimit(uint32_t SetPower)
  * END ***************************************************************************************/
 static uint32_t Phase_PID_LookupTable(uint32_t Power)
 {
+	
 	uint32_t value = 0;
 	PhasePID.iError =	0.0F;      //当前误差值
 	PhasePID.LastError = 0.0F;	   //上次误差值
@@ -386,7 +386,11 @@ static uint32_t Phase_PID_LookupTable(uint32_t Power)
 	PhasePID.AdjCnt = 0;		   //PID调整次数
 	PhasePID.ErrorThr = g_FactorData.PhaseEThr;
 	/*********************得到PID相位的上限和当前PID的相位*****************************/
-	GN_Device.SetPID.PhaseLimit =  IF_NvmParam_GetPhaseMapTable(GN_Device.SetPower)*1.5F;
+	if(GN_Device.SetPower != GN_Device.PowerLimit)
+	{
+		GN_Device.PowerLimit = GN_Device.SetPower;
+		GN_Device.SetPID.PhaseLimit =  IF_NvmParam_GetPhaseMapTable(GN_Device.PowerLimit)*1.5F;
+	}
 	value =  IF_NvmParam_GetPhaseMapTable(Power)*0.9F;	
 	return  value;
 }	
@@ -429,17 +433,21 @@ static float Phase_PID_realize(float OutPower,float Pforward)
 static float Volt_PID_LookupTable(uint32_t Power)
 {
 	float fvalue = 0;
+	int16_t vTableIndex = 0;
 	VoltPID.iError =	0.0F;      //当前误差值
 	VoltPID.LastError = 0.0F;	   //上次误差值
 	VoltPID.PrevError = 0.0F;	   //上上次误差值
 	VoltPID.AdjCnt = 0;			   //PID调整次数
 	VoltPID.ErrorThr = g_FactorData.VoltEThr;
 	/*********************得到PID电压的上限和当前PID的电压*****************************/
-	int16_t VTableIndexLimit = (GN_Device.SetPower/10)-1;
-	if(VTableIndexLimit <= 0)VTableIndexLimit = 0;
-	GN_Device.SetPID.VoltLimit =  IF_NvmParam_GetVoltMapTable(VTableIndexLimit)*1.5F;
-	
-	int16_t vTableIndex = (Power/10)-1;
+	if(GN_Device.SetPower != GN_Device.PowerLimit)
+	{
+		GN_Device.PowerLimit = GN_Device.SetPower;
+		vTableIndex = (GN_Device.PowerLimit/10)-1;
+		if(vTableIndex <= 0)vTableIndex = 0;
+		GN_Device.SetPID.VoltLimit =  IF_NvmParam_GetVoltMapTable(vTableIndex)*1.5F;
+	}
+	vTableIndex = (Power/10)-1;
 	if(vTableIndex <= 0)vTableIndex = 0;
 	fvalue =  IF_NvmParam_GetVoltMapTable(vTableIndex);
 	return  fvalue;
