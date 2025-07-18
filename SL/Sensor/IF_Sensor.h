@@ -23,7 +23,8 @@ extern "C" {
 * Interface functions                                                         *
 ******************************************************************************/
 extern void IF_SensorInit(void);
-extern void IF_Sensor_Fpga_Task(void);
+extern void IF_Sensor_ReadFpga_Task(void);
+extern void IF_Sensor_WriteFgpa_Task(void);
 extern void IF_Sensor_Device_Task(void);
 
 

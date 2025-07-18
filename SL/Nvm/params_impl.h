@@ -111,13 +111,16 @@ typedef struct _InternalParam_t
 	uint32_t WorkCenterFreq;
 	uint32_t ACDCCurrent;
 	
-	uint8_t  FeedCollectionMode;                 
+	uint8_t  FeedbackMode;                 
 	uint32_t FeedPreMask;
 	uint32_t FeedPostMask;
 	
 	int32_t  PhaseState2;
-	int32_t PhaseStepSpeed;
+	int32_t  PhaseStepSpeed;
 	uint32_t PhaseStepTimer;
+	
+	int32_t  DDSPhaseOffset;
+	uint8_t  VISampleSmooth;
 	
 } InternalParam_t;
 

@@ -29,16 +29,18 @@ static void Module_Sensor_Input(void)
 {
 	if(GN_Device.RunState.Now == RUN_STATE)
 	{
+		
 		GN_Device.SetPower 	=  IF_SL_CmdParam_GetPwrPoint();
-		GN_Device.RFPwrState.Now = (RFEnum)IF_SL_CmdParam_GetRFPowerState();
-		GN_Device.Sensor.Freq   =  IF_SL_Fpga_GetSensor(ChnN_Freq,HP_CHN);
-		GN_Device.Sensor.Pfwd   =  IF_SL_Fpga_GetSensor(ChnN_Pfwd,HP_CHN);
-		GN_Device.Sensor.Pref   =  IF_SL_Fpga_GetSensor(ChnN_Pref,HP_CHN);
-		GN_Device.Sensor.VSWR   =  IF_SL_Fpga_GetSensor(ChnN_VSWR,HP_CHN);	
+		GN_Device.Sensor.Now.RFState = (RFEnum)IF_SL_CmdParam_GetRFPowerState();
+		GN_Device.Sensor.Now.Freq   =  IF_SL_Fpga_GetSensor(ChnN_Freq,HP_CHN);
+		GN_Device.Sensor.Now.Pfwd   =  IF_SL_Fpga_GetSensor(ChnN_Pfwd,HP_CHN);
+		GN_Device.Sensor.Now.Pdlv   =  IF_SL_Fpga_GetSensor(ChnN_Pdlv,HP_CHN);
+		GN_Device.Sensor.Now.Pref   =  IF_SL_Fpga_GetSensor(ChnN_Pref,HP_CHN);
+		GN_Device.Sensor.Now.VSWR   =  IF_SL_Fpga_GetSensor(ChnN_VSWR,HP_CHN);
+		GN_Device.Sensor.Now.Gamma  =  IF_SL_Fpga_GetSensor(ChnN_Gamma,HP_CHN);		
 	}else
 	{
 		GN_Device.SetPower 	= 0;
-		GN_Device.RFPwrState.Now = RF_OFF;
 		memset(&GN_Device.Sensor,0,sizeof(Sensor_t));
 	}
 }

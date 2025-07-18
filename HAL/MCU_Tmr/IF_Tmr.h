@@ -23,11 +23,6 @@ typedef struct
   uint32_t tmrPeriod;
 } tmr_cfg_type;
 
-
-extern uint16_t FANS_Time_OVERcnt[4];
-extern uint32_t FANS_Period_Val[4] ;
-extern uint16_t FANS_Curr_CCR_Val[4];
-extern uint16_t FANS_Last_CCR_Val[4];
 		
 /******************************************************************************
  * Interface functions                                                         *

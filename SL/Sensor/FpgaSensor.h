@@ -49,6 +49,7 @@ extern "C" {
 #define FACTOR_VRMS_ADDR				192
 #define FACTOR_IRMS_ADDR				196
 #define FACTOR_PHASE_ADDR				200
+#define FACTOR_SAMPLE_ADDR              252
 
 #define PULSEMODE_SWITCH_ADDR			204
 #define PULSEMODE_DUTY_ADDR				220
@@ -58,7 +59,7 @@ extern "C" {
 #define SYNCOUT_ENABLE_ADDR				212 
 #define SYNCOUT_DELAY_ADDR				216
 
-#define FEED_COLLECTIONMODE_ADDR		228
+#define FEED_BACKMODE_ADDR				228
 #define FEED_PREMASK_ADDR		    	232
 #define FEED_POSTMASK_ADDR				236
 
@@ -66,7 +67,7 @@ extern "C" {
 #define PHASE_STEPSPEED_ADDR			244
 #define PHASE_STEPTIMER_ADDR			248
 
-typedef struct _SensorReg_t
+typedef struct _ReadReg_t
 {
 	uint8_t Version[FPGAWARE_VERSION_LEN];
 	int32_t temperture;
@@ -93,19 +94,23 @@ typedef struct _SensorReg_t
 	
 	int32_t SyncOutDutyMeasure;
 	int32_t SyncOutFreqMeasure;
-	
-	int32_t DDSStateSwitch;
+}ReadReg_t;
+
+typedef struct _WriteReg_t
+{
+	int32_t DDSState;
 	int32_t DDSChannelNo;
 	int32_t DDSFrequency;
 	int32_t DDSPhase;
 	
 	int32_t ACDCVoltage;
 	int32_t ACDCCurrent;
-	int32_t ACDCStateSwitch;
+	int32_t ACDCState;
 	
 	int32_t VrmsFactor;
 	int32_t IrmsFactor;
 	int32_t PhaseFactor;
+	int32_t VISampleSmooth;
 	
 	int32_t PulseMode;
 	int32_t PulseDuty;
@@ -115,15 +120,15 @@ typedef struct _SensorReg_t
 	int32_t SyncOutEnable;
 	int32_t SyncOutDelay;
 	
-	int32_t FeedCollectionMode;
+	int32_t FeedbackMode;
 	int32_t FeedPreMask;
 	int32_t FeedPostMask;
 	
 	int32_t PhaseState2;
 	int32_t PhaseStepSpeed;
 	int32_t PhaseStepTimer;
-}SensorReg_t;
-
+		
+}WriteReg_t;
 /******************射频电源输出sensor通道(LevelToLevel)设置参数***************************/
 
 typedef enum
@@ -145,6 +150,7 @@ typedef struct _SensorData_t
 	float Z;
 	float R;
 	float X;
+	float Gamma;
 	float VSWR;	
 }SensorData_t, *PSensorData_t;
 
@@ -161,12 +167,13 @@ typedef enum Sensor_ChnN_t
 	 ChnN_R      	= 0x09,
 	 ChnN_X      	= 0x0A,
 	 ChnN_VSWR   	= 0x0B,
-	 ChnN_Gm         =0x0C,
+	 ChnN_Gamma     = 0x0C,
 
 }Sensor_ChnN_t;
 
 extern void IF_FpgaSensor_ParamInit(void);
 extern void Sensor_Fpga_Sample(void);
+extern void Sensor_Fpga_Write(void);
 #if defined(__cplusplus)
 }
 #endif /* __cplusplus */

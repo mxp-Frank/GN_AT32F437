@@ -186,8 +186,8 @@ extern uint32_t IF_InternalParam_GetFpgaPulsePowerThr(void);
 extern void IF_InternalParam_SetFpgaPulseSyncDelay(uint16_t value);
 extern uint16_t IF_InternalParam_GetFpgaPulseSyncDelay(void);
 
-extern uint8_t IF_InternalParam_GetFeedCollectionMode(void);
-extern void IF_InternalParam_SetFeedCollectionMode(uint8_t value);
+extern uint8_t IF_InternalParam_GetFeedbackMode(void);
+extern void IF_InternalParam_SetFeedbackMode(uint8_t value);
 //---------------------------------------------------------------
 extern uint32_t IF_InternalParam_GetFeedPreMask(void);
 extern void IF_InternalParam_SetFeedPreMask(uint32_t value);
@@ -203,6 +203,12 @@ extern void IF_InternalParam_SetPhaseStepSpeed(uint32_t value);
 //---------------------------------------------------------------
 extern uint32_t IF_InternalParam_GetPhaseStepTimer(void);
 extern void IF_InternalParam_SetPhaseStepTimer(uint32_t value);
+//---------------------------------------------------------------
+extern int32_t IF_InternalParam_GetDDSPhaseOffset(void);
+extern void IF_InternalParam_SetDDSPhaseOffset(int32_t value);
+
+extern uint8_t IF_InternalParam_GetVISampleSmooth(void);
+extern void IF_InternalParam_SetVISampleSmooth(uint8_t value);
 //-------------------------------------------------------------------------------------------------
 //AM Configurable User Parameters
 extern void IF_UserParam_SetRegulationMode(uint8_t value);
@@ -257,8 +263,8 @@ extern uint16_t IF_CmdParam_GetRFPwrPoint(void);
 extern uint8_t IF_CmdParam_GetDDSSignSwitch(void);
 extern void IF_CmdParam_SetDDSSignSwitch(uint8_t value);
 //---------------------------------------------------------------
-extern uint32_t IF_CmdParam_GetACDCStateSwitch(void);
-extern void IF_CmdParam_SetACDCStateSwitch(uint32_t value);
+extern uint32_t IF_CmdParam_GetACDCState(void);
+extern void IF_CmdParam_SetACDCState(uint32_t value);
 //---------------------------------------------------------------
 extern void IF_CmdParam_SetPowerWorkMode(uint8_t value);
 extern uint8_t IF_CmdParam_GetPowerWorkMode(void);

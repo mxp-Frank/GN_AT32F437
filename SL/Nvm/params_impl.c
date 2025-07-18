@@ -1698,26 +1698,26 @@ void IF_InternalParam_SetACDCCurrent(uint32_t value)
 }
 
 //---------------------------------------------------------------
-uint8_t IF_InternalParam_GetFeedCollectionMode(void)
+uint8_t IF_InternalParam_GetFeedbackMode(void)
 {
 	uint8_t value = 0;
 	if(ON==IF_CmdParam_GetFactoryMode())
 	{
-		value = Fs_InternalParam.FeedCollectionMode;
+		value = Fs_InternalParam.FeedbackMode;
 	}else
 	{
-		value = InternalParam.FeedCollectionMode;
+		value = InternalParam.FeedbackMode;
 	}
 	return value;  
 }
-void IF_InternalParam_SetFeedCollectionMode(uint8_t value)
+void IF_InternalParam_SetFeedbackMode(uint8_t value)
 {	
 	if(ON==IF_CmdParam_GetFactoryMode())
 	{	
-		Fs_InternalParam.FeedCollectionMode  = value;
+		Fs_InternalParam.FeedbackMode  = value;
 		ActionsRSP[ID_SAVE_FS_INTERNAL_PARAM]= ON;	
 	}
-	InternalParam.FeedCollectionMode  = value;
+	InternalParam.FeedbackMode  = value;
 	ActionsRSP[ID_SAVE_INTERNAL_PARAM] = ON;	
 }
 //---------------------------------------------------------------
@@ -1834,6 +1834,54 @@ void IF_InternalParam_SetPhaseStepTimer(uint32_t value)
 		ActionsRSP[ID_SAVE_FS_INTERNAL_PARAM]= ON;	
 	}
 	InternalParam.PhaseStepTimer  = value;
+	ActionsRSP[ID_SAVE_INTERNAL_PARAM] = ON;	
+}
+
+//---------------------------------------------------------------
+int32_t IF_InternalParam_GetDDSPhaseOffset(void)
+{
+	int32_t value = 0;
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{
+		value = Fs_InternalParam.DDSPhaseOffset;
+	}else
+	{
+		value = InternalParam.DDSPhaseOffset;
+	}
+	return value;  
+}
+void IF_InternalParam_SetDDSPhaseOffset(int32_t value)
+{	
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{	
+		Fs_InternalParam.DDSPhaseOffset  = value;
+		ActionsRSP[ID_SAVE_FS_INTERNAL_PARAM]= ON;	
+	}
+	InternalParam.DDSPhaseOffset  = value;
+	ActionsRSP[ID_SAVE_INTERNAL_PARAM] = ON;	
+}
+
+//---------------------------------------------------------------
+uint8_t IF_InternalParam_GetVISampleSmooth(void)
+{
+	uint8_t value = 0;
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{
+		value = Fs_InternalParam.VISampleSmooth;
+	}else
+	{
+		value = InternalParam.VISampleSmooth;
+	}
+	return value;  
+}
+void IF_InternalParam_SetVISampleSmooth(uint8_t value)
+{	
+	if(ON==IF_CmdParam_GetFactoryMode())
+	{	
+		Fs_InternalParam.VISampleSmooth  = value;
+		ActionsRSP[ID_SAVE_FS_INTERNAL_PARAM]= ON;	
+	}
+	InternalParam.VISampleSmooth  = value;
 	ActionsRSP[ID_SAVE_INTERNAL_PARAM] = ON;	
 }
 //-------------------------------------------------------------------------------------------------
@@ -2169,11 +2217,11 @@ void IF_CmdParam_SetRFPowerSwitch(uint8_t value)
 }
 
 //---------------------------------------------------------------
-uint32_t IF_CmdParam_GetACDCStateSwitch(void)
+uint32_t IF_CmdParam_GetACDCState(void)
 {
 	return DevCmdParam.SetACDCState;  
 }
-void IF_CmdParam_SetACDCStateSwitch(uint32_t value)
+void IF_CmdParam_SetACDCState(uint32_t value)
 {
 	DevCmdParam.SetACDCState = value;
 }
@@ -2323,7 +2371,7 @@ void IF_NvmParam_SetPhaseMapMap(int32_t value,uint16_t index)
 }
 int32_t IF_NvmParam_GetPhaseMapTable(int32_t Power)
 {
-	uint32_t PhaseValue = 0;
+	int32_t PhaseValue = 0;
 	uint16_t tabIndex = 0;	
 	while(tabIndex <= PhaseMapParam.len)
     {
@@ -2332,6 +2380,7 @@ int32_t IF_NvmParam_GetPhaseMapTable(int32_t Power)
 	}
 	if(tabIndex >= 1)PhaseValue  = (tabIndex-1)*1000;//参数相位单位(1/1000)
 	if(PhaseValue >= MAX_FPGA_PHASE)PhaseValue = MAX_FPGA_PHASE;
+	if(PhaseValue <= 0)PhaseValue = 0;
 	return PhaseValue;
 }
 /*************************Process Data Function************************************************/

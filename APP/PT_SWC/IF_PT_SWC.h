@@ -27,9 +27,10 @@ extern "C" {
 
 #define CAP_NUM									(2)
 #define MAIN_TASK_PERIOD       					(2)  
-#define PID_INIT_TIMER						    (2)
 #define PID_LOOP_TIMER							(10)
-#define THR_RATE								(1.06F)
+#define PREF_UP_LIMIT							(20)
+
+#define PWR_UP_LIMIT(x)							(x*1.5F)
 typedef enum
 {
     STANDBY_STATE     = 0,
@@ -50,61 +51,49 @@ typedef enum
     RF_ON         = 1
 }RFEnum;
 
-typedef struct
-{
-    RFEnum   Now;
-    RFEnum   Last;
-}RFPower_t;
-
 typedef struct 
 {
+	RFEnum          RFState;        //状态	
 	float			Freq;		    //频率
 	float         	Pfwd;       	//正向功率
+	float			Pdlv;			//传输功率
 	float         	Pref;       	//反射功率
 	float			VSWR;			//驻波比
-	float 			Tsqure;			//反射系数	
+	float 			Gamma;			//反射系数	
 	uint16_t        VDCBias;        //匹配器VDC电压
 }Sensor_t;	
 
 typedef struct 
 {
-	uint32_t         Volt_Cnt;  	//PID过程计数
-	uint32_t         VoltLimit;    //设备PID驱动电压的限制
-	
-	uint32_t         Phase_Cnt;     //PID过程计数
+	Sensor_t    Now;
+	Sensor_t	Last;
+}OutSensor_t;	
+
+typedef struct 
+{
+	uint32_t      	 PointLimit;
+	uint32_t         PID_Cnt;  		//PID过程计数
 	uint32_t         PhaseLimit;    //设备PID驱动相位的限制		
 }SetPID_t;
-
-typedef struct
-{
-	uint32_t         Phase;			//设备阈值相位值
-	uint32_t         Volt;			//设备阈值电压值
-	uint32_t         Power;			//设备阈值功率值
-}AjustThr_t;	
 
 typedef struct 
 {
 	uint32_t Point;
 	uint32_t Phase;
-	uint32_t Volt;
 }PwrState_t;
 
 
 typedef struct _GN_Device_t
 { 	
 	RunState_t		 RunState;    		//I监测状态
-	RFPower_t        RFPwrState;        //射频工作状态
-	Sensor_t         Sensor;	        //设备sensor值	
+	OutSensor_t      Sensor;	        //设备sensor值
 	
+	uint16_t		 SetPower;          //设备上位机设置功率	
+	PwrState_t       InitPower;         //初始化值
 	PwrState_t       TargetPower;       //设备目标值
 	PwrState_t 		 LastPower;       	//上次设备输出值
-	
-	AjustThr_t		 AjustThr;          //设备阈值调整
-	AjustThr_t		 LastAjustThr;      //上次设备阈值调整
-	
 	SetPID_t	     SetPID;            //设备PID调整
-	uint32_t		 SetPower;          //设备上位机设置功率	
-	uint32_t 		 PowerLimit;        //设备设置功率上限
+	
 }GN_Device_t;
 
 typedef struct 

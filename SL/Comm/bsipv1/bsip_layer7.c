@@ -317,7 +317,7 @@ void BSIP_FpgaFirmwareUpdate(uint8_t port)
  * @Brief :      
  * ************************************************************************
  */
-void BSIP_ModbusFirmwareUpdate(uint8_t port)
+void BSIP_ModbusFirmwareUpdate(uint8_t port,uint8_t ModbusAddress)
 {
 	BSIPInfo_t BsipFrame;
 	Layer2Data_t txLayer2Data;
@@ -327,14 +327,14 @@ void BSIP_ModbusFirmwareUpdate(uint8_t port)
 		txLayer2Data.Len = BsipFrame.infoLen - 3;		
 		memcpy(&txLayer2Data.Buf,&BsipFrame.bsip.info,txLayer2Data.Len);	
 		uint16_t ModbusUpdateFrameLen = ((txLayer2Data.Len)%2==0)? (txLayer2Data.Len/2): ((txLayer2Data.Len+1)/2);	
-		MB_WriteNumHoldingReg_10H(MODBUS_ADDR, HOLD_REG_SW_START,ModbusUpdateFrameLen,(uint16_t*)txLayer2Data.Buf);
+		MB_WriteNumHoldingReg_10H(ModbusAddress, HOLD_REG_SW_START,ModbusUpdateFrameLen,(uint16_t*)txLayer2Data.Buf);
 		if(pdTRUE == xSemaphoreTake(ModbusReSemaphore, 300))
 		{	
 			NeedSend_ACK = 1;
 			xSemaphoreGive(ModbusNfSemaphore); 
 		}else
 		{
-			MB_WriteNumHoldingReg_10H(MODBUS_ADDR, HOLD_REG_SW_START,ModbusUpdateFrameLen,(uint16_t*)txLayer2Data.Buf);
+			MB_WriteNumHoldingReg_10H(ModbusAddress, HOLD_REG_SW_START,ModbusUpdateFrameLen,(uint16_t*)txLayer2Data.Buf);
 			if(pdTRUE == xSemaphoreTake(ModbusReSemaphore, 300))
 			{	
 				NeedSend_ACK = 1;
@@ -438,7 +438,7 @@ static void Dealwith_Cmd_DDSPhase(uint8_t* pBuf)
 static void Dealwith_Cmd_SetACDCState(uint8_t* pBuf)
 {
 	uint8_t value = pBuf[0];
-	IF_CmdParam_SetACDCStateSwitch(value);
+	IF_CmdParam_SetACDCState(value);
 }
 static void Dealwith_Cmd_SetACDCVolt(uint8_t* pBuf)
 {

@@ -21,7 +21,7 @@ void IF_Module_CmdExecute_Task(void)
 {
 	Module_Cmd_Execute();
 }
-
+	
 /* FUNCTION *************************************************************
  * Function Name : IF_Module_Output_Task
  * Description   : Port output执行函数
@@ -129,7 +129,7 @@ static void Module_Port_Output(void)
 	}
 	
 	/**************反射功率大于反射功率限制***************************/
-	if(GN_Device.Sensor.Pref > IF_SL_UserParam_GetReflectPowerLimit())
+	if(GN_Device.Sensor.Now.Pref > IF_SL_UserParam_GetReflectPowerLimit())
 	{
 		if(IF_SL_UserParam_GetReflectPowerDelayOff() > 0)
 		{
@@ -149,7 +149,7 @@ static void Module_Port_Output(void)
 	}	
 	
 	/*************功率输出时，监测电源功率**************************/
-	if(GN_Device.Sensor.Pfwd >= POWER_RATIO)
+	if(GN_Device.Sensor.Now.Pfwd >= POWER_RATIO)
 	{
 		g_StatusWord.bits.RFOnOrOff = 1;
 		IF_SetNormalOutput_SIG(IOSIGN_RFONLEDONOFF,ON);

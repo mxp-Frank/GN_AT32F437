@@ -1450,7 +1450,7 @@ static void Dealwith_DOB_CmdSetPoint(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		{
 			//数据类型正确才设置参数
 			uint16_t value = MAKE_UINT16( pRxDOB->pData[1],pRxDOB->pData[0]);
-			if (value <= MAX_POWER)
+			if (value <= IF_UserParam_GetForwardPowerLimit())
 			{
 				IF_CmdParam_SetRFPwrPoint(value);
 				pTxDOB->Status = NoErrorNoData;
@@ -2094,7 +2094,7 @@ static void Dealwith_DOB_InitPower(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 	}
 }
 
-static void Dealwith_DOB_FeedCollectionMode(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+static void Dealwith_DOB_FeedbackMode(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 	if ((pTxDOB->SubIndex) != 0x01)
 	{
@@ -2108,7 +2108,7 @@ static void Dealwith_DOB_FeedCollectionMode(DataObject_t* pRxDOB, DataObject_t* 
 		pTxDOB->DataLen  = 1;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
 
-		uint8_t value = IF_InternalParam_GetFeedCollectionMode();
+		uint8_t value = IF_InternalParam_GetFeedbackMode();
 		txDOBsDataBuf[txDOBsDataLen++] = value;
 	}	
 	else if (rxInfo.Cmd == ParameterWrite)
@@ -2117,7 +2117,7 @@ static void Dealwith_DOB_FeedCollectionMode(DataObject_t* pRxDOB, DataObject_t* 
 		{
 			//数据类型正确才设置参数
 			uint8_t value = pRxDOB->pData[0];
-			IF_InternalParam_SetFeedCollectionMode(value);
+			IF_InternalParam_SetFeedbackMode(value);
 			pTxDOB->Status = NoErrorNoData;
 		}
 		else
@@ -2301,6 +2301,74 @@ static void Dealwith_DOB_PhaseStepTimer(DataObject_t* pRxDOB, DataObject_t* pTxD
 		}
 	}
 }
+
+static void Dealwith_DOB_DDSPhaseOffset(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_SINT32;
+		pTxDOB->DataLen  = 4;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		int32_t value = IF_InternalParam_GetDDSPhaseOffset();
+		txDOBsDataBuf[txDOBsDataLen++] = Byte0_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte1_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte2_UINT32(value);
+		txDOBsDataBuf[txDOBsDataLen++] = Byte3_UINT32(value);
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_SINT32)
+		{
+			//数据类型正确才设置参数
+			int32_t value = MAKE_UINT32(pRxDOB->pData[3], pRxDOB->pData[2],pRxDOB->pData[1], pRxDOB->pData[0]);
+			IF_InternalParam_SetDDSPhaseOffset(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+static void Dealwith_DOB_VISampleSmooth(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
+{
+	if ((pTxDOB->SubIndex) != 0x01)
+	{
+		pTxDOB->Status = UnknownSubIndex;
+		return;
+	}
+	if (rxInfo.Cmd == ParameterRead)
+	{
+		pTxDOB->Status   = NoErrorHaveData;
+		pTxDOB->DataType = DataType_UINT8;
+		pTxDOB->DataLen  = 1;
+		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
+
+		uint8_t value = IF_InternalParam_GetVISampleSmooth();
+		txDOBsDataBuf[txDOBsDataLen++] = value;
+	}
+	else if (rxInfo.Cmd == ParameterWrite)
+	{
+		if (pRxDOB->DataType == DataType_UINT8)
+		{
+			uint8_t value =  pRxDOB->pData[0];
+			IF_InternalParam_SetVISampleSmooth(value);
+			pTxDOB->Status = NoErrorNoData;
+		}
+		else
+		{
+			pTxDOB->Status = CheckFailedParam;
+		}
+	}
+}
+
 static void Dealwith_DOB_ACDCVoltGain(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 {
 
@@ -4476,7 +4544,7 @@ static void Dealwith_DOB_CmdACDCDrviveState(DataObject_t* pRxDOB, DataObject_t* 
 		pTxDOB->DataType = DataType_UINT8;
 		pTxDOB->DataLen  = 1;
 		pTxDOB->pData    = &txDOBsDataBuf[txDOBsDataLen];
-		value = IF_CmdParam_GetACDCStateSwitch();
+		value = IF_CmdParam_GetACDCState();
 		txDOBsDataBuf[txDOBsDataLen++] = value;
 	}
 	else if (rxInfo.Cmd == ParameterWrite)
@@ -4487,7 +4555,7 @@ static void Dealwith_DOB_CmdACDCDrviveState(DataObject_t* pRxDOB, DataObject_t* 
 			uint8_t value =  pRxDOB->pData[0];
 			if (value == 1||value == 0)
 			{	
-				IF_CmdParam_SetACDCStateSwitch(value);
+				IF_CmdParam_SetACDCState(value);
 				pTxDOB->Status = NoErrorNoData;				
 			}
 			else
@@ -5290,8 +5358,8 @@ static void ParseOneParamDOB(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 	case ID_StartPower:
 		Dealwith_DOB_InitPower(pRxDOB, pTxDOB);
 		break;
-	case ID_FeedCollectionMode:
-		Dealwith_DOB_FeedCollectionMode(pRxDOB, pTxDOB);
+	case ID_FeedbackMode:
+		Dealwith_DOB_FeedbackMode(pRxDOB, pTxDOB);
 		break;			   
 	case ID_FeedPreMask:
 		Dealwith_DOB_FeedPreMask(pRxDOB, pTxDOB);
@@ -5307,7 +5375,14 @@ static void ParseOneParamDOB(DataObject_t* pRxDOB, DataObject_t* pTxDOB)
 		break;			   
 	case ID_PhaseStepTimer:
 		Dealwith_DOB_PhaseStepTimer(pRxDOB, pTxDOB);
-		break;			  
+		break;
+	case ID_DDSPhaseOffset:
+		Dealwith_DOB_DDSPhaseOffset(pRxDOB, pTxDOB);
+		break;	
+	case ID_VISampleSmooth:
+		Dealwith_DOB_VISampleSmooth(pRxDOB, pTxDOB);
+		break;
+	
 	case ID_ACDCVoltGain:
 		Dealwith_DOB_ACDCVoltGain(pRxDOB, pTxDOB);
 		break;

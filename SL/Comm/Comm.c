@@ -142,9 +142,9 @@ void RS485_UART_Callback(void)
 void IF_CommInit(void)
 {
 	FGIPv2_Init();
+	uint8_t value = IF_CommParam_GetDataRate();
+	IF_HAL_SetBaudRate(value);	
 	IF_ACDC_SetParamsRWType(READ_MB_VERSIONREG); 
-//	uint8_t value = IF_CommParam_GetDataRate();
-//	IF_HAL_SetBaudRate(value);	
 }
 
 
@@ -159,10 +159,11 @@ void IF_UartTask1(void)
     CommMsg_t rxMsg;
     if(pdTRUE == xQueueReceive(UserQueue, &rxMsg, BSIP_TASK_PERIOD))
 	{
-		Dealwith_BSIP_Layer2(COM1,&rxMsg);
+		Dealwith_BSIP_Layer2(USER_UART,&rxMsg);
 		IF_Param_ExecuteActionsAfterRsp();
     }	
-	BSIP_TxManagment(COM1); 
+	vTaskDelay(BSIP_TASK_PERIOD);
+	BSIP_TxManagment(USER_UART); 
 }
 
 /* FUNCTION *******************************************************************
@@ -214,34 +215,27 @@ void IF_UartSendTask4(void)
 /************************************************************************/
 /* Local Functions Definitions                                          */
 /************************************************************************/
-uint8_t SendToRxQueueFromISR(uint8_t port, pCommMsg_t pRxMsg)
+void SendToRxQueueFromISR(uint8_t port, pCommMsg_t pRxMsg)
 {
-	uint8_t result = 0;
-
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	switch(port)
 	{
 		case USER_UART:
-			if(pdTRUE == xQueueSendFromISR(UserQueue, pRxMsg, &xHigherPriorityTaskWoken))result = 1;	
+			if(UserQueue != NULL)xQueueSendFromISR(UserQueue, pRxMsg, &xHigherPriorityTaskWoken);	
 		break;
 		case DEBUG_UART:
-			if(pdTRUE == xQueueSendFromISR(FGIPv2Queue, pRxMsg, &xHigherPriorityTaskWoken))result = 1;	
+			if(FGIPv2Queue != NULL)xQueueSendFromISR(FGIPv2Queue, pRxMsg, &xHigherPriorityTaskWoken);	
 		break;
 		case RS485_UART:
-			if(pdTRUE == xQueueSendFromISR(ModbusRxQueue, pRxMsg, &xHigherPriorityTaskWoken))
-			{
-				result = 1;
-			}	
+			if(ModbusRxQueue != NULL)xQueueSendFromISR(ModbusRxQueue, pRxMsg, &xHigherPriorityTaskWoken);	
 		break;
 		case FPGA_UART:	
 			if(pRxMsg->data[1]==0xFF && pRxMsg->data[2]==0xFF &&pRxMsg->data[3]==0x00 &&pRxMsg->data[4]==0xFF &&pRxMsg->data[5]==0xFF)
 			{	
-				xSemaphoreGiveFromISR(FpgaReSemaphore,&xHigherPriorityTaskWoken);		
+				if(FpgaReSemaphore != NULL)xSemaphoreGiveFromISR(FpgaReSemaphore,&xHigherPriorityTaskWoken);			
 			}		
 			break;		
 	}
-	
 	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-	return result;
 }
 

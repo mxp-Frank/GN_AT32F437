@@ -22,6 +22,7 @@ static Layer2Data_t ModBuffer;
 extern CommMsg_t g_RxBuf[PORT_NUM];
 extern CommMsg_t g_TxBuf[PORT_NUM];
 
+static void ModBus_SendTypeManagment(uint8_t ModbusAddress);
 static void Update_ACDCSettingToPHoldRegister(void);
 static void Update_PHoldRegisterToACDCSetting(void);
 static void Update_ACDCParamToPHoldRegister(void);
@@ -38,49 +39,11 @@ void Modbus_TxBufManagment(uint8_t port)
 { 	
 	if(ModBusSendType == WRITE_MB_SOFTWAREREG) //软件版本保持寄存器
 	{
-		BSIP_ModbusFirmwareUpdate(port);
+		BSIP_ModbusFirmwareUpdate(port,MODBUS_ADDR);
 	}
 	else
 	{
-		if(ModBusSendType == READ_MB_VERSIONREG)    //读版本输入寄存器		
-		{		
-			MB_ReadInputReg_04H(MODBUS_ADDR, INPUT_REG_A33,INPUT_REG_VERSION_NUM);	
-		}
-		else if(ModBusSendType == READ_MB_HOLDREG) 
-		{
-			MB_ReadHoldingReg_03H(MODBUS_ADDR, HOLD_REG_P01,HOLD_REG_P_NUM);
-		}
-		else if(ModBusSendType ==READ_MB_PROCSSREG)    //读过程输入寄存器
-		{
-			MB_ReadInputReg_04H(MODBUS_ADDR, INPUT_REG_A01,INPUT_REG_PROCESS_NUM);			
-		}
-		else if(ModBusSendType ==	READ_MB_COILS)	//读线圈状态
-		{				
-			MB_ReadCoil_01H(MODBUS_ADDR, INPUT_IO_T01,INPUT_IO_NUM);					
-		}
-		else if(ModBusSendType == WRITE_MB_MULTCOILS)  //写线圈状态
-		{			
-			MB_WriteNumCoil_0FH(MODBUS_ADDR, OUTPUT_IO_D01, 1,(uint16_t*)&Modbus_OutputCoils);		
-		}
-		else if(ModBusSendType ==  WRITE_MB_SETTINGEREG)//写设置保持寄存器
-		{			
-			Update_ACDCSettingToPHoldRegister();
-			uint8_t AddressOffset = HOLD_REG_P01 - HOLD_REG_P01;				
-			MB_WriteNumHoldingReg_10H(MODBUS_ADDR, HOLD_REG_P01,SETTING_REG_NUM,(uint16_t*)&Modbus_PHoldReg[AddressOffset]);
-		}
-		else if(ModBusSendType == WRITE_MB_HARDWAREREG)//写版本保持寄存器
-		{	
-			uint8_t AddressOffset = HOLD_REG_P29 - HOLD_REG_P01;			
-			MB_WriteNumHoldingReg_10H(MODBUS_ADDR, HOLD_REG_P29,HARDVER_REG_NUM,(uint16_t*)&Modbus_PHoldReg[AddressOffset]);	
-		}
-		else if(ModBusSendType ==WRITE_MB_PARAMREG)//写参数保持寄存器		
-		{	
-			Update_ACDCParamToPHoldRegister();	
-			uint8_t AddressOffset = HOLD_REG_P05 - HOLD_REG_P01;	
-			MB_WriteNumHoldingReg_10H(MODBUS_ADDR, HOLD_REG_P05,PARAM_REG_NUM,(uint16_t*)&Modbus_PHoldReg[AddressOffset]);
-		}	
-		
-		vTaskDelay(MODBUS_TX_PERIOD);
+		ModBus_SendTypeManagment(MODBUS_ADDR);
 	}
 }
 /* FUNCTION *********************************************************************************
@@ -209,6 +172,53 @@ void Dealwith_Modbus_Service(pCommMsg_t pRxMsg)
 		}	
 	}		
 }	
+/* FUNCTION *********************************************************************************
+ * Function Name : ModBus_SendTypeManagment
+ * Description   : Modbus发送查询数据
+ * Parameter     : port 发送数据端口
+ * END ***************************************************************************************/
+static void ModBus_SendTypeManagment(uint8_t Modbus_Address)
+{
+	if(ModBusSendType == READ_MB_VERSIONREG)    //读版本输入寄存器		
+	{		
+		MB_ReadInputReg_04H(Modbus_Address, INPUT_REG_A33,INPUT_REG_VERSION_NUM);	
+	}
+	else if(ModBusSendType == READ_MB_HOLDREG) 
+	{
+		MB_ReadHoldingReg_03H(Modbus_Address, HOLD_REG_P01,HOLD_REG_P_NUM);
+	}
+	else if(ModBusSendType ==READ_MB_PROCSSREG)    //读过程输入寄存器
+	{
+		MB_ReadInputReg_04H(Modbus_Address, INPUT_REG_A01,INPUT_REG_PROCESS_NUM);			
+	}
+	else if(ModBusSendType ==	READ_MB_COILS)	//读线圈状态
+	{				
+		MB_ReadCoil_01H(Modbus_Address, INPUT_IO_T01,INPUT_IO_NUM);					
+	}
+	else if(ModBusSendType == WRITE_MB_MULTCOILS)  //写线圈状态
+	{			
+		MB_WriteNumCoil_0FH(Modbus_Address, OUTPUT_IO_D01, 1,(uint16_t*)&Modbus_OutputCoils);		
+	}
+	else if(ModBusSendType ==  WRITE_MB_SETTINGEREG)//写设置保持寄存器
+	{			
+		Update_ACDCSettingToPHoldRegister();
+		uint8_t AddressOffset = HOLD_REG_P01 - HOLD_REG_P01;				
+		MB_WriteNumHoldingReg_10H(Modbus_Address, HOLD_REG_P01,SETTING_REG_NUM,(uint16_t*)&Modbus_PHoldReg[AddressOffset]);
+	}
+	else if(ModBusSendType == WRITE_MB_HARDWAREREG)//写版本保持寄存器
+	{	
+		uint8_t AddressOffset = HOLD_REG_P29 - HOLD_REG_P01;			
+		MB_WriteNumHoldingReg_10H(Modbus_Address, HOLD_REG_P29,HARDVER_REG_NUM,(uint16_t*)&Modbus_PHoldReg[AddressOffset]);	
+	}
+	else if(ModBusSendType ==WRITE_MB_PARAMREG)//写参数保持寄存器		
+	{	
+		Update_ACDCParamToPHoldRegister();	
+		uint8_t AddressOffset = HOLD_REG_P05 - HOLD_REG_P01;	
+		MB_WriteNumHoldingReg_10H(Modbus_Address, HOLD_REG_P05,PARAM_REG_NUM,(uint16_t*)&Modbus_PHoldReg[AddressOffset]);
+	}	
+
+	vTaskDelay(MODBUS_TX_PERIOD);
+}
 /* FUNCTION *********************************************************************************
  * Function Name : Modbus_ReceiveChar
  * Description   : 查表法计算crc，

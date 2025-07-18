@@ -306,13 +306,13 @@ static void FpgaUnit_Reset(void)
 uint8_t IF_FpgaReg_ReadStart(void)
 {
 	uint8_t error_flag = 0;
-	uint8_t timeOutCnt = 0;
+	uint16_t timeOutCnt = 0;
 	FpgaData_PortInit(DATA_INPUT); //Setup Data port Input
 	DATA_START_HIGH; 
-	while(DATA_FPGA_READ == 0)//normal operation time is less 100us	
+	while(DATA_FPGA_READ == 0)//normal operation time is less 200us	
 	{
 		timeOutCnt++;
-		if(timeOutCnt > 100)
+		if(timeOutCnt >= 200)
 		{
 			error_flag = 1;
 			break;  

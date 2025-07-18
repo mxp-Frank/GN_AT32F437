@@ -42,6 +42,7 @@ void IF_SL_CfgInit(void)
     IF_TimerInit();
 	IF_InterfaceInit();	
 	IF_CommInit();
+	delay_ms(100);
 }
 	
 void IF_SL_WDOG_FEED(void)
@@ -108,18 +109,22 @@ void IF_SL_UartSendTask4(void)
 
 //Sensor SL interface
 /* FUNCTION *********************************************************************************
- * Function Name : IF_SL_Sensor_Fpga_Task
+ * Function Name : IF_SL_ReadSensor_Task
  * Description   : Sensor任务函数接口
  * Parameter     : 
  * Parameter     :                               
  * END ***************************************************************************************/
-void IF_SL_Sensor_Fpga_Task(void)
+void IF_SL_Sensor_ReadFpga_Task(void)
 {
-    IF_Sensor_Fpga_Task();
+    IF_Sensor_ReadFpga_Task();
 }
 
+void IF_SL_Sensor_WriteFgpa_Task(void)
+{
+	IF_Sensor_WriteFgpa_Task();
+}
 /* FUNCTION *********************************************************************************
- * Function Name : IF_SL_Sensor_Fpga_Task
+ * Function Name : IF_SL_ReadSensor_Task
  * Description   : Sensor任务函数接口
  * Parameter     : 
  * Parameter     :                               
@@ -417,7 +422,7 @@ void IF_SL_CmdParam_SetDDSDriverState(uint8_t ONorOFF)
 //**************************************
 void IF_SL_CmdParam_SetACDCDriverState(uint8_t ONorOFF)
 {
-	 IF_CmdParam_SetACDCStateSwitch(ONorOFF);
+	 IF_CmdParam_SetACDCState(ONorOFF);
 }
 //**************************************
 uint8_t IF_SL_CmdParam_GetRFPowerState(void)

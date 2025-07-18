@@ -16,25 +16,24 @@
 	
 /* DATA STRUCTURES */
 /* LOCAL VARIABLES */
-static PID_Typedef PhasePID;
-static PID_Typedef VoltPID;
+static PID_Typedef PfwdPID;
+static PID_Typedef PrefPID;
 /* GLOBAL VARIABLES */
 
 GN_Device_t GN_Device;
 /* FUNCTION PROTOTYPES */
 static uint32_t Module_PowerDriverCtrl(void);
 static void Module_TargetPowerOutput(uint32_t SetPower);
+
 static void Module_CheckPowerLimit(uint32_t SetPower);
-static void Module_PhasePIDAdjust(uint32_t SetPower);
-static void Module_VoltPIDAdjust(uint32_t SetPower);
+static void Module_PowerAdjustInit(uint32_t SetPower);
+static void Module_PfwdPIDAdjust(uint32_t SetPower);
+static void Module_PrefPIDAdjust(uint32_t SetPower);
 
 static void Module_ACDCOutputPhase(float SetPIDPhase);
-static uint32_t Phase_PID_LookupTable(uint32_t power);
-static float Phase_PID_realize(float OutputPower,float Pforward);
-
-static void Module_ACDCOutputVoltage(float SetPIDVoltage);
-static float Volt_PID_LookupTable(uint32_t power);
-static float Volt_PID_realize(float OutputPower,float Pforward);
+static void Module_PhasePID_Init(void);
+static float Pfwd_PID_realize(float OutputPower,float Pforward);
+static float Pref_PID_realize(float OutputPower,float Pforward);
 /************************************************************************/
 /* Global Functions Definitions                                          */
 /************************************************************************/
@@ -47,7 +46,7 @@ static float Volt_PID_realize(float OutputPower,float Pforward);
 void IF_Module_SWCInit(void)
 {
     //Global Init...
-	memset(&GN_Device, 0, sizeof(GN_Device_t));
+	memset((void*)&GN_Device, 0, sizeof(GN_Device_t));
 	IF_SL_CmdParam_SetPowerWorkMode(ON);
 }
 /* FUNCTION *********************************************************************************
@@ -62,8 +61,7 @@ void IF_Module_Main_Task(void)
 	if(GN_Device.RunState.Now == RUN_STATE) 
 	{
 		SetPower = Module_PowerDriverCtrl();
-		Module_TargetPowerOutput(SetPower);
-					
+		Module_TargetPowerOutput(SetPower);				
 	}
 }
 /* FUNCTION *********************************************************************************
@@ -76,7 +74,7 @@ static uint32_t Module_PowerDriverCtrl(void)
 {
 	float PowerSlowRate = 0.0F;
 	/**********************射频功耗驱动开启状态*********************************/	
-	if (RF_ON == GN_Device.RFPwrState.Now)
+	if (RF_ON == GN_Device.Sensor.Now.RFState)
 	{	
 		if(OFF == IF_SL_UserParam_GetSlowMode())  				//缓启动模式关闭
 		{
@@ -101,15 +99,7 @@ static uint32_t Module_PowerDriverCtrl(void)
 		}	
 		PowerSlowRate = IF_SL_Timer_GetRFSlowStopDelayTime();				
 	}
-	uint32_t SetPower = PowerSlowRate * GN_Device.SetPower;
-	if(SetPower > 0)
-	{
-		IF_SL_CmdParam_SetDDSDriverState(ON); 					//功放驱动电源使能	
-	}else
-	{
-		IF_SL_CmdParam_SetDDSDriverState(OFF); 				 	//关功放驱动电源使能
-	}
-	
+	uint32_t SetPower = GN_Device.SetPower*PowerSlowRate;
 	return SetPower;	
 }
 /* FUNCTION *********************************************************************************
@@ -121,153 +111,96 @@ static uint32_t Module_PowerDriverCtrl(void)
 static void Module_TargetPowerOutput(uint32_t SetPower)
 {	
 	/**************监控功率开启************************************/
-	if (RF_ON == GN_Device.RFPwrState.Now && SetPower >= POWER_RATIO) 		
+	if (RF_ON == GN_Device.Sensor.Now.RFState && SetPower >= POWER_RATIO) 		
 	{	
-		if(GN_Device.RFPwrState.Now != GN_Device.RFPwrState.Last) //功率状态切换
+		/************************功率和相位限制值***************************/		
+		if(GN_Device.SetPID.PointLimit != GN_Device.SetPower)
 		{
-			if(SetPower >= IF_SL_InternalParam_GetInitPoint())
-			{
-				GN_Device.TargetPower.Point = IF_SL_InternalParam_GetInitPoint();
-			}
-			GN_Device.TargetPower.Phase = Phase_PID_LookupTable(GN_Device.TargetPower.Point);
-			Module_ACDCOutputPhase(GN_Device.TargetPower.Phase);
-			
-		}else if(GN_Device.Sensor.Pfwd >= POWER_RATIO)
-		{
-			Module_CheckPowerLimit(SetPower);
-			if(SetPower <= IF_SL_UserParam_GetForwardPowerLimit())
-			{
-				Module_PhasePIDAdjust(SetPower);	
-			}else
-			{
-				Module_VoltPIDAdjust(SetPower);	
-			}	
+			GN_Device.SetPID.PointLimit = GN_Device.SetPower;
+			GN_Device.SetPID.PhaseLimit = IF_NvmParam_GetPhaseMapTable(GN_Device.SetPID.PointLimit);
 		}	
+		if(GN_Device.Sensor.Now.RFState != GN_Device.Sensor.Last.RFState) //初始化功率状态
+		{
+			Module_PhasePID_Init();
+			Module_PowerAdjustInit(SetPower);
+			
+		}else if(GN_Device.Sensor.Now.Pfwd >= POWER_RATIO) //功率监测及PID过程
+		{
+			Module_CheckPowerLimit(SetPower);	
+		}
+		/*************************功率输出******************************/
+		if(GN_Device.TargetPower.Phase < PWR_UP_LIMIT(GN_Device.SetPID.PhaseLimit))
+		{	
+			IF_SL_CmdParam_SetDDSDriverState(ON); 			   //功放驱动电源使能	
+			IF_SL_CmdParam_SetACDCVoltage(INIT_ACDC_VOLTAGE); //设置初始化电压	
+			Module_ACDCOutputPhase(GN_Device.TargetPower.Phase);
+		}
 	}else
 	{
-		memset(&GN_Device.SetPID,0,sizeof(SetPID_t));
-		memset(&GN_Device.AjustThr,0,sizeof(AjustThr_t));
 		IF_SL_ClearRFPwrPIDProcessData();
 		IF_SL_CmdParam_SetDDSPhase(0);              	  //设置射频驱动相位为0
-		IF_SL_CmdParam_SetACDCVoltage(INIT_ACDC_VOLTAGE); //设置AC-DC初始化电压	
-		IF_SL_CmdParam_SetACDCDriverState(ON); 		      //开启AC-DC电源使能			
+		IF_SL_CmdParam_SetDDSDriverState(OFF); 			  //关功放驱动电源使能
+		IF_SL_CmdParam_SetACDCDriverState(ON); 		      //开启电源使能		
+		IF_SL_CmdParam_SetACDCVoltage(INIT_ACDC_VOLTAGE); //设置初始化电压	
+		memset((void*)&GN_Device.SetPID,0,sizeof(SetPID_t));
+		memset((void*)&GN_Device.Sensor.Now,0,sizeof(Sensor_t));
+		memset((void*)&GN_Device.TargetPower,0,sizeof(PwrState_t));			
+	}		
+	memcpy((void*)&GN_Device.Sensor.Last,(void*)&GN_Device.Sensor.Now,sizeof(Sensor_t));
+	memcpy((void*)&GN_Device.LastPower,(void*)&GN_Device.TargetPower,sizeof(PwrState_t));
+}
+/* FUNCTION *********************************************************************************
+ * Function  	 :	Module_PowerAdjustInit
+ * Description   : 电源功率调整初始化函数
+ * Parameter     : SetPower 设置的功率
+ * return        :                
+ * END ***************************************************************************************/
+static void Module_PowerAdjustInit(uint32_t SetPower)
+{
+	GN_Device.InitPower.Point = SetPower;
+	if(SetPower >= IF_SL_InternalParam_GetInitPoint())
+	{
+		GN_Device.InitPower.Point = IF_SL_InternalParam_GetInitPoint();	
 	}
 	
-	GN_Device.LastPower.Point   = GN_Device.TargetPower.Point;
-	GN_Device.LastPower.Phase   = GN_Device.TargetPower.Phase;
-	GN_Device.LastPower.Volt    = GN_Device.TargetPower.Volt;
-	GN_Device.LastAjustThr.Power = GN_Device.AjustThr.Power;
-	GN_Device.LastAjustThr.Phase = GN_Device.AjustThr.Phase;
-	GN_Device.LastAjustThr.Volt  = GN_Device.AjustThr.Volt;
-	GN_Device.RFPwrState.Last = GN_Device.RFPwrState.Now;
-}
-/* FUNCTION *********************************************************************************
- * Function  	 :	Module_PhasePIDAdjust
- * Description   : 电源功率调整处理过程函数
- * Parameter     : TargetPower 设置的功率
- * return        :                
- * END ***************************************************************************************/
-static  void Module_PhasePIDAdjust(uint32_t SetPower)
-{
-	/*************************检查目标功率与上次是否相同,驻波比大于设置值********************/
-	if((GN_Device.SetPID.Phase_Cnt < PID_INIT_TIMER && GN_Device.Sensor.VSWR > g_FactorData.VSWRLimit)||(GN_Device.TargetPower.Point != GN_Device.LastPower.Point))  
-	{
-		GN_Device.SetPID.Phase_Cnt = 0;
-		uint32_t VSWRPower = SetPower/GN_Device.Sensor.VSWR;
-		uint32_t VSWRPhase = Phase_PID_LookupTable(VSWRPower);
-		if(VSWRPhase  <  GN_Device.AjustThr.Phase)
-		{
-			GN_Device.TargetPower.Point = VSWRPower;
-			GN_Device.TargetPower.Phase = VSWRPhase;	
-		}else 
-		{
-			GN_Device.TargetPower.Point = GN_Device.AjustThr.Power;
-			GN_Device.TargetPower.Phase = GN_Device.AjustThr.Phase;	
-		}
-	}else
-	{
-		GN_Device.SetPID.Phase_Cnt++;
-	}
-	/************************开始设置Phase PID********************************/	
-	if(GN_Device.SetPID.Phase_Cnt == PID_INIT_TIMER)
-	{
-		GN_Device.TargetPower.Point = SetPower;
-		GN_Device.TargetPower.Phase = Phase_PID_LookupTable(GN_Device.TargetPower.Point);	
-		
-	}else if(GN_Device.SetPID.Phase_Cnt > PID_LOOP_TIMER)
-	{
-		 uint32_t IncreasePhase = Phase_PID_realize(GN_Device.TargetPower.Point,GN_Device.Sensor.Pfwd);
-		 GN_Device.TargetPower.Phase = GN_Device.TargetPower.Phase + IncreasePhase;
-	}
-	if(GN_Device.TargetPower.Phase < GN_Device.SetPID.PhaseLimit)
-	{
-		Module_ACDCOutputPhase(GN_Device.TargetPower.Phase);
-	}
-	/************************过程数据采集******************************/
-	if(GN_Device.SetPID.Phase_Cnt % PID_LOOP_TIMER == 0)
-	{
-		if(GN_Device.Sensor.VSWR < TUNED_VSWR) 
-		{
-			IF_SL_ClearRFPwrPIDProcessDataFlag();
-		}else
-		{
-			IF_SL_UpdateRFPwrPIDProcessData();
-		}
-	}	
-}
+	GN_Device.InitPower.Phase = IF_NvmParam_GetPhaseMapTable(GN_Device.InitPower.Point);
+	GN_Device.TargetPower.Point = GN_Device.InitPower.Point;
+	GN_Device.TargetPower.Phase = GN_Device.InitPower.Phase;	
+}	
 
 /* FUNCTION *********************************************************************************
- * Function  	 :	Module_VoltPIDAdjust
+ * Function  	 :	Module_PfwdPIDAdjust
  * Description   : 电源功率调整处理过程函数
  * Parameter     : TargetPower 设置的功率
  * return        :                
  * END ***************************************************************************************/
-static  void Module_VoltPIDAdjust(uint32_t SetPower)
+static  void Module_PfwdPIDAdjust(uint32_t SetPower)
 {
-	/*************************检查目标功率与上次是否相同,驻波比大于设置值********************/
-	if((GN_Device.SetPID.Volt_Cnt < PID_INIT_TIMER && GN_Device.Sensor.VSWR > g_FactorData.VSWRLimit)||(GN_Device.TargetPower.Point != GN_Device.LastPower.Point) )  
+	uint32_t PfmPoint = IF_SL_UserParam_GetReflectPowerThreshold()/GN_Device.Sensor.Now.Gamma;  
+	uint32_t PfxPoint = GN_Device.Sensor.Now.Pfwd/GN_Device.Sensor.Now.Gamma;   		
+	if(PfmPoint < PfxPoint && PfmPoint < SetPower)
 	{
-		GN_Device.SetPID.Volt_Cnt = 0;
-		uint32_t VSWRPower = SetPower/GN_Device.Sensor.VSWR;
-		uint32_t VSWRVolt = Volt_PID_LookupTable(VSWRPower);
-		if(VSWRVolt <  GN_Device.AjustThr.Volt)
-		{
-			GN_Device.TargetPower.Point = VSWRPower;
-			GN_Device.TargetPower.Volt = VSWRVolt;	
-		}else 
-		{
-			GN_Device.TargetPower.Point = GN_Device.AjustThr.Power;
-			GN_Device.TargetPower.Volt  = GN_Device.AjustThr.Volt;	
-		}	
+		GN_Device.TargetPower.Point = PfmPoint;
+	}else if(PfxPoint < PfmPoint&&PfxPoint< SetPower)
+	{
+		GN_Device.TargetPower.Point = PfxPoint;	
 	}else
 	{
-		GN_Device.SetPID.Volt_Cnt++;
-	}
-	/**************开始设置Volt PID********************/	
-	if(GN_Device.SetPID.Volt_Cnt == PID_INIT_TIMER)
-	{
 		GN_Device.TargetPower.Point = SetPower;
-		GN_Device.TargetPower.Volt = Volt_PID_LookupTable(GN_Device.TargetPower.Volt);		
-	}else if(GN_Device.SetPID.Volt_Cnt > PID_LOOP_TIMER)
-	{
-		 uint32_t IncreaseVolt = Volt_PID_realize(GN_Device.TargetPower.Point,GN_Device.Sensor.Pfwd);
-		 GN_Device.TargetPower.Volt = GN_Device.TargetPower.Volt + IncreaseVolt;
 	}
-	if(GN_Device.TargetPower.Volt < GN_Device.SetPID.VoltLimit)
-	{
-		Module_ACDCOutputVoltage(GN_Device.TargetPower.Volt);
-	}
-	/************************过程数据采集******************************/	
-	if(GN_Device.SetPID.Volt_Cnt % PID_LOOP_TIMER == 0)
-	{
-		if(GN_Device.Sensor.VSWR < TUNED_VSWR) 
-		{
-			IF_SL_ClearRFPwrPIDProcessDataFlag();
-		}else
-		{
-			IF_SL_UpdateRFPwrPIDProcessData();
-		}
-	}	
+	GN_Device.TargetPower.Phase += Pfwd_PID_realize(GN_Device.TargetPower.Point,GN_Device.Sensor.Now.Pfwd);
+}
+	
+/* FUNCTION *********************************************************************************
+ * Function  	 :	Module_PrefPIDAdjust
+ * Description   : 电源功率调整处理过程函数
+ * Parameter     : TargetPower 设置的功率
+ * return        :                
+ * END ***************************************************************************************/
+static  void Module_PrefPIDAdjust(uint32_t SetPower)
+{
+	uint32_t TargetPrefPoint = IF_SL_UserParam_GetReflectPowerThreshold();	
+	GN_Device.TargetPower.Phase += Pref_PID_realize(TargetPrefPoint,GN_Device.Sensor.Now.Pref);
 }	
 /* FUNCTION *********************************************************************************
  * Function  : Module_OutputPhase
@@ -289,26 +222,6 @@ static void Module_ACDCOutputPhase(float SetPIDPhase)
 	IF_CmdParam_SetDDSPhase(SetPIDPhase);	
 }	
 /* FUNCTION *********************************************************************************
- * Function  : ACDCModule_OutputVoltage
- * Description   : 设置Fpga输出相位接口
- * Parameter     : 
- * return        :                
- * END ***************************************************************************************/
-static void Module_ACDCOutputVoltage(float SetPIDVoltage)
-{
-	/*********************设置射频输出功率值*********************/	
-	if(SetPIDVoltage >= MAX_ACDC_VOLT)  //限制PID最大输出
-	{
-		SetPIDVoltage = MAX_ACDC_VOLT;
-		g_StatusWord.bits.PowerAtLimit = 1;			//电压超出极限值
-	}else
-	{
-		g_StatusWord.bits.PowerAtLimit = 0;
-	}	
-	IF_CmdParam_SetACDCVoltage(SetPIDVoltage);
-	
-}
-/* FUNCTION *********************************************************************************
  * Function  : Module_CheckPowerLimit
  * Description   : 电源电压输出阈值处理过程函数
  * Parameter     : OutputPower 输出的功率值
@@ -316,84 +229,40 @@ static void Module_ACDCOutputVoltage(float SetPIDVoltage)
  * END ***************************************************************************************/
 static void Module_CheckPowerLimit(uint32_t SetPower)
 {	
-	/**********************功率监测，开启状态*********************************/
-	if(FWDREGULATION == IF_SL_UserParam_GetRegulationMode()) //前向功率模式下
+		
+	if(GN_Device.Sensor.Now.Pref >= IF_SL_UserParam_GetReflectPowerThreshold() + PrefPID.ErrorThr)
+	{ 
+		Module_PrefPIDAdjust(SetPower);	
+	}else
 	{
-		if(GN_Device.Sensor.Pref > IF_SL_UserParam_GetReflectPowerThreshold())
-		{ 
-			GN_Device.SetPID.Phase_Cnt = 0; //PID的退出条件
-			GN_Device.SetPID.Volt_Cnt  = 0; //PID的退出条件
-			/***************设置当前调整阈值***************/
-			GN_Device.AjustThr.Power = GN_Device.LastPower.Point/THR_RATE;   
-			GN_Device.AjustThr.Phase = GN_Device.LastPower.Phase/THR_RATE;
-			GN_Device.AjustThr.Volt  = GN_Device.LastPower.Volt/THR_RATE;
-		}else
-		{		
-			if((GN_Device.TargetPower.Point == GN_Device.LastAjustThr.Power)||
-			   (GN_Device.LastAjustThr.Power >= (SetPower/2)))
-			{
-				GN_Device.AjustThr.Power = GN_Device.LastAjustThr.Power;
-				GN_Device.AjustThr.Phase = GN_Device.LastAjustThr.Phase;
-				GN_Device.AjustThr.Volt	 = GN_Device.LastAjustThr.Volt;			
-			}else  
-			{
-				GN_Device.AjustThr.Power = GN_Device.LastPower.Point*THR_RATE;   
-				GN_Device.AjustThr.Phase = GN_Device.LastPower.Phase*THR_RATE;
-				GN_Device.AjustThr.Volt  = GN_Device.LastPower.Volt*THR_RATE;		
-			}							
-		}
-	}else if(LOADREGULATION == IF_SL_UserParam_GetRegulationMode()) //传输功率模式下
+		Module_PfwdPIDAdjust(SetPower);
+	} 
+	/************************过程数据采集******************************/
+	if(GN_Device.SetPID.PID_Cnt % PID_LOOP_TIMER == 0)
 	{
-		if(GN_Device.Sensor.Pref > GN_Device.SetPower)
-		{ 	 
-			GN_Device.SetPID.Phase_Cnt = 0; //PID的退出条件
-			GN_Device.SetPID.Volt_Cnt  = 0; //PID的退出条件
-			/***************设置当前调整阈值***************/
-			GN_Device.AjustThr.Power = GN_Device.LastPower.Point/THR_RATE;   
-			GN_Device.AjustThr.Phase = GN_Device.LastPower.Phase/THR_RATE;
-			GN_Device.AjustThr.Volt  = GN_Device.LastPower.Volt/THR_RATE;
+		if(GN_Device.Sensor.Now.VSWR < TUNED_VSWR) 
+		{
+			IF_SL_ClearRFPwrPIDProcessDataFlag();
 		}else
-		{		
-			if((GN_Device.TargetPower.Point == GN_Device.LastAjustThr.Power)||
-			   (GN_Device.LastAjustThr.Power >= (SetPower/2)))
-			{
-				GN_Device.AjustThr.Power = GN_Device.LastAjustThr.Power;
-				GN_Device.AjustThr.Phase = GN_Device.LastAjustThr.Phase;
-				GN_Device.AjustThr.Volt	 = GN_Device.LastAjustThr.Volt;				
-			}else 
-			{
-				GN_Device.AjustThr.Power = GN_Device.LastPower.Point*THR_RATE;   
-				GN_Device.AjustThr.Phase = GN_Device.LastPower.Phase*THR_RATE;
-				GN_Device.AjustThr.Volt  = GN_Device.LastPower.Volt*THR_RATE;			
-			}							
+		{
+			IF_SL_UpdateRFPwrPIDProcessData();
 		}
-	}
+	}	
+	GN_Device.SetPID.PID_Cnt++;
 }
-	
  /* FUNCTION *********************************************************************************
- * Function  : PID_LookupTable
+ * Function      : Module_PhasePID_Init
  * Description   : 匹配器设置初始化接口
  * Parameter     : Power功率查询
  * return        : FpgaPhase值               
  * END ***************************************************************************************/
-static uint32_t Phase_PID_LookupTable(uint32_t Power)
+static void Module_PhasePID_Init(void)
 {
-	
-	uint32_t value = 0;
-	PhasePID.iError =	0.0F;      //当前误差值
-	PhasePID.LastError = 0.0F;	   //上次误差值
-	PhasePID.PrevError = 0.0F;	   //上上次误差值
-	PhasePID.AdjCnt = 0;		   //PID调整次数
-	PhasePID.ErrorThr = g_FactorData.PhaseEThr;
-	/*********************得到PID相位的上限和当前PID的相位*****************************/
-	if(GN_Device.SetPower != GN_Device.PowerLimit)
-	{
-		GN_Device.PowerLimit = GN_Device.SetPower;
-		GN_Device.SetPID.PhaseLimit =  IF_NvmParam_GetPhaseMapTable(GN_Device.PowerLimit)*1.5F;
-	}
-	value =  IF_NvmParam_GetPhaseMapTable(Power)*0.9F;	
-	return  value;
-}	
+	memset(&PfwdPID,0,sizeof(PID_Typedef));
+	memset(&PrefPID,0,sizeof(PID_Typedef));
+	PfwdPID.ErrorThr = g_FactorData.PhaseEThr;
+	PrefPID.ErrorThr = g_FactorData.VoltEThr;
+}
 /* FUNCTION *********************************************************************************
  * Function  : incPIDCalc
  * Description   : 增量式PID计算
@@ -401,57 +270,30 @@ static uint32_t Phase_PID_LookupTable(uint32_t Power)
  * Parmeter      : Pforward 当前响应的功率值
  * return        : IncrementVol 经过PID运算得到的电压增量值               
  * END ***************************************************************************************/
-static float Phase_PID_realize(float OutPower,float Pforward)
+static float Pfwd_PID_realize(float OutPower,float Pforward)
 {
 	float Kp_Value = 0.0F, Ki_Value = 0.0F, Kd_Value = 0.0F,Increment = 0;
 	//设置功率与Sensor采样功率的差值
-	PhasePID.iError = OutPower - Pforward; 
+	PfwdPID.iError = OutPower - Pforward; 
 	//调整差值阈值
-	if(fabs(PhasePID.iError) > PhasePID.ErrorThr)
+	if(fabs(PfwdPID.iError) > PfwdPID.ErrorThr)
 	{
-		if(PhasePID.AdjCnt > 2)  //得到前两次误差值后，再进行增量计算
+		//if(PfwdPID.AdjCnt > 2)  //得到前两次误差值后，再进行增量计算
 		{
-			Kp_Value =  g_FactorData.PhaseKp * (PhasePID.iError - PhasePID.LastError);
-			Ki_Value =  g_FactorData.PhaseKi * PhasePID.iError;
-			Kd_Value =  g_FactorData.PhaseKd * (PhasePID.iError -2*PhasePID.LastError + PhasePID.PrevError);
+			Kp_Value =  g_FactorData.PhaseKp * (PfwdPID.iError - PfwdPID.LastError);
+			Ki_Value =  g_FactorData.PhaseKi * PfwdPID.iError;
+			Kd_Value =  g_FactorData.PhaseKd * (PfwdPID.iError -2*PfwdPID.LastError + PfwdPID.PrevError);
 			Increment = Kp_Value + Ki_Value + Kd_Value;	
 		}
-		PhasePID.LastError = PhasePID.iError;       //存储前一次误差，用于下次计算	
-		PhasePID.PrevError = PhasePID.LastError;	//存储前两次误差，用于下次计算			
-		if(Increment > 1000) Increment = 500;
-		if(Increment < -1000)Increment = -500;		
+		PfwdPID.LastError = PfwdPID.iError;       //存储前一次误差，用于下次计算	
+		PfwdPID.PrevError = PfwdPID.LastError;	//存储前两次误差，用于下次计算			
+		if(Increment > 1000) Increment = 1000;
+		if(Increment < -1000)Increment = -1000;		
 	}
-	if(PhasePID.AdjCnt < UINT16_MAX)PhasePID.AdjCnt++;
+	if(PfwdPID.AdjCnt < UINT16_MAX)PfwdPID.AdjCnt++;
     return Increment; 							//返回增量值	
 }
- /* FUNCTION *********************************************************************************
- * Function  : PID_LookupTable
- * Description   : 匹配器设置初始化接口
- * Parameter     : Power功率查询
- * return        : FpgaPhase值               
- * END ***************************************************************************************/
-static float Volt_PID_LookupTable(uint32_t Power)
-{
-	float fvalue = 0;
-	int16_t vTableIndex = 0;
-	VoltPID.iError =	0.0F;      //当前误差值
-	VoltPID.LastError = 0.0F;	   //上次误差值
-	VoltPID.PrevError = 0.0F;	   //上上次误差值
-	VoltPID.AdjCnt = 0;			   //PID调整次数
-	VoltPID.ErrorThr = g_FactorData.VoltEThr;
-	/*********************得到PID电压的上限和当前PID的电压*****************************/
-	if(GN_Device.SetPower != GN_Device.PowerLimit)
-	{
-		GN_Device.PowerLimit = GN_Device.SetPower;
-		vTableIndex = (GN_Device.PowerLimit/10)-1;
-		if(vTableIndex <= 0)vTableIndex = 0;
-		GN_Device.SetPID.VoltLimit =  IF_NvmParam_GetVoltMapTable(vTableIndex)*1.5F;
-	}
-	vTableIndex = (Power/10)-1;
-	if(vTableIndex <= 0)vTableIndex = 0;
-	fvalue =  IF_NvmParam_GetVoltMapTable(vTableIndex);
-	return  fvalue;
-}	
+	
 /* FUNCTION *********************************************************************************
  * Function  : incPIDCalc
  * Description   : 增量式PID计算
@@ -459,27 +301,24 @@ static float Volt_PID_LookupTable(uint32_t Power)
  * Parmeter      : Pforward 当前响应的功率值
  * return        : IncrementVol 经过PID运算得到的电压增量值               
  * END ***************************************************************************************/
-static float Volt_PID_realize(float SetPower,float ActualPower)
+static float Pref_PID_realize(float SetPower,float ActualPower)
 {
 	float Kp_Value = 0.0F, Ki_Value = 0.0F, Kd_Value = 0.0F,Increment = 0;
 	//设置功率与Sensor采样功率的差值
-	VoltPID.iError = SetPower - ActualPower;	
+	PrefPID.iError = SetPower - ActualPower;	
 	//调整差值阈值
-	if(fabs(VoltPID.iError) > VoltPID.ErrorThr)
+	if(PrefPID.iError < (-1*PrefPID.ErrorThr))
 	{
-		if(VoltPID.AdjCnt > 2)  //得到前两次误差值后，再进行增量计算
-		{
-			 Kp_Value = g_FactorData.VoltKp *(VoltPID.iError - VoltPID.LastError);
-			 Ki_Value = g_FactorData.VoltKi * VoltPID.iError;
-			 Kd_Value = g_FactorData.VoltKd *(VoltPID.iError - 2*VoltPID.LastError + VoltPID.PrevError);
-			 Increment = Kp_Value + Ki_Value + Kd_Value;	
-		}
-		VoltPID.LastError = VoltPID.iError;     	//存储前一次误差，用于下次计算				
-		VoltPID.PrevError = VoltPID.LastError;		//存储前两次误差，用于下次计算
-		if(Increment > 1000) Increment = 500;
-		if(Increment < -1000)Increment = -500;		
-	}
-	if(VoltPID.AdjCnt < UINT16_MAX)VoltPID.AdjCnt++;	
+		 Kp_Value = g_FactorData.VoltKp *(PrefPID.iError - PrefPID.LastError);
+		 Ki_Value = g_FactorData.VoltKi * PrefPID.iError;
+		 Kd_Value = g_FactorData.VoltKd *(PrefPID.iError - 2*PrefPID.LastError + PrefPID.PrevError);
+		 Increment = Kp_Value + Ki_Value + Kd_Value;	
+		
+		PrefPID.LastError = PrefPID.iError;     	//存储前一次误差，用于下次计算				
+		PrefPID.PrevError = PrefPID.LastError;		//存储前两次误差，用于下次计算
+		if(Increment > 1000) Increment = 1000;
+		if(Increment < -1000)Increment = -1000;		
+	}	
     return Increment; 							//返回增量值	
 }
 

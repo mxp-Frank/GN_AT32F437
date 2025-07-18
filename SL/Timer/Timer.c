@@ -37,9 +37,7 @@ static void Check_RFReflectOffDelay(void);
 static void Check_PowerUpTimer(void);
 static void Check_RFOnTimer(void);
 
-static uint16_t Fan_FG_Speed(uint8_t FanChnNo);
 static void Check_FanSlowOnDelay(void);
-static void Check_FanSpeedTimer(void);
 
 static void Timer_ISR_Callback(void);
 
@@ -338,48 +336,6 @@ static void Check_RFOnTimer(void)
 		SystemTimer.RFOnDuration = 0;
 	}
 }
-static uint16_t Fan_FG_Speed(uint8_t FanChnNo)
-{
-	uint16_t tempspd =0;
-	uint32_t temp = 60000000;  //60s=60*1000000
-	if(FANS_Period_Val[FanChnNo]==0)
-	{
-		tempspd =0;
-	}else
-	{
-		temp = temp*SystemTimer.Pwm_duty/100;
-		tempspd = temp/FANS_Period_Val[FanChnNo];
-	}	
-	return tempspd;
-}	
-/* FUNCTION *********************************************************************************
- * Function Name : Check_FanSpeedTimer
- * Description   : 风扇速度定时器回调函数
- * Parameter     : 
- * return        :                
- * END ***************************************************************************************/
-static void Check_FanSpeedTimer(void)
-{
-	SystemTimer.FanTimer++;
-	if(SystemTimer.FanTimer > 25)
-	{
-		SystemTimer.FanTimer=0;
-		for(uint8_t i=0;i<4;i++)
-		{
-			if(FANS_Time_OVERcnt[i] >= 5)
-			{
-				FANS_Time_OVERcnt[i] = 0;
-				FANS_Period_Val[i]  = 0;
-				FANS_Curr_CCR_Val[i] = 0;
-				FANS_Last_CCR_Val[i]= 0;
-				SystemTimer.FanSpeedVal[i] =0;
-			}else
-			{
-				SystemTimer.FanSpeedVal[i]=Fan_FG_Speed(i);
-			}
-		}
-	}	
-}
 /* FUNCTION *********************************************************************************
  * Function Name : Check_FanSlowOnDelay
  * Description   : 风扇缓开启定时器回调函数
@@ -389,7 +345,7 @@ static void Check_FanSpeedTimer(void)
 static void Check_FanSlowOnDelay(void)
 {
 	SystemTimer.FanSlowOnTimer++;
-	if (SystemTimer.FanSlowOnTimer >= 100)       // 100ms时间到
+	if (SystemTimer.FanSlowOnTimer >= 50)       // 50ms时间到
 	{
 		SystemTimer.FanSlowOnTimer = 0;
 		if(SystemTimer.Pwm_duty >= 90)
@@ -414,9 +370,7 @@ static void Timer_ISR_Callback(void)
 	Check_RFReflectOffDelay();
 	Check_RFSlowStartDelay();
 	Check_RFSlowStopDelay();
-	Check_FanSlowOnDelay();
-	Check_FanSpeedTimer();
-	
+	Check_FanSlowOnDelay();	
 }
 
 

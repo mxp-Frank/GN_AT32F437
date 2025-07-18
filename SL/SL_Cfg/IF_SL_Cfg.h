@@ -58,7 +58,8 @@ extern void IF_SL_WDOG_FEED(void);
 extern void IF_SL_Bootloader(void);
 
 extern void IF_SL_Sensor_Device_Task(void);
-extern void IF_SL_Sensor_Fpga_Task(void);
+extern void IF_SL_Sensor_ReadFpga_Task(void);
+extern void IF_SL_Sensor_WriteFgpa_Task(void);
 extern void IF_SL_InterfaceInput_Task(void);
 /**********Uart Interface SL **************/
 extern void IF_SL_UartTask1(void);

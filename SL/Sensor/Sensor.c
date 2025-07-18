@@ -35,15 +35,25 @@ void IF_SensorInit(void)
     IF_HAL_Sensor_MCU_Start();
 }
 /* FUNCTION *********************************************************************************
- * Function Name : IF_Sensor_Fpga_Sample
+ * Function Name : IF_Sensor_ReadFpga_Task
  * Description   : Sensor Fpga任务函数接口
  * Parameter     : 
  * return        :                
  * END ***************************************************************************************/
-void IF_Sensor_Fpga_Task(void)
+void IF_Sensor_ReadFpga_Task(void)
 {
     Sensor_Fpga_Sample();
 }
+/* FUNCTION *********************************************************************************
+ * Function Name : IF_Sensor_WriteFgpa_Task
+ * Description   : Sensor Fpga任务函数接口
+ * Parameter     : 
+ * return        :                
+ * END ***************************************************************************************/
+void IF_Sensor_WriteFgpa_Task(void)
+{
+	Sensor_Fpga_Write();
+}	
 /* FUNCTION *********************************************************************************
  * Function Name : IF_IF_Sensor_Device_Task
  * Description   : Sensor设备任务函数接口

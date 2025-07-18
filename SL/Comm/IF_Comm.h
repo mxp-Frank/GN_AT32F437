@@ -100,7 +100,7 @@ extern void IF_UartTask2(void);
 extern void IF_UartTask3(void);
 extern void IF_UartReciveTask4(void);
 extern void IF_UartSendTask4(void);
-extern uint8_t SendToRxQueueFromISR(uint8_t port, pCommMsg_t pRxMsg);
+extern void SendToRxQueueFromISR(uint8_t port, pCommMsg_t pRxMsg);
 #if defined(__cplusplus)
  }
 #endif /* __cplusplus */

@@ -115,12 +115,14 @@ typedef enum _ParamterIndex_t
 	ID_SyncSource				   = 0x422E,
 	ID_SyncOutEnable			   = 0x422F,
 	ID_SyncOutDelay				   = 0x4230,
-	ID_FeedCollectionMode		   = 0x4231,
+	ID_FeedbackMode		   		   = 0x4231,
 	ID_FeedPreMask				   = 0x4232,
 	ID_FeedPostMask				   = 0x4233,
 	ID_PhaseState2                 = 0x4234,
 	ID_PhaseStepSpeed			   = 0x4235,
 	ID_PhaseStepTimer			   = 0x4236,
+	ID_DDSPhaseOffset              = 0x4237,
+	ID_VISampleSmooth				   = 0x4238,
 	//Configurable User parameters 
     ID_RegulationMode              = 0x4000,  // work mode, 0: Pfwd, 1: Pdlv 2:Vdc
 	ID_PfwdLimit				   = 0x4001,  //Forward power Limit

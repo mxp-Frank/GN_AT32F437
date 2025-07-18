@@ -15,7 +15,7 @@
 
 /* CONST & MACROS */
  
-#define QUEUE_LENGTH         	5        //队列长度
+#define QUEUE_LENGTH         	8        //队列长度
 /* DATA STRUCTURES */
 
 /* LOCAL VARIABLES */
@@ -73,8 +73,7 @@ int main(void)
 	UserQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));   			//User Protocol
 	FGIPv2Queue = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));   			//FGIPv2 Protocol	
 	BsipTxQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));           //BSIP Protocol	
-	ModbusRxQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));         //Modbus Protocol	
-	
+	ModbusRxQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));         //Modbus Protocol		
 	ModbusFWQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(BSIPInfo_t));        //Modbus Firmware Protocol	
 	FpgaFWQueue = xQueueCreate(QUEUE_LENGTH, sizeof(BSIPInfo_t));   		//Fpga Firmware Protocol	
 	CmdQueue = xQueueCreate(QUEUE_LENGTH, sizeof(DeviceCmdMsg_t));		    //Cmd Control
@@ -188,7 +187,7 @@ static void Pt_Sensor_task_function(void *pvParameters)
 {
     while(1)
     {
-		IF_SL_Sensor_Fpga_Task();
+		IF_SL_Sensor_ReadFpga_Task();
 		xSemaphoreGive(mainSemaphore);
 		vTaskDelay(MAIN_TASK_PERIOD);
 	}
@@ -203,6 +202,7 @@ static void Pt_Main_task_function(void *pvParameters)
 		{
 			IF_Module_Input_Task();
 			IF_Module_Main_Task();
+			IF_SL_Sensor_WriteFgpa_Task();
 		}				
 	}
 }

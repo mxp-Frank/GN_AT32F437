@@ -135,7 +135,7 @@ extern void Dealwith_BSIP_Layer7(void);
 extern void BSIP_TxTimeManagment(uint8_t port);
 extern void BSIP_TxBufManagment(uint8_t port);
 extern void BSIP_FpgaFirmwareUpdate(uint8_t port);
-extern void BSIP_ModbusFirmwareUpdate(uint8_t port);
+extern void BSIP_ModbusFirmwareUpdate(uint8_t port,uint8_t Modbbus_Address);
 
 
 #endif /* _BSIP_LAYER7_H_ */

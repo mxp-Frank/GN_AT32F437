@@ -63,8 +63,7 @@ void IF_InterfaceInit(void)
 	IF_SetNormalOutput_SIG(IOSIGN_PWR5VDRVONOFF,ON);    //5V Enable
 	IF_SetNormalOutput_SIG(IOSIGN_PWR12VDRVONOFF,ON);   //12V Enable
 	IF_SetNormalOutput_SIG(IOSIGN_RFPWRLEDONOFF,ON);	//开启电源输出灯状态
-	
-	IF_SetNormalOutput_SIG(IOSIGN_INTLOCKENABLE,OFF);    
+	   
 	IF_SetNormalOutput_SIG(IOSIGN_INTLKLEDONOFF,OFF); 	//关闭InterLock输出灯状态 		
 	IF_SetNormalOutput_SIG(IOSIGN_RFONLEDONOFF,OFF);	//关闭射频输出灯状态
 	IF_SetNormalOutput_SIG(IOSIGN_DEBUGLEDONOFF,OFF);	//关闭调试灯输出状态

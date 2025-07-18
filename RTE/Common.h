@@ -158,8 +158,8 @@ typedef union
 
 typedef union 
 {
-	uint16_t  Val ;
-	uint16_t v[2] __attribute__((packed));
+	int16_t  Val ;
+	int16_t v[2] __attribute__((packed));
 	struct __attribute__((packed))
 	{
 		uint8_t LB;

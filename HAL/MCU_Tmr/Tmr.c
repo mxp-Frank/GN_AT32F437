@@ -19,11 +19,6 @@
 static uint32_t fac_us=0;							//us延时倍乘数
 static uint16_t fac_ms=0;							//ms延时倍乘数,在FreeRTOS下,代表每个节拍的ms数
 
-uint16_t FANS_Time_OVERcnt[4]={0};
-uint32_t FANS_Period_Val[4] ={0};
-uint16_t FANS_Curr_CCR_Val[4] = {0},FANS_Last_CCR_Val[4] = {0};
-
-
 extern void xPortSysTickHandler(void);
 /* GLOBAL VARIABLES */
 
@@ -33,10 +28,7 @@ static void TIMER1_HAL_Init(void);
 static void TIMER2_PWM_Port_Init(void);
 static void TIMER2_PWM_Init(void);
 
-static void TIMER3_InputCapture_Port_Init(void);
-static void TIMER3_InputCapture_Init(void);
-
-static void TIMER4_HAL_Init(void);
+static void TIMER3_HAL_Init(void);
 static void delay_init(void);
 
 
@@ -83,11 +75,8 @@ void IF_TmrInit(void)
 	//Fan硬件PWM时钟
 	TIMER2_PWM_Port_Init();
 	TIMER2_PWM_Init();
-	//Fan硬件InputCapture时钟
-	TIMER3_InputCapture_Port_Init();	
-	TIMER3_InputCapture_Init();
 	//Modbus接收时钟
-	TIMER4_HAL_Init();
+	TIMER3_HAL_Init();
 }
 
 /************************************************************************/
@@ -195,7 +184,7 @@ static void TIMER2_PWM_Init(void)
     tmr_interrupt_enable(TMR1, TMR_OVF_INT, TRUE);
 
     /* tmr1 hall interrupt nvic init */
-    nvic_irq_enable(TMR1_OVF_TMR10_IRQn, 8, 0);
+    nvic_irq_enable(TMR1_OVF_TMR10_IRQn, 3, 0);
 	/* enable tmr1 */
 	#ifdef DEBUG_ON    
 		debug_apb2_periph_mode_set(DEBUG_TMR1_PAUSE, TRUE);
@@ -218,173 +207,19 @@ void TMR1_OVF_TMR10_IRQHandler(void)
     }
 }
 /* FUNCTION *******************************************************************
- * Function Name : TIMER3_InputCapture_Port_Init
- * Description   : PWM输入管脚Init
- * Parameter	 : 
- * Return        :  
- * END ***********************************************************************/
-static void TIMER3_InputCapture_Port_Init(void)
-{
-	gpio_init_type gpio_init_struct;
-    /* set default parameter */
-	gpio_default_para_init(&gpio_init_struct);
-	
-   	/* configure the normal INPUT gpio */
-    gpio_init_struct.gpio_mode = GPIO_MODE_INPUT;
-    gpio_init_struct.gpio_pull = GPIO_PULL_NONE;
-	
-	/*Fan1 Detect  gpio input structure config*/
-	gpio_init_struct.gpio_pins = 0;
-    gpio_init_struct.gpio_pins = Fan1_FG_PIN;
-    gpio_init(Fan1_FG_PORT, &gpio_init_struct);
-	
-	/*Fan2 Detect  gpio input structure config*/
-	gpio_init_struct.gpio_pins = 0;
-    gpio_init_struct.gpio_pins = Fan2_FG_PIN;
-    gpio_init(Fan2_FG_PORT, &gpio_init_struct);
-	
-	/*Fan3 Detect  gpio input structure config*/
-	gpio_init_struct.gpio_pins = 0;
-    gpio_init_struct.gpio_pins = Fan3_FG_PIN;
-    gpio_init(Fan3_FG_PORT, &gpio_init_struct);
-	
-	/*Fan4 Detect  gpio input structure config*/
-	gpio_init_struct.gpio_pins = 0;
-    gpio_init_struct.gpio_pins = Fan4_FG_PIN;
-    gpio_init(Fan4_FG_PORT, &gpio_init_struct);
-	
-	gpio_pin_mux_config(Fan1_FG_PORT, Fan1_FG_PIN_SOURCES, Fan1_FG_MUX);
-	gpio_pin_mux_config(Fan2_FG_PORT, Fan2_FG_PIN_SOURCES, Fan2_FG_MUX);
-	gpio_pin_mux_config(Fan3_FG_PORT, Fan3_FG_PIN_SOURCES, Fan3_FG_MUX);
-	gpio_pin_mux_config(Fan4_FG_PORT, Fan4_FG_PIN_SOURCES, Fan4_FG_MUX);
-}
-/* FUNCTION *******************************************************************
- * Function Name : TIMER3_InputCapture_Init
- * Description   : 定时器初始化 TMR3 for InputCapture
- * Parameter	 : 
- * Return        :  
- * END ***********************************************************************/
-static void TIMER3_InputCapture_Init(void)
-{
-	crm_clocks_freq_type crm_clocks_freq_struct = {0};
-	tmr_input_config_type  tmr_input_config_struct;
-	tmr_cfg_type tmrCfg;
-    /* get system clock */
-    crm_clocks_freq_get(&crm_clocks_freq_struct);
-    tmrCfg.tmrDiv = ((crm_clocks_freq_struct.apb1_freq * 2) / TMRCLK_28M) - 1;
-    tmrCfg.tmrPeriod = 0xFFFF;
-	
-	/* enable tmr3/gpioa clock */
-	crm_periph_clock_enable(CRM_TMR3_PERIPH_CLOCK, TRUE);
-	/* tmr3 counter mode configuration */
-	tmr_base_init(TMR1, tmrCfg.tmrPeriod, tmrCfg.tmrDiv);
-	tmr_cnt_dir_set(TMR3, TMR_COUNT_UP);
-
-	/* configure tmr3 channel1 to get clock signal */
-	tmr_input_config_struct.input_channel_select = TMR_SELECT_CHANNEL_1;
-	tmr_input_config_struct.input_mapped_select = TMR_CC_CHANNEL_MAPPED_DIRECT;
-	tmr_input_config_struct.input_polarity_select = TMR_INPUT_RISING_EDGE;
-	tmr_input_channel_init(TMR3, &tmr_input_config_struct, TMR_CHANNEL_INPUT_DIV_1);
-
-	/* configure tmr3 channel2 to get clock signal */
-	tmr_input_config_struct.input_channel_select = TMR_SELECT_CHANNEL_2;
-	tmr_input_config_struct.input_mapped_select = TMR_CC_CHANNEL_MAPPED_DIRECT;
-	tmr_input_config_struct.input_polarity_select = TMR_INPUT_RISING_EDGE;
-	tmr_input_channel_init(TMR3, &tmr_input_config_struct, TMR_CHANNEL_INPUT_DIV_1);
-	
-	/* configure tmr3 channel3 to get clock signal */
-	tmr_input_config_struct.input_channel_select = TMR_SELECT_CHANNEL_3;
-	tmr_input_config_struct.input_mapped_select = TMR_CC_CHANNEL_MAPPED_DIRECT;
-	tmr_input_config_struct.input_polarity_select = TMR_INPUT_RISING_EDGE;
-	tmr_input_channel_init(TMR3, &tmr_input_config_struct, TMR_CHANNEL_INPUT_DIV_1);
-	
-	/* configure tmr3 channel4 to get clock signal */
-	tmr_input_config_struct.input_channel_select = TMR_SELECT_CHANNEL_4;
-	tmr_input_config_struct.input_mapped_select = TMR_CC_CHANNEL_MAPPED_DIRECT;
-	tmr_input_config_struct.input_polarity_select = TMR_INPUT_RISING_EDGE;
-	tmr_input_channel_init(TMR3, &tmr_input_config_struct, TMR_CHANNEL_INPUT_DIV_1);
-	
-	/* overflow interrupt enable */
-    tmr_interrupt_enable(TMR3, TMR_OVF_INT, TRUE);
-	
-	tmr_interrupt_enable(TMR3, TMR_C1_INT, TRUE);
-	tmr_interrupt_enable(TMR3, TMR_C2_INT, TRUE);
-	tmr_interrupt_enable(TMR3, TMR_C3_INT, TRUE);
-	tmr_interrupt_enable(TMR3, TMR_C4_INT, TRUE);
-	
-	/* tmr2 trigger interrupt nvic init */
-	nvic_priority_group_config(NVIC_PRIORITY_GROUP_4);
-	nvic_irq_enable(TMR3_GLOBAL_IRQn, 7, 0);
-
-	/* enable tmr3 */
-	tmr_counter_enable(TMR3, TRUE);
-
-}	
-	
-/**
-  * @brief  this function handles tmr3 trigger exception.
-  * @param  none
-  * @retval none
-  */
-void TMR3_GLOBAL_IRQHandler(void)
-{
-	if(tmr_flag_get(TMR3, TMR_OVF_FLAG) == SET)
-    {
-        FANS_Time_OVERcnt[0]++;
-		FANS_Time_OVERcnt[1]++;
-		FANS_Time_OVERcnt[2]++;
-		FANS_Time_OVERcnt[3]++;
-        tmr_flag_clear(TMR3, TMR_OVF_FLAG);
-    }
-	if(tmr_flag_get(TMR3, TMR_C4_FLAG) == SET)
-	{ 
-		tmr_flag_clear(TMR3, TMR_C4_FLAG);
-		FANS_Curr_CCR_Val[0]=tmr_channel_value_get(TMR3, TMR_SELECT_CHANNEL_4);
-		FANS_Period_Val[0]=(FANS_Curr_CCR_Val[0]+(uint32_t)FANS_Time_OVERcnt[0]*0xFFFF-FANS_Last_CCR_Val[0]+5)/10+FANS_Time_OVERcnt[0]*9/10;
-		FANS_Last_CCR_Val[0]=FANS_Curr_CCR_Val[0];
-		FANS_Time_OVERcnt[0] =0;
-	}	
-	if(tmr_flag_get(TMR3, TMR_C3_FLAG) == SET)
-	{ 
-		tmr_flag_clear(TMR3, TMR_C3_FLAG);
-		FANS_Curr_CCR_Val[1]=tmr_channel_value_get(TMR3, TMR_SELECT_CHANNEL_3);
-		FANS_Period_Val[1]=(FANS_Curr_CCR_Val[1]+(uint32_t)FANS_Time_OVERcnt[1]*0xFFFF-FANS_Last_CCR_Val[1]+5)/10+FANS_Time_OVERcnt[1]*9/10;
-		FANS_Last_CCR_Val[1]=FANS_Curr_CCR_Val[1];
-		FANS_Time_OVERcnt[1] =0;
-	}
-	if(tmr_flag_get(TMR3, TMR_C2_FLAG) == SET)
-	{ 
-		tmr_flag_clear(TMR3, TMR_C2_FLAG);
-		FANS_Curr_CCR_Val[2]=tmr_channel_value_get(TMR3, TMR_SELECT_CHANNEL_2);
-		FANS_Period_Val[2]=(FANS_Curr_CCR_Val[2]+(uint32_t)FANS_Time_OVERcnt[2]*0xFFFF-FANS_Last_CCR_Val[2]+5)/10+FANS_Time_OVERcnt[2]*9/10;
-		FANS_Last_CCR_Val[2]=FANS_Curr_CCR_Val[2];
-		FANS_Time_OVERcnt[2] =0;
-		
-	}
-	if(tmr_flag_get(TMR3, TMR_C1_FLAG) == SET)
-	{ 
-		tmr_flag_clear(TMR3, TMR_C1_FLAG);
-		FANS_Curr_CCR_Val[3]=tmr_channel_value_get(TMR3, TMR_SELECT_CHANNEL_1);
-		FANS_Period_Val[3]=(FANS_Curr_CCR_Val[3]+(uint32_t)FANS_Time_OVERcnt[3]*0xFFFF-FANS_Last_CCR_Val[3]+5)/10+FANS_Time_OVERcnt[3]*9/10;
-		FANS_Last_CCR_Val[3]= FANS_Curr_CCR_Val[3];
-		FANS_Time_OVERcnt[3] = 0;
-		
-	}
-}
-/* FUNCTION *******************************************************************
- * Function Name : TIMER4_HAL_Init
+ * Function Name : TIMER3_HAL_Init
  * Description   : 定时器初始化 TMR5 for OSTICK 10us
  * Parameter	 : 
  * Return        :  
  * END ***********************************************************************/
-static void TIMER4_HAL_Init(void)
+static void TIMER3_HAL_Init(void)
 {
     crm_clocks_freq_type crm_clocks_freq_struct = {0};
     tmr_cfg_type tmrCfg;
 
     /* get system clock */
     crm_clocks_freq_get(&crm_clocks_freq_struct);
-    tmrCfg.tmrDiv = ((crm_clocks_freq_struct.apb2_freq * 2) / TMRCLK_28M) - 1;
+    tmrCfg.tmrDiv = ((crm_clocks_freq_struct.apb1_freq * 2) / TMRCLK_28M) - 1;
     tmrCfg.tmrPeriod = TMRPRD_1MS;  //1ms period
 
 	/* enable tmr1 clock */
@@ -399,7 +234,7 @@ static void TIMER4_HAL_Init(void)
     tmr_interrupt_enable(TMR5, TMR_OVF_INT, TRUE);
 
     /* tmr1 hall interrupt nvic init */
-    nvic_irq_enable(TMR5_GLOBAL_IRQn, 7, 0);
+    nvic_irq_enable(TMR5_GLOBAL_IRQn, 8, 0);
 	/* enable tmr5 */
 	#ifdef DEBUG_ON    
 		debug_apb1_periph_mode_set(DEBUG_TMR5_PAUSE, TRUE);
