@@ -58,8 +58,8 @@ extern void IF_SL_WDOG_FEED(void);
 extern void IF_SL_Bootloader(void);
 
 extern void IF_SL_Sensor_Device_Task(void);
-extern void IF_SL_Sensor_ReadFpga_Task(void);
-extern void IF_SL_Sensor_WriteFgpa_Task(void);
+extern void IF_SL_ReadSensor_Task(void);
+extern void IF_SL_WriteSensor(void);
 extern void IF_SL_InterfaceInput_Task(void);
 /**********Uart Interface SL **************/
 extern void IF_SL_UartTask1(void);
@@ -166,7 +166,6 @@ extern void IF_SL_Nvm_ParamsRW(NVMRWMask_Enum NVMRW_Mask);
 
 extern void IF_SL_UpdateRFPwrPIDProcessData(void);
 extern void IF_SL_ClearRFPwrPIDProcessData(void);
-extern void IF_SL_ClearRFPwrPIDProcessDataFlag(void);
 /****************Cmd SL***********************/
 extern void IF_SL_ResetDevice(void);
 

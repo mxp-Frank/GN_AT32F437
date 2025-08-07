@@ -172,8 +172,8 @@ typedef enum Sensor_ChnN_t
 }Sensor_ChnN_t;
 
 extern void IF_FpgaSensor_ParamInit(void);
-extern void Sensor_Fpga_Sample(void);
-extern void Sensor_Fpga_Write(void);
+extern void IF_Sensor_Fpga_Read(void);
+extern void IF_Sensor_Fpga_Write(void);
 #if defined(__cplusplus)
 }
 #endif /* __cplusplus */

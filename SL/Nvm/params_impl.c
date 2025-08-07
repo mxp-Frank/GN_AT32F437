@@ -2396,27 +2396,16 @@ void IF_UpdateRFPwrPIDProcessData(void)
 {	 
 	 if (g_ProcessData.RecordNum < MAX_PD_RECORD_NUM)
 	 {	
-		if(IF_CmdParam_GetRFPwrPoint() < IF_InternalParam_GetInitPoint())
-		{
-			g_ProcessData.Records[g_ProcessData.RecordNum].ACDCVolt = IF_CmdParam_GetDDSPhase();	
-		}else
-		{
-			g_ProcessData.Records[g_ProcessData.RecordNum].ACDCVolt = IF_CmdParam_GetACDCVoltage();
-		}
-		g_ProcessData.Records[g_ProcessData.RecordNum].Pfwd = 1000*IF_Fpga_GetMcuAlgSensor(ChnN_Pfwd,HP_CHN);
-		g_ProcessData.Records[g_ProcessData.RecordNum].Pref = 1000*IF_Fpga_GetMcuAlgSensor(ChnN_Pref,HP_CHN);
-		g_ProcessData.Records[g_ProcessData.RecordNum].vswr = 1000*IF_Fpga_GetMcuAlgSensor(ChnN_VSWR,HP_CHN);
+		g_ProcessData.Records[g_ProcessData.RecordNum].ACDCVolt = IF_CmdParam_GetDDSPhase();	
+		g_ProcessData.Records[g_ProcessData.RecordNum].Pfwd = 1000*IF_Fpga_GetRegAlgSensor(ChnN_Pfwd,HP_CHN);
+		g_ProcessData.Records[g_ProcessData.RecordNum].Pref = 1000*IF_Fpga_GetRegAlgSensor(ChnN_Pref,HP_CHN);
+		g_ProcessData.Records[g_ProcessData.RecordNum].vswr = 1000*IF_Fpga_GetRegAlgSensor(ChnN_VSWR,HP_CHN);
+		g_ProcessData.Records[g_ProcessData.RecordNum].R    = 1000*IF_Fpga_GetRegAlgSensor(ChnN_R,HP_CHN);
+		g_ProcessData.Records[g_ProcessData.RecordNum].X    = 1000*IF_Fpga_GetRegAlgSensor(ChnN_X,HP_CHN);
 		g_ProcessData.RecordNum++;
 	 }
 }
-uint8_t IF_GetRFPwrPIDProcessDataFlag(void)
-{
-    return g_ProcessData.flag;
-}
-void IF_SetRFPwrPIDProcessDataFlag(uint8_t value)
-{
-    g_ProcessData.flag = value;
-}
+
 void IF_ClearRFPwrPIDProcessData(void)
 {
     memset(&g_ProcessData, 0, PROCESS_DATA_LEN);

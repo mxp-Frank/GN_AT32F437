@@ -303,23 +303,16 @@ static void FpgaUnit_Reset(void)
  }
 
 //read or write a singal reg of FPGA
-uint8_t IF_FpgaReg_ReadStart(void)
+void IF_FpgaReg_ReadStart(void)
 {
-	uint8_t error_flag = 0;
 	uint16_t timeOutCnt = 0;
 	FpgaData_PortInit(DATA_INPUT); //Setup Data port Input
 	DATA_START_HIGH; 
-	while(DATA_FPGA_READ == 0)//normal operation time is less 200us	
+	while(DATA_FPGA_READ == 0)//normal operation time is less 1000	
 	{
 		timeOutCnt++;
-		if(timeOutCnt >= 200)
-		{
-			error_flag = 1;
-			break;  
-		} 
-		delay_us(1);
+		if(timeOutCnt > 1000)break;   
 	}
-	return error_flag;
 }
 
 void IF_FpgaReg_ReadEnd(void)

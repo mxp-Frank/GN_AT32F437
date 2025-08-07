@@ -39,7 +39,7 @@ extern "C" {
 #define SERIAL_NUMBER_LEN              			32
 #define TRACKING_NUMBER_LEN            			48
 
-#define MAX_PD_RECORD_NUM               		1000
+#define MAX_PD_RECORD_NUM               		2000
 
 #define MAX_RFPWRVOL_NUM						250
 #define MAX_RFPWRPHS_NUM						180
@@ -257,11 +257,12 @@ typedef struct _ProcessDataRecord_t
     uint32_t  Pfwd;
 	uint32_t  Pref;
 	uint32_t  vswr;
+	int32_t  R;
+	int32_t  X;
 } PDORecord_t;
 
 typedef struct _ProcessData_t
 {
-	uint8_t  flag;   //过程数据结束标志位
     uint16_t RecordNum;
     PDORecord_t Records[MAX_PD_RECORD_NUM];
 
@@ -277,7 +278,7 @@ typedef struct _ProcessData_t
 #define RUNNING_STATUS_LEN						  sizeof(RunningStatus_t)
 	
 #define PD_ONE_RECORD_LEN                         sizeof(PDORecord_t)
-#define PROCESS_DATA_LEN                          (sizeof(ProcessData_t) - 1) //Data -1 (size标志位)
+#define PROCESS_DATA_LEN                          sizeof(ProcessData_t)  
 #define PD_RECORD_NUM_EACH_FRAME                  (240/PD_ONE_RECORD_LEN)  //Data max len 248
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -153,9 +153,9 @@ void IF_HAL_Sensor_MCU_Start(void)
     IF_AdcStart();
 }
 
-uint8_t IF_HAL_FpgaReg_ReadStart(void)
+void IF_HAL_FpgaReg_ReadStart(void)
 {
-	return IF_FpgaReg_ReadStart();
+	IF_FpgaReg_ReadStart();
 }
 
 void IF_HAL_FpgaReg_ReadEnd(void)

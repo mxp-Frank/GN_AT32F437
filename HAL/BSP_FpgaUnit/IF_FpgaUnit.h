@@ -34,7 +34,7 @@ typedef enum
  * Interface functions                                                         *
  ******************************************************************************/
 extern void IF_FpgaUnitInit(void);
-extern uint8_t IF_FpgaReg_ReadStart(void);
+extern void IF_FpgaReg_ReadStart(void);
 extern void IF_FpgaReg_ReadEnd(void);
 extern uint8_t IF_FpgaReg_Read(uint16_t regAddr);
 extern void IF_FpgaReg_Write(uint16_t regAddr, uint8_t regData);

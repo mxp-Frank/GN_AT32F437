@@ -15,12 +15,11 @@
 
 /* CONST & MACROS */
  
-#define QUEUE_LENGTH         	8        //队列长度
+#define QUEUE_LENGTH         	10        //队列长度
 /* DATA STRUCTURES */
 
 /* LOCAL VARIABLES */
 static uint32_t SysWakeTimer = 0;
-static SemaphoreHandle_t mainSemaphore = NULL;
 
 static TaskHandle_t SensorTask_Handler;
 static TaskHandle_t	MainTask_Handler;
@@ -63,7 +62,6 @@ int main(void)
     __disable_irq(); 
 	
 	/* Semaphore initiation */
-	mainSemaphore = xSemaphoreCreateBinary();
 	FpgaReSemaphore = xSemaphoreCreateBinary();
 	FpgaNfSemaphore = xSemaphoreCreateBinary();
 	ModbusReSemaphore = xSemaphoreCreateBinary();
@@ -73,9 +71,11 @@ int main(void)
 	UserQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));   			//User Protocol
 	FGIPv2Queue = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));   			//FGIPv2 Protocol	
 	BsipTxQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));           //BSIP Protocol	
-	ModbusRxQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));         //Modbus Protocol		
+	ModbusRxQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(CommMsg_t));         //Modbus Protocol	
+	
 	ModbusFWQueue  = xQueueCreate(QUEUE_LENGTH, sizeof(BSIPInfo_t));        //Modbus Firmware Protocol	
-	FpgaFWQueue = xQueueCreate(QUEUE_LENGTH, sizeof(BSIPInfo_t));   		//Fpga Firmware Protocol	
+	FpgaFWQueue = xQueueCreate(QUEUE_LENGTH, sizeof(BSIPInfo_t));   		//Fpga Firmware Protocol
+	
 	CmdQueue = xQueueCreate(QUEUE_LENGTH, sizeof(DeviceCmdMsg_t));		    //Cmd Control
 	
 	
@@ -141,6 +141,31 @@ int main(void)
 /************************************************************************/
 /* Local Functions Definitions                                          */
 /************************************************************************/
+/* Pt sensor task function: Pt sensor process */
+static void Pt_Sensor_task_function(void *pvParameters)
+{
+    while(1)
+    {
+		IF_SL_ReadSensor_Task();
+		xTaskNotifyGive(MainTask_Handler);
+		vTaskDelay(MAIN_TASK_PERIOD);
+	}
+}
+/* Pt main task function: Pt main process */
+static void Pt_Main_task_function(void *pvParameters)
+{
+	IF_Module_SWCInit();
+    while(1)
+    {
+		if(ulTaskNotifyTake(pdTRUE,portMAX_DELAY))
+		{
+			IF_Module_Input_Task();
+			IF_Module_Main_Task();
+			IF_Module_Sensor_Task();
+		}				
+	}
+}
+
 /* Pt Input task function: Interface Input porcess */
 static void PT_Port_task_function(void *pvParameters)
 {
@@ -157,7 +182,7 @@ static void PT_Port_task_function(void *pvParameters)
 		}
 		if(RATE_DO_EXECUTE(RATE_20_HZ, tick))  /** 20Hz  50ms update **/
 		{
-			IF_Module_CmdExecute_Task();		   //数据执行输入接口
+			IF_Module_CmdExecute_Task();	 //数据执行输入接口
 		}		
 		tick++;
     }
@@ -182,31 +207,6 @@ static void Pt_Interface_task_function(void *pvParameters)
 		tick++;		
     }
 }
-/* Pt sensor task function: Pt sensor process */
-static void Pt_Sensor_task_function(void *pvParameters)
-{
-    while(1)
-    {
-		IF_SL_Sensor_ReadFpga_Task();
-		xSemaphoreGive(mainSemaphore);
-		vTaskDelay(MAIN_TASK_PERIOD);
-	}
-}
-/* Pt main task function: Pt main process */
-static void Pt_Main_task_function(void *pvParameters)
-{
-	IF_Module_SWCInit();
-    while(1)
-    {
-		if(pdTRUE == xSemaphoreTake(mainSemaphore, portMAX_DELAY))
-		{
-			IF_Module_Input_Task();
-			IF_Module_Main_Task();
-			IF_SL_Sensor_WriteFgpa_Task();
-		}				
-	}
-}
-
 /* HwTest task function */
 static void HwTest_task_function(void *pvParameters)
 {
@@ -296,7 +296,7 @@ static void ModbusSend_task_function(void *pvParameters)
 void vApplicationIdleHook(void)
 {
 	SysWakeTimer++;
-	if((SysWakeTimer % 100) == 0)
+	if((SysWakeTimer % RATE_25_HZ) == 0)
 	{
 		IF_SL_WDOG_FEED();	
 	}	

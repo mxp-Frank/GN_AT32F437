@@ -26,11 +26,9 @@ extern "C" {
 #endif /* __cplusplus */
 
 #define CAP_NUM									(2)
-#define MAIN_TASK_PERIOD       					(2)  
+#define MAIN_TASK_PERIOD       					(1)  
 #define PID_LOOP_TIMER							(10)
-#define PREF_UP_LIMIT							(20)
-
-#define PWR_UP_LIMIT(x)							(x*1.5F)
+#define PWR_UP_LIMIT(x)							(x*2)
 typedef enum
 {
     STANDBY_STATE     = 0,
@@ -53,7 +51,7 @@ typedef enum
 
 typedef struct 
 {
-	RFEnum          RFState;        //状态	
+	uint8_t         State;          //状态	
 	float			Freq;		    //频率
 	float         	Pfwd;       	//正向功率
 	float			Pdlv;			//传输功率
@@ -85,20 +83,17 @@ typedef struct
 
 typedef struct _GN_Device_t
 { 	
-	RunState_t		 RunState;    		//I监测状态
+	RunState_t		 RunState;    		//监测状态
 	OutSensor_t      Sensor;	        //设备sensor值
-	
-	uint16_t		 SetPower;          //设备上位机设置功率	
+	uint16_t		 SetPower;          //设备上位机设置功率
 	PwrState_t       InitPower;         //初始化值
 	PwrState_t       TargetPower;       //设备目标值
-	PwrState_t 		 LastPower;       	//上次设备输出值
 	SetPID_t	     SetPID;            //设备PID调整
-	
+	uint16_t         ACDCSlow_Cnt;		//ACDC缓启动计数值
 }GN_Device_t;
 
 typedef struct 
 {
-	__IO uint32_t  	AdjCnt;				//循环次数
 	__IO float  	iError;      		//定义偏差
 	__IO float  	LastError;			//前一次误差
 	__IO float  	PrevError;			//前两次误差
@@ -116,11 +111,11 @@ extern SemaphoreHandle_t maintainSemaphore;
 
 
 extern void IF_Module_SWCInit(void);
-extern void IF_Module_Main_Task(void);
-extern void IF_Module_Output_Task(void);
-extern void IF_Module_Output_Task(void);
 extern void IF_Module_Input_Task(void);
+extern void IF_Module_Main_Task(void);
+extern void IF_Module_Sensor_Task(void);
 extern void IF_Module_CmdExecute_Task(void);
+extern void IF_Module_Output_Task(void);
 
 #if defined(__cplusplus)
 extern "C" }

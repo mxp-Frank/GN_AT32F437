@@ -21,7 +21,19 @@ void IF_Module_CmdExecute_Task(void)
 {
 	Module_Cmd_Execute();
 }
-	
+/* FUNCTION *************************************************************
+ * Function Name : IF_Module_Sensor_Task
+ * Description   : sensor执行输出函数
+ * Parameter     : 
+ * return        :               
+ * END *****************************************************************/
+void IF_Module_Sensor_Task(void)
+{
+	if(GN_Device.RunState.Now >= IDLE_STATE)
+	{
+		IF_SL_WriteSensor();
+	}
+}	
 /* FUNCTION *************************************************************
  * Function Name : IF_Module_Output_Task
  * Description   : Port output执行函数
@@ -105,6 +117,7 @@ static void Module_Cmd_Execute(void)
  * END ***************************************************************************************/
 static void Module_Port_Output(void)
 {	
+
 	if(GN_Device.RunState.Now == STANDBY_STATE)
 	{	
 		IF_SetNormalOutput_SIG(IOSIGN_INTLOCKENABLE,OFF);	  	

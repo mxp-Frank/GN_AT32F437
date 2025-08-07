@@ -37,12 +37,11 @@ static void _SL_CfgDebug(void);
  * END ***************************************************************************************/
 void IF_SL_CfgInit(void)
 {   
-    IF_NvmInit();
-    IF_SensorInit();
+    IF_NvmInit();  
     IF_TimerInit();
-	IF_InterfaceInit();	
 	IF_CommInit();
-	delay_ms(100);
+	IF_InterfaceInit();	
+	IF_SensorInit();
 }
 	
 void IF_SL_WDOG_FEED(void)
@@ -114,14 +113,14 @@ void IF_SL_UartSendTask4(void)
  * Parameter     : 
  * Parameter     :                               
  * END ***************************************************************************************/
-void IF_SL_Sensor_ReadFpga_Task(void)
+void IF_SL_ReadSensor_Task(void)
 {
     IF_Sensor_ReadFpga_Task();
 }
 
-void IF_SL_Sensor_WriteFgpa_Task(void)
+void IF_SL_WriteSensor(void)
 {
-	IF_Sensor_WriteFgpa_Task();
+	IF_Sensor_WriteFgpa();
 }
 /* FUNCTION *********************************************************************************
  * Function Name : IF_SL_ReadSensor_Task
@@ -146,9 +145,7 @@ void IF_SL_InterfaceInput_Task(void)
 /**********************Fpga Sensor Layer****************************************/
 float IF_SL_Fpga_GetSensor(uint8_t ChnNo,uint8_t Pwr_Chn)
 {
-	float fvalue;
-	fvalue = IF_Fpga_GetRegAlgSensor(ChnNo,Pwr_Chn);
-	return fvalue;
+	return IF_Fpga_GetRegAlgSensor(ChnNo,Pwr_Chn);
 }
 uint32_t IF_SL_Fpga_GetSyncOutMeasureFrequency(void)
 {
@@ -160,9 +157,7 @@ uint8_t IF_SL_Fpga_GetSyncOutMeasureDutyCircle(void)
 }
 int16_t IF_SL_Get_Sensor_DCBias(void)
 {
-	int16_t value =0;
-	value = IF_Sensor_GetDCBias();
-	return value;
+	return IF_Sensor_GetDCBias();
 }	
 /**********************Interface  Output Layer****************************************/
 void IF_SL_SetInterfaceOutput(IOSignEnum IOSwitch,uint8_t OnorOff)
@@ -188,16 +183,12 @@ void IF_SL_EXDAC_SetACDCVoltageOutput(float value)
 //PhasePoint of parameter
 uint16_t IF_SL_InternalParam_GetInitPoint(void)
 {
-	uint16_t Value = 0;
-	Value = IF_InternalParam_GetInitPoint();
-	return Value;
+	return IF_InternalParam_GetInitPoint();
 }
 //PulseRFPowerThr of parameter 
 uint32_t IF_SL_InternalParam_GetFpgaPulsePowerThr(void)
 {
-	uint32_t value = 0;
-	value = IF_InternalParam_GetFpgaPulsePowerThr();
-	return value;
+	return IF_InternalParam_GetFpgaPulsePowerThr();
 }	
 void IF_SL_InternalParam_SetFpgaPulsePowerThr(uint32_t value)
 {
@@ -206,9 +197,7 @@ void IF_SL_InternalParam_SetFpgaPulsePowerThr(uint32_t value)
 //FpgaPulseSyncDelay of parameter 
 uint16_t IF_SL_InternalParam_GetFpgaPulseSyncDelay(void)
 {
-	uint16_t value = 0;
-	value = IF_InternalParam_GetFpgaPulseSyncDelay();
-	return value;
+	return IF_InternalParam_GetFpgaPulseSyncDelay();
 }	
 void IF_SL_InternalParam_SetFpgaPulseSyncDelay(uint16_t value)
 {
@@ -218,9 +207,7 @@ void IF_SL_InternalParam_SetFpgaPulseSyncDelay(uint16_t value)
 //RegulationMode of parameter
 uint8_t IF_SL_UserParam_GetRegulationMode(void)
 {
-	uint8_t value = 0;
-	value = IF_UserParam_GetRegulationMode();
-	return value;
+	return IF_UserParam_GetRegulationMode();
 }
 void IF_SL_UserParam_SetRegulationMode(uint8_t value)
 {
@@ -229,9 +216,7 @@ void IF_SL_UserParam_SetRegulationMode(uint8_t value)
 //ForwardPowerLimit of parameter 
 uint16_t IF_SL_UserParam_GetForwardPowerLimit(void)
 {
-	uint16_t value = 0;
-	value = IF_UserParam_GetForwardPowerLimit();
-	return value;
+	return IF_UserParam_GetForwardPowerLimit();
 }
 void IF_SL_UserParam_SetForwardPowerLimit(uint16_t value)
 {	
@@ -240,9 +225,7 @@ void IF_SL_UserParam_SetForwardPowerLimit(uint16_t value)
 //ReflectPowerLimit of parameter 
 uint16_t  IF_SL_UserParam_GetReflectPowerLimit(void)
 {
-	uint16_t value = 0;
-	value = IF_UserParam_GetReflectPowerLimit();
-	return value;
+	return IF_UserParam_GetReflectPowerLimit();
 }
 void  IF_SL_UserParam_SetReflectPowerLimit(uint16_t value)
 {
@@ -251,9 +234,7 @@ void  IF_SL_UserParam_SetReflectPowerLimit(uint16_t value)
 //DCBiasPowerLimit of parameter
 uint16_t  IF_SL_UserParam_GetDCBiasPowerLimit(void)
 {
-	uint16_t value = 0;
-	value = IF_UserParam_GetDCBiasPowerLimit();
-	return value;
+	return IF_UserParam_GetDCBiasPowerLimit();
 }
 void  IF_SL_UserParam_SetDCBiasPowerLimit(uint16_t value)
 {	
@@ -266,16 +247,12 @@ uint8_t IF_SL_UserParam_GetReflectPowerDelayOff(void)
 }	
 uint16_t IF_SL_UserParam_GetReflectPowerThreshold(void)
 {
-	uint16_t value = 0;
-	value = IF_UserParam_GetReflectPowerThreshold();
-	return value;
+	return IF_UserParam_GetReflectPowerThreshold();
 }
 //MatchMode of parameter
 uint8_t IF_SL_UserParam_GetMatchMode(void)
 {
-	uint8_t value = 0;
-	value = IF_UserParam_GetMatchMode();
-	return value;
+	return IF_UserParam_GetMatchMode();
 }	
 void IF_SL_UserParam_SetMatchMode(uint8_t value)
 {
@@ -285,9 +262,7 @@ void IF_SL_UserParam_SetMatchMode(uint8_t value)
 //SlowMode of parameter
 uint8_t IF_SL_UserParam_GetSlowMode(void)
 {
-	uint8_t value = 0;
-	value = IF_UserParam_GetSlowMode();
-	return value;
+	return IF_UserParam_GetSlowMode();
 }
 void IF_SL_UserParam_SetSlowMode(uint8_t value)
 {
@@ -296,9 +271,7 @@ void IF_SL_UserParam_SetSlowMode(uint8_t value)
 //SlowRFOnDelay of parameter
 uint16_t IF_SL_UserParam_GetSlowStartDelay(void)
 {
-	uint16_t value = 0;
-	value = IF_UserParam_GetSlowStartDelay();
-	return value;
+	return IF_UserParam_GetSlowStartDelay();
 }
 void IF_SL_UserParam_SetSlowStartDelay(uint16_t value)
 {
@@ -307,9 +280,7 @@ void IF_SL_UserParam_SetSlowStartDelay(uint16_t value)
 //SlowRFOffDelay of parameter
 uint16_t IF_SL_UserParam_GetSlowStopDelay(void)
 {
-	uint16_t value = 0;
-	value = IF_UserParam_GetSlowStopDelay();
-	return value;
+	return IF_UserParam_GetSlowStopDelay();
 }
 void IF_SL_UserParam_SetSlowStopDelay(uint16_t value)
 {
@@ -318,9 +289,7 @@ void IF_SL_UserParam_SetSlowStopDelay(uint16_t value)
 //VDCFactor of parameter
 uint32_t IF_SL_UserParam_GetVDCFactor(void)
 {
-	uint32_t value =0;
-	value = IF_UserParam_GetVDCFactor();
-	return value;
+	return IF_UserParam_GetVDCFactor();
 }
 void IF_SL_UserParam_SetVDCFactor(uint32_t value)
 {
@@ -330,7 +299,6 @@ void IF_SL_UserParam_SetVDCFactor(uint32_t value)
 /**********************Nvm Layer****************************************/
 void IF_SL_Nvm_WriteSystemResetTimes(void)
 {
-	static uint16_t SystemPowerTimer = 0;
 	static uint8_t powerUp10sFlagCleared = OFF;
 	/******上电后10s将系统复位次数清零********/
 	if(powerUp10sFlagCleared == OFF)
@@ -340,13 +308,6 @@ void IF_SL_Nvm_WriteSystemResetTimes(void)
 			IF_NvmParam_WriteSystemResetTimes(0);
 			powerUp10sFlagCleared = ON;	
 		}
-	}
-	/******上电后1hour将系统将累计上电时间加1次数********/
-	if(IF_Timer_GetPowerUpDurationFlag()== ON)
-	{
-		SystemPowerTimer= IF_NvmParam_ReadSystemTotalTimes()+1;
-		IF_NvmParam_WriteSystemTotalTimes(SystemPowerTimer);
-		IF_Timer_SetPowerUpDurationFlag(OFF);
 	}	
 }	
 void IF_SL_Nvm_ParamsRW(NVMRWMask_Enum NVMRW_Mask)
@@ -402,7 +363,6 @@ void  IF_SL_SetUartBaudRate(uint8_t baudrateKey)
 
 void IF_SL_ResetDevice(void)
 {
-	delay_ms(100);
 	NVIC_SystemReset();
 }
 //**************************************
@@ -456,22 +416,13 @@ void IF_SL_CmdParam_SetACDCVoltage(uint32_t value)
 /*****************************************/
 void IF_SL_UpdateRFPwrPIDProcessData(void)
 {
-	if( 0 == IF_GetRFPwrPIDProcessDataFlag())
-	{
-		IF_UpdateRFPwrPIDProcessData();
-	}
+	IF_UpdateRFPwrPIDProcessData();
 }
 void IF_SL_ClearRFPwrPIDProcessData(void)
 {
-	if(1 == IF_GetRFPwrPIDProcessDataFlag())
-	{
-		IF_ClearRFPwrPIDProcessData();
-	}
+	IF_ClearRFPwrPIDProcessData();
 }
-void IF_SL_ClearRFPwrPIDProcessDataFlag(void)
-{
-	IF_SetRFPwrPIDProcessDataFlag(0);
-}
+
 /*****************************************/
 void IF_SL_ExecuteAction(void)
 {

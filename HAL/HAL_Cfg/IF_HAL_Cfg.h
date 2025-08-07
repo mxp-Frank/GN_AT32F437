@@ -70,7 +70,7 @@ extern void IF_HAL_EXDAC_SET(uint16_t channel, float refValue);
 
 //PART 4 : FPGA for SENSOR_SL
 extern void IF_HAL_Sensor_MCU_Start(void);
-extern uint8_t IF_HAL_FpgaReg_ReadStart(void);
+extern void IF_HAL_FpgaReg_ReadStart(void);
 extern void IF_HAL_FpgaReg_ReadEnd(void);
 extern uint8_t IF_HAL_FpgaReg_Read(uint16_t regAddr);
 extern void IF_HAL_FpgaReg_Write(uint16_t regAddr, uint8_t regData);

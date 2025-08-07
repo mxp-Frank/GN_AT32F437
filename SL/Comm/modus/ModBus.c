@@ -251,14 +251,12 @@ static void RS485_SendData(uint8_t port,Layer2Data_t txMsg)
 	{
 		g_TxBuf[port].data[g_TxBuf[port].len++]= txMsg.Buf[i];
 	}
-	while(g_RxBuf[RS485_UART].flag)
+	while(g_RxBuf[RS485_UART].flag == 1)
 	{
-		delay_ms(1);
+		vTaskDelay(1);
 	}
 	RS485_TX_EN();
-	IF_UartEnableTx(port);
-	
-		
+	IF_UartEnableTx(port);		
 }
 /* FUNCTION *********************************************************************************
  * Function Name : Modbus_ReceiveChar
@@ -269,9 +267,12 @@ static void RS485_SendData(uint8_t port,Layer2Data_t txMsg)
  * END ***************************************************************************************/
 void Modbus_ReceiveChar(uint8_t port, uint8_t ch)
 {
-	RS485_RX_EN();                			   //接受使能
-	g_RxBuf[port].flag = 1;  
-	g_RxBuf[port].port = port;  
+	if(g_RxBuf[port].flag == 0)
+	{
+		RS485_RX_EN();                			   //接受使能
+		g_RxBuf[port].flag = 1;  
+		g_RxBuf[port].port = port;  
+	}
 	if(g_RxBuf[port].len < BUFFER_SIZE)        //接收的字符超出边界
 	{
 		g_RxBuf[port].data[g_RxBuf[port].len++] = ch;
@@ -285,7 +286,7 @@ void Modbus_ReceiveChar(uint8_t port, uint8_t ch)
  * Parameter     : ch: 需要处理的字节
  * Return        :
  * END ***************************************************************************************/
-void TMR_Modbus_ISR_Callback(void)
+void Modbus_TMR_ISR_Callback(void)
 {	
 	if(g_RxBuf[RS485_UART].flag == 1)  //接收帧开始
 	{
@@ -333,15 +334,15 @@ void MB_ReadCoil_01H(uint8_t addr, uint16_t reg, uint16_t num)
 {
 	uint16_t crc = 0;	
 	memset(&ModBuffer,0,sizeof(Layer2Data_t));
-	ModBuffer.Buf[ModBuffer.Len++]= addr;         /*从站地址*/
-	ModBuffer.Buf[ModBuffer.Len++]= 0x01;			/*功能码*/
-	ModBuffer.Buf[ModBuffer.Len++]= reg >>8;		/*寄存器地址，高字节*/		
-	ModBuffer.Buf[ModBuffer.Len++]= reg ;			/*寄存器地址，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= num >>8;		/*线圈(bit)个数，高字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= num;			/*线圈(bit)个数，低字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= addr;         			/*从站地址*/
+	ModBuffer.Buf[ModBuffer.Len++]= 0x01;					/*功能码*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(reg);		/*寄存器地址，高字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(reg);		/*寄存器地址，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(num);		/*线圈(bit)个数，高字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(num);		/*线圈(bit)个数，低字节*/		
 	crc = ModbusCRC16(ModBuffer.Buf,ModBuffer.Len);	
-	ModBuffer.Buf[ModBuffer.Len++]= crc;			/*Mobus crc，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= crc >>8;		/*Mobus crc，高字节*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(crc);		/*Mobus crc，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(crc);		/*Mobus crc，高字节*/
 	RS485_SendData(RS485_UART,ModBuffer);
 }
 /* FUNCTION *********************************************************************************
@@ -354,15 +355,15 @@ void MB_WriteCoil_05H(uint8_t addr, uint16_t reg, uint16_t sta)
 {
 	uint16_t crc = 0;
 	memset(&ModBuffer,0,sizeof(Layer2Data_t));
-	ModBuffer.Buf[ModBuffer.Len++]= addr;         /*从站地址*/
-	ModBuffer.Buf[ModBuffer.Len++]= 0x05;			/*功能码*/
-	ModBuffer.Buf[ModBuffer.Len++]= reg >>8;		/*寄存器地址，高字节*/		
-	ModBuffer.Buf[ModBuffer.Len++]= reg;			/*寄存器地址，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= sta >>8;		/*线圈(bit)个数，高字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= sta;			/*线圈(bit)个数，低字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= addr;         			/*从站地址*/
+	ModBuffer.Buf[ModBuffer.Len++]= 0x05;					/*功能码*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(reg);		/*寄存器地址，高字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(reg);		/*寄存器地址，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(sta);		/*线圈(bit)个数，高字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(sta);		/*线圈(bit)个数，低字节*/		
 	crc = ModbusCRC16(ModBuffer.Buf,ModBuffer.Len);	
-	ModBuffer.Buf[ModBuffer.Len++]= crc;			/*Mobus crc，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= crc >>8;		/*Mobus crc，高字节*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(crc);		/*Mobus crc，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(crc);		/*Mobus crc，高字节*/
 	RS485_SendData(RS485_UART,ModBuffer);
 }
 
@@ -376,15 +377,15 @@ void MB_ReadInput_02H(uint8_t addr, uint16_t reg, uint16_t num)
 {
 	uint16_t crc =0;
 	memset(&ModBuffer,0,sizeof(Layer2Data_t));
-	ModBuffer.Buf[ModBuffer.Len++]= addr;         /*从站地址*/
-	ModBuffer.Buf[ModBuffer.Len++]= 0x02;			/*功能码*/
-	ModBuffer.Buf[ModBuffer.Len++]= reg >>8;		/*寄存器地址，高字节*/		
-	ModBuffer.Buf[ModBuffer.Len++]= reg;			/*寄存器地址，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= num >>8;		/*开关(bit)个数，高字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= num;			/*开关(bit)个数，低字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= addr;         			/*从站地址*/
+	ModBuffer.Buf[ModBuffer.Len++]= 0x02;					/*功能码*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(reg);		/*寄存器地址，高字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(reg);		/*寄存器地址，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(num);		/*开关(bit)个数，高字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(num);		/*开关(bit)个数，低字节*/		
 	crc = ModbusCRC16(ModBuffer.Buf,ModBuffer.Len);	
-	ModBuffer.Buf[ModBuffer.Len++]= crc;			/*Mobus crc，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= crc >>8;		/*Mobus crc，高字节*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(crc);		/*Mobus crc，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(crc);		/*Mobus crc，高字节*/
 	RS485_SendData(RS485_UART,ModBuffer);		
 }
 
@@ -398,15 +399,15 @@ void MB_ReadInputReg_04H(uint8_t addr, uint16_t reg, uint16_t num)
 {
 	uint16_t crc =0;
 	memset(&ModBuffer,0,sizeof(Layer2Data_t));
-	ModBuffer.Buf[ModBuffer.Len++]= addr;         /*从站地址*/
-	ModBuffer.Buf[ModBuffer.Len++]= 0x04;			/*功能码*/
-	ModBuffer.Buf[ModBuffer.Len++]= reg >>8;		/*寄存器地址，高字节*/		
-	ModBuffer.Buf[ModBuffer.Len++]= reg;			/*寄存器地址，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= num >>8;		/*寄存器个数，高字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= num;			/*寄存器个数，低字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= addr;        		 	/*从站地址*/
+	ModBuffer.Buf[ModBuffer.Len++]= 0x04;					/*功能码*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(reg);		/*寄存器地址，高字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(reg);		/*寄存器地址，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(num);		/*寄存器个数，高字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(num);		/*寄存器个数，低字节*/		
 	crc = ModbusCRC16(ModBuffer.Buf,ModBuffer.Len);	
-	ModBuffer.Buf[ModBuffer.Len++]= crc;			/*Mobus crc，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= crc >>8;		/*Mobus crc，高字节*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(crc);		/*Mobus crc，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(crc);		/*Mobus crc，高字节*/
 	RS485_SendData(RS485_UART,ModBuffer);	
 }
 
@@ -420,15 +421,15 @@ void MB_ReadHoldingReg_03H(uint8_t addr, uint16_t reg, uint16_t num)
 {
 	uint16_t crc =0;
 	memset(&ModBuffer,0,sizeof(Layer2Data_t));
-	ModBuffer.Buf[ModBuffer.Len++]= addr;         /*从站地址*/
-	ModBuffer.Buf[ModBuffer.Len++]= 0x03;			/*功能码*/
-	ModBuffer.Buf[ModBuffer.Len++]= reg >>8;		/*寄存器地址，高字节*/		
-	ModBuffer.Buf[ModBuffer.Len++]= reg;			/*寄存器地址，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= num >>8;		/*寄存器个数，高字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= num;			/*寄存器个数，低字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= addr;         				/*从站地址*/
+	ModBuffer.Buf[ModBuffer.Len++]= 0x03;						/*功能码*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(reg);			/*寄存器地址，高字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(reg);			/*寄存器地址，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(num);			/*寄存器个数，高字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(num);			/*寄存器个数，低字节*/		
 	crc = ModbusCRC16(ModBuffer.Buf,ModBuffer.Len);	
-	ModBuffer.Buf[ModBuffer.Len++]= crc;			/*Mobus crc，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= crc >>8;		/*Mobus crc，高字节*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(crc);			/*Mobus crc，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(crc);			/*Mobus crc，高字节*/
 	RS485_SendData(RS485_UART,ModBuffer);
 }
 
@@ -442,20 +443,20 @@ void MB_WriteHoldingReg_06H(uint8_t addr, uint16_t reg, uint16_t data)
 {
 	uint16_t crc = 0;
 	memset(&ModBuffer,0,sizeof(Layer2Data_t));
-	ModBuffer.Buf[ModBuffer.Len++]= addr;         /*从站地址*/
-	ModBuffer.Buf[ModBuffer.Len++]= 0x06;			/*功能码*/
-	ModBuffer.Buf[ModBuffer.Len++]= reg >>8;		/*寄存器地址，高字节*/		
-	ModBuffer.Buf[ModBuffer.Len++]= reg;			/*寄存器地址，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= data >>8;		/*寄存器个数，高字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= data;			/*寄存器个数，低字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= addr;         			/*从站地址*/
+	ModBuffer.Buf[ModBuffer.Len++]= 0x06;					/*功能码*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(reg);		/*寄存器地址，高字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(reg);		/*寄存器地址，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(data);		/*寄存器个数，高字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(data);		/*寄存器个数，低字节*/		
 	crc = ModbusCRC16(ModBuffer.Buf,ModBuffer.Len);	
-	ModBuffer.Buf[ModBuffer.Len++]= crc;			/*Mobus crc，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= crc >>8;		/*Mobus crc，高字节*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(crc);		/*Mobus crc，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(crc);		/*Mobus crc，高字节*/
 	RS485_SendData(RS485_UART,ModBuffer);	
 }
 
 /* FUNCTION *********************************************************************************
- * Function Name : MB_WriteCoil_05H
+ * Function Name : MB_WriteNumCoil_0FH
  * Description   : 写多个线圈状态(CoilStatus)
  * Parameter     : addr:从站地址，reg:寄存器地址，num：线圈个数,sta:读线圈状态
  * Return        :
@@ -463,7 +464,7 @@ void MB_WriteHoldingReg_06H(uint8_t addr, uint16_t reg, uint16_t data)
 void MB_WriteNumCoil_0FH(uint8_t addr, uint16_t reg, uint16_t num,uint16_t  *databuf)
 {
 	uint16_t crc = 0,Count = 0;
-	if(num%8==0)
+	if(num%8 == 0)
 	{
 		Count = num/8;
 	}else
@@ -471,20 +472,20 @@ void MB_WriteNumCoil_0FH(uint8_t addr, uint16_t reg, uint16_t num,uint16_t  *dat
 		Count = num/8+1;
 	}	
 	memset(&ModBuffer,0,sizeof(Layer2Data_t));
-	ModBuffer.Buf[ModBuffer.Len++]= addr;         /*从站地址*/
-	ModBuffer.Buf[ModBuffer.Len++]= 0x0F;			/*功能码*/
-	ModBuffer.Buf[ModBuffer.Len++]= reg >>8;		/*寄存器地址，高字节*/		
-	ModBuffer.Buf[ModBuffer.Len++]= reg;			/*寄存器地址，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= num >>8;		/*线圈(16bit)个数，高字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= num;			/*线圈(16bit)个数，低字节*/
-	ModBuffer.Buf[ModBuffer.Len++]= Count;		/*数据个数*/
+	ModBuffer.Buf[ModBuffer.Len++]= addr;         			/*从站地址*/
+	ModBuffer.Buf[ModBuffer.Len++]= 0x0F;					/*功能码*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(reg);		/*寄存器地址，高字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(reg);		/*寄存器地址，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(num);		/*线圈(16bit)个数，高字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(num);		/*线圈(16bit)个数，低字节*/
+	ModBuffer.Buf[ModBuffer.Len++]= Count;					/*数据个数*/
 	for(uint16_t i=0;i<(num<<1)+1;i++)
 	{
-		ModBuffer.Buf[ModBuffer.Len++]= databuf[i];		/*后面数据长度*/
+		ModBuffer.Buf[ModBuffer.Len++]= databuf[i];			/*后面数据长度*/
 	}
 	crc = ModbusCRC16(ModBuffer.Buf,ModBuffer.Len);	
-	ModBuffer.Buf[ModBuffer.Len++]= crc;			/*Mobus crc，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= crc >>8;		/*Mobus crc，高字节*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(crc);		/*Mobus crc，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(crc);		/*Mobus crc，高字节*/
 	RS485_SendData(RS485_UART,ModBuffer);	
 }
 /* FUNCTION *********************************************************************************
@@ -497,21 +498,21 @@ void MB_WriteNumHoldingReg_10H(uint8_t addr, uint16_t reg, uint16_t num,uint16_t
 {
 	uint16_t crc =0;
 	memset(&ModBuffer,0,sizeof(Layer2Data_t));
-	ModBuffer.Buf[ModBuffer.Len++]= addr;         	/*从站地址*/
-	ModBuffer.Buf[ModBuffer.Len++]= 0x10;			/*功能码*/
-	ModBuffer.Buf[ModBuffer.Len++]= reg >>8;		/*寄存器地址，高字节*/		
-	ModBuffer.Buf[ModBuffer.Len++]= reg;			/*寄存器地址，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= num>>8;			/*寄存器个数，高字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= num;			/*寄存器个数，低字节*/			
-	ModBuffer.Buf[ModBuffer.Len++]= num <<1;		/*数据个数，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= addr;         				/*从站地址*/
+	ModBuffer.Buf[ModBuffer.Len++]= 0x10;						/*功能码*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(reg);			/*寄存器地址，高字节*/		
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(reg);			/*寄存器地址，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(num);			/*寄存器个数，高字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(num);			/*寄存器个数，低字节*/			
+	ModBuffer.Buf[ModBuffer.Len++]= num <<1;					/*数据个数，低字节*/	
 	for(uint16_t i=0;i< num;i++)
    	{
-		ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(databuf[i]);		/*寄存器个数，高字节*/	
-		ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(databuf[i]);		/*寄存器个数，低字节*/		
+		ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(databuf[i]);	/*寄存器个数，高字节*/	
+		ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(databuf[i]);	/*寄存器个数，低字节*/		
 	}
 	crc = ModbusCRC16(ModBuffer.Buf,ModBuffer.Len);	
-	ModBuffer.Buf[ModBuffer.Len++]= crc;			/*Mobus crc，低字节*/	
-	ModBuffer.Buf[ModBuffer.Len++]= crc >>8;		/*Mobus crc，高字节*/
+	ModBuffer.Buf[ModBuffer.Len++]= Byte0_UINT16(crc);			/*Mobus crc，低字节*/	
+	ModBuffer.Buf[ModBuffer.Len++]= Byte1_UINT16(crc);			/*Mobus crc，高字节*/
 	RS485_SendData(RS485_UART,ModBuffer);
  }
 
@@ -630,7 +631,7 @@ uint8_t IF_Sensor_GetACDCAppVersion(uint8_t *pBuf)
 {
 	uint8_t i= 0;
 	uint8_t regAddress = (INPUT_REG_A33-INPUT_REG_A33);
-	for( i=0;i<(INPUT_REG_A48-INPUT_REG_A33+1);i++)
+	for( i=0;i<=(INPUT_REG_A48-INPUT_REG_A33);i++)
 	{
 		pBuf[i]= Byte0_UINT16(Modbus_VersionReg[regAddress+i]);
 		if(pBuf[i]==0xFF)break;
@@ -641,7 +642,7 @@ uint8_t IF_Sensor_GetACDCBootVersion(uint8_t *pBuf)
 {
 	uint8_t i= 0;
 	uint8_t regAddress =(INPUT_REG_A49-INPUT_REG_A33);
-	for( i=0;i<(INPUT_REG_A64-INPUT_REG_A49+1);i++)
+	for( i=0;i<=(INPUT_REG_A64-INPUT_REG_A49);i++)
 	{
 		pBuf[i]= Byte0_UINT16(Modbus_VersionReg[regAddress+i]);
 		if(pBuf[i]==0xFF)break;
@@ -653,7 +654,7 @@ uint32_t IF_Sensor_GetACDCAppChecksum(void)
 {
 	UINT32_VAL retValue;
 	uint8_t regAddress =(INPUT_REG_A65-INPUT_REG_A33);
-	for(uint8_t i=0;i<(INPUT_REG_A68-INPUT_REG_A65+1);i++)
+	for(uint8_t i=0;i<=(INPUT_REG_A68-INPUT_REG_A65);i++)
 	{
 		retValue.v[i]= Byte0_UINT16(Modbus_VersionReg[regAddress+i]);
 	}
@@ -869,22 +870,22 @@ void IF_NvmParam_GetModbusVersons(uint8_t *pBuf, uint16_t len)
 {	
 	len = 0; 
 	//HardwareVersion
-	for(uint8_t i=0;i<(HOLD_REG_P44-HOLD_REG_P29+1);i++)
+	for(uint8_t i=0;i<=(HOLD_REG_P44-HOLD_REG_P29);i++)
 	{
 		pBuf[len++] =Byte0_UINT16(Modbus_PHoldReg[HOLD_REG_P29-HOLD_REG_P01+i]);
 	}
 	//AppVerion
-	for( uint8_t i=0;i<(INPUT_REG_A48-INPUT_REG_A33+1);i++)
+	for( uint8_t i=0;i<=(INPUT_REG_A48-INPUT_REG_A33);i++)
 	{
 		pBuf[len++] = Byte0_UINT16(Modbus_VersionReg[INPUT_REG_A33-INPUT_REG_A33+i]);
 	}
 	//BootVerion
-	for(uint8_t i=0;i<(INPUT_REG_A64-INPUT_REG_A49+1);i++)
+	for(uint8_t i=0;i<=(INPUT_REG_A64-INPUT_REG_A49);i++)
 	{
 		pBuf[len++] = Byte0_UINT16(Modbus_VersionReg[INPUT_REG_A49-INPUT_REG_A33+i]);
 	}
 	//checksum
-	for(uint8_t i=0;i<(INPUT_REG_A68-INPUT_REG_A65+1);i++)
+	for(uint8_t i=0;i<=(INPUT_REG_A68-INPUT_REG_A65);i++)
 	{
 		pBuf[len++] = Byte0_UINT16(Modbus_VersionReg[INPUT_REG_A65-INPUT_REG_A33+i]);
 	}

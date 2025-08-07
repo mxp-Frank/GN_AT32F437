@@ -46,11 +46,11 @@ __weak void TMR_1ms_Callback(void)
 {
 
 }
-__weak void TMR_Modbus_ISR_Callback(void)
+__weak void Modbus_TMR_ISR_Callback(void)
 {
 
 }
-__weak void FAN_PWM_ISR_Callback(void)
+__weak void Fan_PWM_ISR_Callback(void)
 {
 	
 }
@@ -184,7 +184,7 @@ static void TIMER2_PWM_Init(void)
     tmr_interrupt_enable(TMR1, TMR_OVF_INT, TRUE);
 
     /* tmr1 hall interrupt nvic init */
-    nvic_irq_enable(TMR1_OVF_TMR10_IRQn, 3, 0);
+    nvic_irq_enable(TMR1_OVF_TMR10_IRQn, 7, 0);
 	/* enable tmr1 */
 	#ifdef DEBUG_ON    
 		debug_apb2_periph_mode_set(DEBUG_TMR1_PAUSE, TRUE);
@@ -202,7 +202,7 @@ void TMR1_OVF_TMR10_IRQHandler(void)
     if(tmr_flag_get(TMR1, TMR_OVF_FLAG) == SET)
     {
         //user's callback
-        FAN_PWM_ISR_Callback();
+        Fan_PWM_ISR_Callback();
         tmr_flag_clear(TMR1, TMR_OVF_FLAG);
     }
 }
@@ -253,8 +253,7 @@ void TMR5_GLOBAL_IRQHandler(void)
     if(tmr_flag_get(TMR5, TMR_OVF_FLAG) == SET)
     {
         //user's callback
-        TMR_Modbus_ISR_Callback();
-		
+        Modbus_TMR_ISR_Callback();		
         tmr_flag_clear(TMR5, TMR_OVF_FLAG);
     }
 }

@@ -34,23 +34,25 @@ static SystemTimer_t SystemTimer;
 static void Check_RFSlowStartDelay(void);
 static void Check_RFSlowStopDelay(void);
 static void Check_RFReflectOffDelay(void);
-static void Check_PowerUpTimer(void);
 static void Check_RFOnTimer(void);
-
 static void Check_FanSlowOnDelay(void);
 
-static void Timer_ISR_Callback(void);
-
 /************************************************************************/
-/*1ms ISR Callback Functions Definitions                                   */
+/*1ms ISR Callback Functions Definitions                                */
 /************************************************************************/
-
 void TMR_1ms_Callback(void)
 {
-    Timer_ISR_Callback();
+    Check_RFOnTimer();
+	Check_RFReflectOffDelay();
+	Check_RFSlowStartDelay();
+	Check_RFSlowStopDelay();
+	Check_FanSlowOnDelay();	
 }
 
-void FAN_PWM_ISR_Callback(void)
+/************************************************************************/
+/*Fan ISR Callback Functions Definitions                                */
+/************************************************************************/
+void Fan_PWM_ISR_Callback(void)
 {
 	Fan_Pwm_TimeOut++;
 	if(Fan_Pwm_TimeOut == FAN_PWM_DUTY(SystemTimer.Pwm_duty))
@@ -85,7 +87,7 @@ void IF_TimerInit(void)
  * END ***************************************************************************************/
 uint32_t IF_Timer_GetPowerUpTimer(void)
 {
-    return SystemTimer.PowerUpDuration;
+    return GetSysTickCnt()/1000;
 }
 
 /* FUNCTION *********************************************************************************
@@ -97,14 +99,6 @@ uint32_t IF_Timer_GetPowerUpTimer(void)
 uint32_t IF_Timer_GetRFOnUpTimer(void)
 {
     return SystemTimer.RFOnDuration;
-}
-uint8_t IF_Timer_GetPowerUpDurationFlag(void)
-{
-	return SystemTimer.PowerUpDurationFlag;
-}
-void IF_Timer_SetPowerUpDurationFlag(uint8_t OnorOff)
-{
-	SystemTimer.PowerUpDurationFlag=OnorOff;
 }
 /* FUNCTION *********************************************************************************
  * Function  : IF_Timer_SetRFOffDelayFlag
@@ -295,26 +289,6 @@ static void Check_RFReflectOffDelay(void)
 	}
 }
 /* FUNCTION *********************************************************************************
- * Function Name : Check_PowerUpTimer
- * Description   : 匹配器电源开启定时器回调函数(系统时间使用LF_UNIT时间)
- * Parameter     : 
- * return        :                
- * END ***************************************************************************************/
-static void Check_PowerUpTimer(void)
-{
-	SystemTimer.PowerUpTimer++;
-
-	if (SystemTimer.PowerUpTimer >= 1000)       // 1s时间到
-	{
-		SystemTimer.PowerUpTimer = 0;
-		SystemTimer.PowerUpDuration++;
-		if(SystemTimer.PowerUpDuration%3600==0)
-		{
-			SystemTimer.PowerUpDurationFlag =1;
-		}
-	}
-}
-/* FUNCTION *********************************************************************************
  * Function Name : Check_RFOnTimer
  * Description   : 射频电源开启定时器回调函数
  * Parameter     : 
@@ -357,23 +331,6 @@ static void Check_FanSlowOnDelay(void)
 	}
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/* FUNCTION *********************************************************************************
- * Function Name : Timer_ISR_Callback
- * Description   : 定时器回调函数
- * Parameter     : 
- * return        :                
- * END ***************************************************************************************/
-static void Timer_ISR_Callback(void)
-{
-	Check_PowerUpTimer();
-	Check_RFOnTimer();
-	Check_RFReflectOffDelay();
-	Check_RFSlowStartDelay();
-	Check_RFSlowStopDelay();
-	Check_FanSlowOnDelay();	
-}
-
-
 //timing related...
 
 /* FUNCTION *********************************************************************************

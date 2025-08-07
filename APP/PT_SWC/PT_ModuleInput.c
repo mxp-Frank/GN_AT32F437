@@ -28,10 +28,9 @@ void IF_Module_Input_Task(void)
 static void Module_Sensor_Input(void)
 {
 	if(GN_Device.RunState.Now == RUN_STATE)
-	{
-		
+	{	
 		GN_Device.SetPower 	=  IF_SL_CmdParam_GetPwrPoint();
-		GN_Device.Sensor.Now.RFState = (RFEnum)IF_SL_CmdParam_GetRFPowerState();
+		GN_Device.Sensor.Now.State  = IF_SL_CmdParam_GetRFPowerState();
 		GN_Device.Sensor.Now.Freq   =  IF_SL_Fpga_GetSensor(ChnN_Freq,HP_CHN);
 		GN_Device.Sensor.Now.Pfwd   =  IF_SL_Fpga_GetSensor(ChnN_Pfwd,HP_CHN);
 		GN_Device.Sensor.Now.Pdlv   =  IF_SL_Fpga_GetSensor(ChnN_Pdlv,HP_CHN);
@@ -90,18 +89,17 @@ static void Module_Port_Input(void)
 			GN_Device.RunState.Now = RUN_STATE;
 		}else
 		{
-			GN_Device.RunState.Now = OPEN_STATE;		
+			GN_Device.RunState.Now = OPEN_STATE;			
 		}
 	}
 	if(GN_Device.RunState.Now != GN_Device.RunState.Last)
 	{
 		IF_SL_CmdParam_SetPwrPoint(0);              //设置功率设置值为零
 		IF_SL_CmdParam_SetDDSPhase(0);          	//关闭功放驱动相位	
-		IF_SL_CmdParam_SetACDCVoltage(0);			//设置AC-DC电压为零	
 		IF_SL_CmdParam_SetRFPowerState(OFF);	    //关闭功率使能		
 		IF_SL_CmdParam_SetDDSDriverState(OFF); 		//关闭功放驱动电源使能	
 		IF_SL_CmdParam_SetACDCDriverState(OFF);     //关闭AC-DC电源使能			
-	}		
+	}	
 	GN_Device.RunState.Last = GN_Device.RunState.Now;
 }
 	

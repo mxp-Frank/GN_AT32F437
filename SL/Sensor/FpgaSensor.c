@@ -18,7 +18,7 @@
 /* LOCAL VARIABLES */
 
 static ReadReg_t FpgaReg;	
-static WriteReg_t  FpgaWriteReg;
+static WriteReg_t  FpgaWriteReg,lastFpgaWriteReg;
 static SensorData_t OutputData[PWR_CHN_NUM];
 
 static float FpgaVrmsFactor = 0;
@@ -26,7 +26,7 @@ static float FpgaIrmsFactor = 0;
 static float FpgaPhaseFactor = 0;
 
 /* FUNCTION PROTOTYPES */
-static void GetInputSensorRegValue(void);
+static void GetInputSensorValue(void);
 static void Fgpa_WriteRegisterValue(void);
 static void Fgpa_ReadRegisterValue(void);
 
@@ -77,6 +77,7 @@ void IF_FpgaSensor_ParamInit(void)
 	uint8_t FpgaInit = 0;
 	memset((void*)&FpgaReg,0,sizeof(ReadReg_t));
 	memset((void*)&FpgaWriteReg,0,sizeof(WriteReg_t));
+	memset((void*)&lastFpgaWriteReg,0,sizeof(WriteReg_t));
 	memset((void*)&OutputData[LP_CHN],0,sizeof(SensorData_t));	
 	memset((void*)&OutputData[HP_CHN],0,sizeof(SensorData_t));
 	
@@ -92,18 +93,18 @@ void IF_FpgaSensor_ParamInit(void)
 		IF_HAL_FpgaReg_ReadEnd();	
 	}
 }
-void Sensor_Fpga_Write(void)
+void IF_Sensor_Fpga_Write(void)
 {
-	GetInputSensorRegValue();
+	GetInputSensorValue();
 	Fgpa_WriteRegisterValue();	
 }	
 /* FUNCTION *********************************************************************************
- * Function Name : Sensor_Fpga_Sample
+ * Function Name : IF_Sensor_Fpga_Read
  * Description   : 得到Fpga VI传感器的数据任务
  * Parameter     : 无
  *                                 
  * END ***************************************************************************************/
-void Sensor_Fpga_Sample(void)
+void IF_Sensor_Fpga_Read(void)
 {	
 	Fgpa_ReadRegisterValue();  
 	if(0 == IF_CmdParam_GetPowerWorkMode())
@@ -126,39 +127,129 @@ void Sensor_Fpga_Sample(void)
  * END ***************************************************************************************/
 static void Fgpa_WriteRegisterValue(void)
 {
-	/******************写FPGA寄存器数据到寄存器缓冲区**************************/
-	Sensor_2G_SetMcuRegister(ACDC_CURRENT_ADDR ,FpgaWriteReg.ACDCCurrent);
-	Sensor_2G_SetMcuRegister(ACDC_VOLTAGE_ADDR ,FpgaWriteReg.ACDCVoltage);
-	
-	Sensor_2G_SetMcuRegister(DDS_CHANNELNO_ADDR ,FpgaWriteReg.DDSChannelNo);	
-	Sensor_2G_SetMcuRegister(DDS_FREQUENCY_ADDR ,FpgaWriteReg.DDSFrequency);	
-	Sensor_2G_SetMcuRegister(DDS_PAHSE_ADDR ,FpgaWriteReg.DDSPhase);			
-	
-	Sensor_2G_SetMcuRegister(FACTOR_VRMS_ADDR ,FpgaWriteReg.VrmsFactor);
-	Sensor_2G_SetMcuRegister(FACTOR_IRMS_ADDR ,FpgaWriteReg.IrmsFactor);
-	Sensor_2G_SetMcuRegister(FACTOR_PHASE_ADDR ,FpgaWriteReg.PhaseFactor);
-	Sensor_2G_SetMcuRegister(FACTOR_SAMPLE_ADDR ,FpgaWriteReg.VISampleSmooth);
-	
-	Sensor_2G_SetMcuRegister(PULSEMODE_SWITCH_ADDR ,FpgaWriteReg.PulseMode);
-	Sensor_2G_SetMcuRegister(PULSEMODE_FREQ_ADDR ,FpgaWriteReg.PulsePeriod);	
-	Sensor_2G_SetMcuRegister(PULSEMODE_DUTY_ADDR ,FpgaWriteReg.PulseDuty);
-	
-	Sensor_2G_SetMcuRegister(SYNCSOURCE_SWITCH_ADDR ,FpgaWriteReg.SyncOutSource);
-	Sensor_2G_SetMcuRegister(SYNCOUT_ENABLE_ADDR ,FpgaWriteReg.SyncOutEnable);
-	Sensor_2G_SetMcuRegister(SYNCOUT_DELAY_ADDR ,FpgaWriteReg.SyncOutDelay);
-	
-	Sensor_2G_SetMcuRegister(FEED_BACKMODE_ADDR ,FpgaWriteReg.FeedbackMode);
-	Sensor_2G_SetMcuRegister(FEED_PREMASK_ADDR ,FpgaWriteReg.FeedPreMask);
-	Sensor_2G_SetMcuRegister(FEED_POSTMASK_ADDR ,FpgaWriteReg.FeedPostMask);
-	
-	Sensor_2G_SetMcuRegister(PHASE_LEVELTOLEVEL_ADDR ,FpgaWriteReg.PhaseState2);
-	Sensor_2G_SetMcuRegister(PHASE_STEPSPEED_ADDR,FpgaWriteReg.PhaseStepSpeed);
-	Sensor_2G_SetMcuRegister(PHASE_STEPTIMER_ADDR,FpgaWriteReg.PhaseStepTimer);
-	
-	/*********************开关状态*********************************/
-	Sensor_2G_SetMcuRegister(ACDC_STATESWITCH_ADDR ,FpgaWriteReg.ACDCState);
-	Sensor_2G_SetMcuRegister(DDS_STATESWITCH_ADDR,FpgaWriteReg.DDSState);
-}	
+	/*********************ACDC Register*********************************/
+	if(lastFpgaWriteReg.ACDCCurrent != FpgaWriteReg.ACDCCurrent)
+	{
+		Sensor_2G_SetMcuRegister(ACDC_CURRENT_ADDR ,FpgaWriteReg.ACDCCurrent);
+		lastFpgaWriteReg.ACDCCurrent = FpgaWriteReg.ACDCCurrent;
+	}
+	if(lastFpgaWriteReg.ACDCVoltage != FpgaWriteReg.ACDCVoltage)
+	{
+		Sensor_2G_SetMcuRegister(ACDC_VOLTAGE_ADDR ,FpgaWriteReg.ACDCVoltage);
+		lastFpgaWriteReg.ACDCVoltage = FpgaWriteReg.ACDCVoltage;
+	}
+	if(lastFpgaWriteReg.ACDCState != FpgaWriteReg.ACDCState)	
+	{
+		Sensor_2G_SetMcuRegister(ACDC_STATESWITCH_ADDR ,FpgaWriteReg.ACDCState);
+		lastFpgaWriteReg.ACDCState = FpgaWriteReg.ACDCState;
+	}
+	/********************DDS Register**********************/	
+	if(lastFpgaWriteReg.DDSFrequency != FpgaWriteReg.DDSFrequency)
+	{
+		Sensor_2G_SetMcuRegister(DDS_FREQUENCY_ADDR ,FpgaWriteReg.DDSFrequency);
+		lastFpgaWriteReg.DDSFrequency = FpgaWriteReg.DDSFrequency;
+	}
+	if(lastFpgaWriteReg.DDSPhase != FpgaWriteReg.DDSPhase)
+	{
+		Sensor_2G_SetMcuRegister(DDS_PAHSE_ADDR ,FpgaWriteReg.DDSPhase);
+		lastFpgaWriteReg.DDSPhase = FpgaWriteReg.DDSPhase;
+	}
+	if(lastFpgaWriteReg.DDSChannelNo != FpgaWriteReg.DDSChannelNo)
+	{
+		Sensor_2G_SetMcuRegister(DDS_CHANNELNO_ADDR ,FpgaWriteReg.DDSChannelNo);
+		lastFpgaWriteReg.DDSChannelNo = FpgaWriteReg.DDSChannelNo;
+	}
+	if(lastFpgaWriteReg.DDSState != FpgaWriteReg.DDSState)	
+	{
+		Sensor_2G_SetMcuRegister(DDS_STATESWITCH_ADDR,FpgaWriteReg.DDSState);
+		lastFpgaWriteReg.DDSState = FpgaWriteReg.DDSState;
+	}
+	/**********************Factor Register********************/	
+	if(lastFpgaWriteReg.VrmsFactor != FpgaWriteReg.VrmsFactor)	
+	{
+		Sensor_2G_SetMcuRegister(FACTOR_VRMS_ADDR ,FpgaWriteReg.VrmsFactor);
+		lastFpgaWriteReg.VrmsFactor = FpgaWriteReg.VrmsFactor;
+	}
+	if(lastFpgaWriteReg.IrmsFactor != FpgaWriteReg.IrmsFactor)	
+	{
+		Sensor_2G_SetMcuRegister(FACTOR_IRMS_ADDR ,FpgaWriteReg.IrmsFactor);
+		lastFpgaWriteReg.IrmsFactor = FpgaWriteReg.IrmsFactor;
+	}
+	if(lastFpgaWriteReg.PhaseFactor != FpgaWriteReg.PhaseFactor)	
+	{
+		Sensor_2G_SetMcuRegister(FACTOR_PHASE_ADDR ,FpgaWriteReg.PhaseFactor);
+		lastFpgaWriteReg.PhaseFactor = FpgaWriteReg.PhaseFactor;
+	}
+	if(lastFpgaWriteReg.VISampleSmooth != FpgaWriteReg.VISampleSmooth)	
+	{
+		Sensor_2G_SetMcuRegister(FACTOR_SAMPLE_ADDR ,FpgaWriteReg.VISampleSmooth);
+		lastFpgaWriteReg.VISampleSmooth = FpgaWriteReg.VISampleSmooth;
+	}
+	/*********************Pulse Register*********************/	
+	if(lastFpgaWriteReg.PulseMode != FpgaWriteReg.PulseMode)	
+	{
+		Sensor_2G_SetMcuRegister(PULSEMODE_SWITCH_ADDR ,FpgaWriteReg.PulseMode);
+		lastFpgaWriteReg.PulseMode = FpgaWriteReg.PulseMode;
+	}
+	if(lastFpgaWriteReg.PulsePeriod != FpgaWriteReg.PulsePeriod)	
+	{
+		Sensor_2G_SetMcuRegister(PULSEMODE_FREQ_ADDR ,FpgaWriteReg.PulsePeriod);
+		lastFpgaWriteReg.PulsePeriod = FpgaWriteReg.PulsePeriod;
+	}
+	if(lastFpgaWriteReg.PulseDuty != FpgaWriteReg.PulseDuty)		
+	{
+		Sensor_2G_SetMcuRegister(PULSEMODE_DUTY_ADDR ,FpgaWriteReg.PulseDuty);
+		lastFpgaWriteReg.PulseDuty = FpgaWriteReg.PulseDuty;
+	}
+	/********************SyncOut Register**********************/	
+	if(lastFpgaWriteReg.SyncOutSource != FpgaWriteReg.SyncOutSource)	
+	{
+		Sensor_2G_SetMcuRegister(SYNCSOURCE_SWITCH_ADDR ,FpgaWriteReg.SyncOutSource);
+		lastFpgaWriteReg.SyncOutSource = FpgaWriteReg.SyncOutSource;
+	}
+	if(lastFpgaWriteReg.SyncOutEnable != FpgaWriteReg.SyncOutEnable)	
+	{
+		Sensor_2G_SetMcuRegister(SYNCOUT_ENABLE_ADDR ,FpgaWriteReg.SyncOutEnable);
+		lastFpgaWriteReg.SyncOutEnable = FpgaWriteReg.SyncOutEnable;
+	}
+	if(lastFpgaWriteReg.SyncOutDelay != FpgaWriteReg.SyncOutDelay)	
+	{
+		Sensor_2G_SetMcuRegister(SYNCOUT_DELAY_ADDR ,FpgaWriteReg.SyncOutDelay);
+		lastFpgaWriteReg.SyncOutDelay = FpgaWriteReg.SyncOutDelay;
+	}
+	/************************FeedBack Register******************/	
+	if(lastFpgaWriteReg.FeedbackMode != FpgaWriteReg.FeedbackMode)	
+	{
+		Sensor_2G_SetMcuRegister(FEED_BACKMODE_ADDR ,FpgaWriteReg.FeedbackMode);
+		lastFpgaWriteReg.FeedbackMode = FpgaWriteReg.FeedbackMode;
+	}
+	if(lastFpgaWriteReg.FeedPreMask != FpgaWriteReg.FeedPreMask)	
+	{
+		Sensor_2G_SetMcuRegister(FEED_PREMASK_ADDR ,FpgaWriteReg.FeedPreMask);
+		lastFpgaWriteReg.FeedPreMask = FpgaWriteReg.FeedPreMask;
+	}
+	if(lastFpgaWriteReg.FeedPostMask != FpgaWriteReg.FeedPostMask)	
+	{
+		Sensor_2G_SetMcuRegister(FEED_POSTMASK_ADDR ,FpgaWriteReg.FeedPostMask);
+		lastFpgaWriteReg.FeedPostMask = FpgaWriteReg.FeedPostMask;
+	}
+	/************************PhaseStep Register******************/	
+	if(lastFpgaWriteReg.PhaseState2 != FpgaWriteReg.PhaseState2)	
+	{
+		Sensor_2G_SetMcuRegister(PHASE_LEVELTOLEVEL_ADDR ,FpgaWriteReg.PhaseState2);
+		lastFpgaWriteReg.PhaseState2 = FpgaWriteReg.PhaseState2;
+	}
+	if(lastFpgaWriteReg.PhaseStepSpeed != FpgaWriteReg.PhaseStepSpeed)	
+	{
+		Sensor_2G_SetMcuRegister(PHASE_STEPSPEED_ADDR,FpgaWriteReg.PhaseStepSpeed);
+		lastFpgaWriteReg.PhaseStepSpeed = FpgaWriteReg.PhaseStepSpeed;
+	}
+	if(lastFpgaWriteReg.PhaseStepTimer != FpgaWriteReg.PhaseStepTimer)	
+	{
+		Sensor_2G_SetMcuRegister(PHASE_STEPTIMER_ADDR,FpgaWriteReg.PhaseStepTimer);
+		lastFpgaWriteReg.PhaseStepTimer = FpgaWriteReg.PhaseStepTimer;
+	}
+}
 
 /* FUNCTION *********************************************************************************
  * Function Name : Fgpa_ReadRegisterValue
@@ -381,7 +472,7 @@ uint8_t IF_Fpga_GetSyncOutMeasureDutyCircle(void)
 }
 	
 
-static void GetInputSensorRegValue(void)
+static void GetInputSensorValue(void)
 {
 	/***********DDS设置**********************/
 	FpgaWriteReg.DDSChannelNo = Fpga_GetDDSChannelNumber();	

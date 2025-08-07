@@ -24,11 +24,10 @@ extern "C" {
 ******************************************************************************/
 extern void IF_SensorInit(void);
 extern void IF_Sensor_ReadFpga_Task(void);
-extern void IF_Sensor_WriteFgpa_Task(void);
 extern void IF_Sensor_Device_Task(void);
 
 
-
+extern void IF_Sensor_WriteFgpa(void);
 extern uint16_t IF_Sensor_GetFanCurrent(void);
 //Sensor_1G output var
 extern int16_t IF_Sensor_GetPCBTemperature(void);

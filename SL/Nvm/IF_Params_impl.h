@@ -323,9 +323,6 @@ extern uint16_t IF_GetRFPwrPIDProcessData(uint16_t frameNo, uint8_t* pBuf);
 extern void IF_UpdateRFPwrPIDProcessData(void);
 extern void IF_ClearRFPwrPIDProcessData(void);
 extern uint16_t IF_GetRFPwrPIDProcessDataRecordNum(void);
-extern uint8_t IF_GetRFPwrPIDProcessDataFlag(void);
-extern void IF_SetRFPwrPIDProcessDataFlag(uint8_t value);
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //软件升级使用的外部函数，函数须在外部实现

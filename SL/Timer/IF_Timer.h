@@ -34,11 +34,7 @@ extern "C" {
 #define RATE_DO_EXECUTE(RATE_HZ, TICK) ((TICK % (MAIN_LOOP_RATE / RATE_HZ)) == 0)
 
 typedef struct _SystemTimer_t
-{
-	uint16_t PowerUpTimer;
-	uint32_t PowerUpDuration;
-	uint8_t PowerUpDurationFlag;
-	
+{	
 	uint16_t RFOnTimer;
 	uint32_t RFOnDuration;
 		
@@ -68,8 +64,6 @@ extern uint32_t  GetSysTickCnt(void);
 
 extern uint32_t IF_Timer_GetPowerUpTimer(void);
 extern uint32_t IF_Timer_GetRFOnUpTimer(void);
-extern uint8_t IF_Timer_GetPowerUpDurationFlag(void);
-extern void IF_Timer_SetPowerUpDurationFlag(uint8_t OnorOff);
 
 extern float IF_Timer_GetRFSlowStartDelayTime(void);
 extern void IF_Timer_SetRFSlowStartDelayFlag(uint8_t OnorOff);

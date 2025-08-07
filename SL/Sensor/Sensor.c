@@ -42,17 +42,17 @@ void IF_SensorInit(void)
  * END ***************************************************************************************/
 void IF_Sensor_ReadFpga_Task(void)
 {
-    Sensor_Fpga_Sample();
+    IF_Sensor_Fpga_Read();
 }
 /* FUNCTION *********************************************************************************
- * Function Name : IF_Sensor_WriteFgpa_Task
+ * Function Name : IF_Sensor_WriteFgpa
  * Description   : Sensor Fpga任务函数接口
  * Parameter     : 
  * return        :                
  * END ***************************************************************************************/
-void IF_Sensor_WriteFgpa_Task(void)
+void IF_Sensor_WriteFgpa(void)
 {
-	Sensor_Fpga_Write();
+	IF_Sensor_Fpga_Write();
 }	
 /* FUNCTION *********************************************************************************
  * Function Name : IF_IF_Sensor_Device_Task
